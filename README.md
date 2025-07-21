@@ -38,3 +38,14 @@ Instagram: https://instagram.com/anush_singla18
 License
 
 This project is licensed under the MIT License.
+
+STARTING PROJECT 
+
+FRONTEND 
+cd client
+npm run dev 
+
+BACKEND
+cd server
+cp .env.example .env
+nodemon server.js
