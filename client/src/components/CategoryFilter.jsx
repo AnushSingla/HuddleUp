@@ -5,7 +5,7 @@ import  Badge  from '@/components/ui/badge';
 const CategoryFilter = ({ selectedCategory, onCategoryChange, videoCounts = {} }) => {
   const categories = [
     { value: 'ALL', label: 'All', icon: '🎬' },
-    { value: 'UNHEARD STORIES', label: 'UNHEARD STORIES', icon: '🏏' },
+    { value: 'UNHEARD STORIES', label: 'UNHEARD STORIES', icon: '📢' },
     { value: 'MATCH ANALYSIS', label: 'MATCH ANALYSIS', icon: '📊' },
     { value: 'SPORTS AROUND THE GLOBE', label: 'SPORTS AROUND THE GLOBE', icon: '🌍' }
   ];

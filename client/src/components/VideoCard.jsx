@@ -43,7 +43,7 @@ const VideoCard = ({ video, onPlay , onDelete }) => {
 
   const getCategoryIcon = (category) => {
     switch (category) {
-      case ' UNHEARD STORIES': return '🏏';
+      case ' UNHEARD STORIES': return '📢';
       case 'MATCH ANALYSIS': return '📊';
       case 'SPORTS AROUND THE GLOBE': return '🌍';
       default: return '🎬';
@@ -119,7 +119,7 @@ const VideoCard = ({ video, onPlay , onDelete }) => {
           </div>
           <div className="flex items-center gap-1">
             <User className="h-3 w-3" />
-            CrickHub User
+            {video.postedBy?.username || 'Unknown User'}
           </div>
         </div>
       </CardContent>

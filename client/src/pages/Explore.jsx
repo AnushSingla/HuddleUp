@@ -26,7 +26,7 @@ const Explore = () => {
 
         const counts = {
           ALL: allVideos.length,
-          ' UNHEARD STORIES': allVideos.filter(v => v.category === 'UNHEARD STORIES').length,
+          'UNHEARD STORIES': allVideos.filter(v => v.category === 'UNHEARD STORIES').length,
           'MATCH ANALYSIS': allVideos.filter(v => v.category === 'MATCH ANALYSIS').length,
           'SPORTS AROUND THE GLOBE': allVideos.filter(v => v.category === 'SPORTS AROUND THE GLOBE').length
         };
