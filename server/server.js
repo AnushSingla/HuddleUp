@@ -19,9 +19,7 @@ app.use(cors({
   credentials: true
 }));
 
-app.use("(.*)", (req, res) => {
-  res.send("Not Found");
-});
+
 
 
 
