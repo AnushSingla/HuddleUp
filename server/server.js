@@ -13,9 +13,14 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: ["https://huddle-up-seven.vercel.app/"],
+  origin: "https://huddle-up-seven.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
+
+app.options("*", cors());  // <-- important
+
 
 app.use(express.json());
 app.use("/api/auth",authRoutes)
