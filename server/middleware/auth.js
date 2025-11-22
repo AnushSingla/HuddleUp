@@ -1,25 +1,28 @@
 const jwt = require("jsonwebtoken");
 
-exports.verifyToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  console.log("🔐 Auth Header:", authHeader);
+const verifyToken = (req, res, next) => {
+  // Allow preflight CORS requests
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    console.log("❌ No token provided");
-    return res.status(403).json({ message: "Unauthorized: No token provided" });
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ message: "Unauthorized: No token provided" });
   }
 
   const token = authHeader.split(" ")[1];
-  console.log("🔑 Extracted Token:", token);
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized: Invalid token format" });
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("✅ Token Decoded:", decoded);
-    req.user = decoded;
+    req.user = decoded; // Save user data
     next();
-  } catch (err) {
-    console.log("❌ Token verification failed:", err.message);
-    return res.status(403).json({ message: "Unauthorized: Invalid token" });
+  } catch (error) {
+    return res.status(403).json({ message: "Invalid or expired token" });
   }
 };
 
+module.exports = { verifyToken };
