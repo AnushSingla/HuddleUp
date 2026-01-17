@@ -72,7 +72,7 @@ Prerequisites:
 
 Clone the repository:
 
-- git clone https://github.com/your-username/HuddleUp.git
+- git clone https://github.com/AnushSingla/HuddleUp.git
 
 - cd HuddleUp
 
