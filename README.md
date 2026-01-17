@@ -71,19 +71,28 @@ Prerequisites:
 ## 🚀 Run Project Locally
 
 Clone the repository:
-git clone https://github.com/your-username/HuddleUp.git
-cd HuddleUp
+
+- git clone https://github.com/your-username/HuddleUp.git
+
+- cd HuddleUp
 
 Backend setup:
-cd server
-cp .env.example .env
-npm install
-nodemon server.js
+
+- cd server
+
+- cp .env.example .env
+
+- npm install
+
+- nodemon server.js
 
 Frontend setup:
-cd ../client
-npm install
-npm run dev
+
+- cd ../client
+
+- npm install
+
+- npm run dev
 
 ---
 
