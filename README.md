@@ -1,81 +1,100 @@
 # 🏟️ HuddleUp — Sports Social Media Platform
 
-**HuddleUp** is a full-stack **MERN** social media platform built for sports enthusiasts to share videos, discuss matches, and connect with like-minded fans.  
-It combines the best features of **Reddit (discussions)**, **YouTube (video content)**, and **Instagram (social engagement)** into a single sports-focused ecosystem.
-
-> 🚀 Built with scalability, clean architecture, and real-world product thinking.
+HuddleUp is a full-stack MERN (MongoDB, Express, React, Node.js) social media platform designed exclusively for sports enthusiasts.
+It enables users to share videos, participate in discussions, follow creators, and connect with fellow fans across different sports.
 
 ---
 
-## 🔥 Key Highlights
+## 🌐 Live Demo
 
-- Full-stack MERN application with **JWT-based authentication**
-- Scalable REST APIs with **Express & MongoDB**
-- Modern, responsive UI using **React + Tailwind / ShadCN**
-- Feature-rich social platform with videos, discussions, likes & follows
-- Designed with **production-grade patterns** (env configs, modular backend)
+- HuddleUp: https://huddle-up-beta.vercel.app/
+
 
 ---
 
 ## ✨ Features
 
-- 🎥 Video uploads for match reactions, analysis & highlights  
-- 💬 Discussion forums with comments and replies  
-- ❤️ Like system and creator following  
-- 🏷️ Content discovery via sports categories & tags  
-- 🤝 Friend request & social graph system  
-- 🔍 Search & explore trending posts and creators  
-- 📱 Fully responsive UI for mobile and desktop  
+- Upload and share sports-related videos (reactions, analysis, highlights)
+- Discussion forums with comments and replies
+- Like videos and follow creators
+- Categorization by sport, team, or trend
+- Friend request and social connection system
+- Search and explore trending content
+- Secure authentication using JWT
+- Fully responsive modern UI
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- **React.js**
-- **Tailwind CSS / ShadCN UI**
+Frontend:
+- React.js
+- Tailwind CSS / ShadCN UI
+- Axios
 
-### Backend
-- **Node.js**
-- **Express.js**
-- **MongoDB**
-- **Mongoose**
-- **JWT Authentication**
-
----
-
-## 🧠 Architecture Overview
-
-- **Client–Server architecture**
-- RESTful APIs with proper separation of concerns
-- JWT-based auth middleware
-- Modular backend structure (routes, controllers, models)
-- Environment-based configuration using `.env`
+Backend:
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- JWT (Authentication & Authorization)
 
 ---
 
-## ⚙️ Local Setup
+## 🧠 System Architecture
 
-### Prerequisites
-- Node.js (v18+)
-- MongoDB (local or cloud)
+- RESTful REST API based client–server architecture
+- JWT based authentication middleware
+- Modular backend (routes, controllers, models)
+- Environment-based configuration
+- Scalable MongoDB schema design
 
 ---
 
-### Frontend
-```bash
-cd client
+## 📁 Project Structure
+
+HuddleUp/
+- client/   → React frontend
+- server/   → Node.js + Express backend
+
+---
+
+## ⚙️ Local Development Setup (Frontend + Backend)
+
+Prerequisites:
+- Node.js v18+
+- MongoDB (local or MongoDB Atlas)
+- npm
+
+---
+
+## 🚀 Run Project Locally
+
+Clone the repository:
+git clone https://github.com/your-username/HuddleUp.git
+cd HuddleUp
+
+Backend setup:
+cd server
+cp .env.example .env
+npm install
+nodemon server.js
+
+Frontend setup:
+cd ../client
 npm install
 npm run dev
 
+---
 
+## 👨‍💻 Author
+
+Anush Singla  
+Email: singlaanush18@gmail.com  
+Linkedln: https://www.linkedin.com/in/anush-singla-1b0899311/
 
 ---
- ### Backend
- ```bash
- cd server
- cp .env.example .env
- npm install
- nodemon server.js
 
+## 📜 License
 
+This project is licensed under the MIT License.
