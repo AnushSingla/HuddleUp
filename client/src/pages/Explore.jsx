@@ -66,83 +66,100 @@ const Explore = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-white">
-      
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-green-600 mb-4">🔍 Explore Sport Content</h1>
-          <p className="text-lg text-blue-600 max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-white">
+      <div className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
+        {/* Header - Smaller */}
+        <div className="text-center mb-12">
+          <div className="inline-block p-4 bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl mb-4">
+            <h1 className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+              🔍 Explore Sports Content
+            </h1>
+          </div>
+          <p className="text-lg lg:text-xl text-blue-700 font-light max-w-2xl mx-auto">
             Discover amazing sports stories, analysis, and content from around the world
           </p>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-100 p-6 mb-8">
-          <div className="mb-6">
-            <div className="relative max-w-md mx-auto">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-400" />
-              <input
-                type="text"
-                placeholder="Search videos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-transparent bg-white/70 backdrop-blur-sm"
-              />
+        {/* Search & Filter Container - Smaller */}
+        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl shadow-xl border border-green-100/50 p-6 lg:p-8 mb-8">
+          <div className="space-y-6">
+            {/* Search Bar - Smaller */}
+            <div className="group">
+              <div className="relative max-w-lg mx-auto">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-400 group-hover:text-green-500 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search videos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 text-base border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300/50 focus:border-green-400 bg-white/80 backdrop-blur-xl shadow-md hover:shadow-lg transition-all"
+                />
+              </div>
             </div>
-          </div>
 
-          <CategoryFilter
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-            videoCounts={videoCounts}
-          />
+            <CategoryFilter
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              videoCounts={videoCounts}
+            />
+          </div>
         </div>
 
+        {/* Search Results - Smaller */}
         {searchTerm && (
-          <div className="text-center mb-6">
-            <p className="text-blue-600">
-              Found {filteredVideos.length} video{filteredVideos.length !== 1 ? 's' : ''} 
-              {searchTerm && ` matching "${searchTerm}"`}
-              {selectedCategory !== 'ALL' && ` in ${selectedCategory}`}
-            </p>
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-xl shadow-lg">
+              <div className="text-xl">📊</div>
+              <p className="text-lg text-blue-700 font-semibold">
+                Found {filteredVideos.length} video{filteredVideos.length !== 1 ? 's' : ''}
+              </p>
+            </div>
           </div>
         )}
 
+        {/* Video Grid */}
         {filteredVideos.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredVideos.map((video) => (
-  <VideoCard
-    key={video._id}
-    video={{
-      ...video, // ✅ Spread the entire original video object
-      id: video._id, // Keep override if needed
-      videoUrl: `http://localhost:5000${video.videoUrl}` // ✅ still apply full URL
-    }}
-    onPlay={handleVideoPlay}
-    onDelete={(id) => setVideos(prev => prev.filter(v => v._id !== id))}
-  />
-))}
+              <VideoCard
+                key={video._id}
+                video={{
+                  ...video,
+                  id: video._id,
+                  videoUrl: `http://localhost:5000${video.videoUrl}`
+                }}
+                onPlay={handleVideoPlay}
+                onDelete={(id) => setVideos(prev => prev.filter(v => v._id !== id))}
+              />
+            ))}
           </div>
         ) : (
           <div className="text-center py-16">
-            <div className="text-6xl mb-4">🏏</div>
-            <h3 className="text-2xl font-bold text-green-600 mb-2">No videos found</h3>
-            <p className="text-blue-600 mb-6">
+            <div className="text-6xl mb-6 mx-auto w-24 h-24 bg-gradient-to-br from-blue-400 to-green-400 rounded-2xl flex items-center justify-center shadow-xl">
+              🏏
+            </div>
+            <h3 className="text-3xl font-bold text-green-600 mb-4">No Videos Found</h3>
+            <p className="text-xl text-blue-600 mb-8 max-w-xl mx-auto">
               {videos.length === 0
                 ? "Be the first to upload a video!"
                 : "Try adjusting your search or filter criteria."}
             </p>
             <button
               onClick={() => window.location.href = '/upload'}
-              className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full transition-all duration-300 hover:shadow-lg transform hover:scale-105"
+              className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-2xl text-lg font-semibold shadow-xl hover:shadow-2xl hover:-translate-y-1 hover:scale-105 transition-all duration-300"
             >
-              Upload Your First Video
+              🚀 Upload Your First Video
             </button>
           </div>
         )}
       </div>
 
       {selectedVideo && (
-        <VideoPlayer video={selectedVideo} onClose={handleClosePlayer} onDelete={(id) => setVideos(prev => prev.filter(v => v._id !== id))}/>
+        <VideoPlayer 
+          video={selectedVideo} 
+          onClose={handleClosePlayer} 
+          onDelete={(id) => setVideos(prev => prev.filter(v => v._id !== id))}
+        />
       )}
     </div>
   );
