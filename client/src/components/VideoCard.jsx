@@ -3,47 +3,41 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import Badge from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Play, Calendar, User, Eye,Trash2 } from 'lucide-react';
+import { Play, Calendar, User, Eye, Trash2 } from 'lucide-react';
 import { API } from '@/api';
-import {  getUserId,getToken } from '@/utils/auth';
+import { getUserId, getToken } from '@/utils/auth';
 
-const VideoCard = ({ video, onPlay , onDelete }) => {
-  console.log("🔍 Full video object:", video);
-  console.log("✅ video.postedBy?._id:", video.postedBy?._id);
-  console.log("✅ Logged-in user ID:", getUserId());
-  console.log("✅ Should show delete button:", video.postedBy?._id === getUserId());
-  const handleDelete = async() =>{
-     const id = video._id || video.id; 
-
-  if (!id) {
-    toast.error("Video ID not found");
-    return;
-  }
-    try{
+const VideoCard = ({ video, onPlay, onDelete }) => {
+  const handleDelete = async () => {
+    const id = video._id || video.id;
+    if (!id) {
+      toast.error("Video ID not found");
+      return;
+    }
+    try {
       await API.delete(`/videos/${id}`, {
-              headers: { Authorization: `Bearer ${getToken()}` },
-        })
-      toast.success("Video Deleted")
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      toast.success("Video Deleted");
       if (onDelete) onDelete(id);
-
-    }catch(err){
+    } catch (err) {
       toast.error('Only The Owner can Delete');
       console.error(err);
     }
-  }
-  const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  return isNaN(date) ? 'Unknown Date' : date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
+  };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return isNaN(date) ? 'Unknown Date' : date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   const getCategoryIcon = (category) => {
-    switch (category) {
-      case ' UNHEARD STORIES': return '📢';
+    switch (category?.trim()) {
+      case 'UNHEARD STORIES': return '📢';
       case 'MATCH ANALYSIS': return '📊';
       case 'SPORTS AROUND THE GLOBE': return '🌍';
       default: return '🎬';
@@ -51,43 +45,44 @@ const VideoCard = ({ video, onPlay , onDelete }) => {
   };
 
   const getCategoryColor = (category) => {
-    switch (category) {
-      case ' UNHEARD STORIES': return 'bg-green-100 text-green-700 border-green-200';
-      case 'MATCH ANALYSIS': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case ' SPORTS AROUND THE GLOBE': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    switch (category?.trim()) {
+      case 'UNHEARD STORIES': return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'MATCH ANALYSIS': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'SPORTS AROUND THE GLOBE': return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
+      default: return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
     }
   };
 
   return (
-    <Card className="group hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] border-blue-100 bg-white/90 backdrop-blur-sm overflow-hidden">
-       
-        {video.postedBy?._id === getUserId() && (
-          
+    <Card className="group bg-slate-900 border-slate-800 rounded-xl overflow-hidden hover:-translate-y-1 hover:border-slate-700 transition-all duration-200">
+      {/* Delete Button */}
+      {video.postedBy?._id === getUserId() && (
         <button
           onClick={handleDelete}
-          className="absolute top-0 right-0 p-1 rounded-full bg-gray-100 text-gray-600 hover:text-red-600 hover:bg-red-100"
+          className="absolute top-3 right-3 z-10 p-2 rounded-lg bg-slate-800/80 text-slate-400 hover:text-red-400 hover:bg-red-500/20 transition-all duration-200"
         >
           <Trash2 className="w-4 h-4" />
         </button>
-        )}
+      )}
+
       {/* Thumbnail */}
-      <div className="relative bg-gradient-to-br from-blue-50 to-cyan-50 h-48 flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-        <Play className="h-16 w-16 text-white drop-shadow-lg group-hover:scale-110 transition-transform duration-300" />
+      <div className="relative h-48 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        
+        <Play className="h-16 w-16 text-white/80 drop-shadow-lg group-hover:scale-110 group-hover:text-white transition-all duration-300" />
 
         {/* Category Badge */}
         <div className="absolute top-3 left-3">
-          <Badge className={`${getCategoryColor(video.category)} border font-medium text-xs`}>
-            {getCategoryIcon(video.category)} {video.category}
+          <Badge className={`${getCategoryColor(video.category)} border text-xs font-medium backdrop-blur-sm`}>
+            {getCategoryIcon(video.category)} {video.category?.trim()}
           </Badge>
         </div>
 
         {/* Preview Overlay */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
           <Button
             size="sm"
-            className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30"
+            className="opacity-0 group-hover:opacity-100 transition-all duration-300 bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 rounded-lg"
             onClick={() => onPlay(video)}
           >
             <Eye className="mr-2 h-4 w-4" />
@@ -96,38 +91,36 @@ const VideoCard = ({ video, onPlay , onDelete }) => {
         </div>
       </div>
 
-      <CardContent className="p-4">
+      <CardContent className="p-5">
         {/* Title */}
-        <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
+        <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors duration-200">
           {video.title}
         </h3>
 
-       
-
         {/* Description */}
         {video.description && (
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+          <p className="text-slate-400 text-sm mb-4 line-clamp-2">
             {video.description}
           </p>
         )}
 
         {/* Meta Info */}
-        <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-          <div className="flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            {formatDate(video.createdAt)}
+        <div className="flex items-center justify-between text-xs text-slate-500">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>{formatDate(video.createdAt)}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <User className="h-3 w-3" />
-            {video.postedBy?.username || 'Unknown User'}
+          <div className="flex items-center gap-1.5">
+            <User className="h-3.5 w-3.5" />
+            <span>{video.postedBy?.username || 'Unknown'}</span>
           </div>
         </div>
       </CardContent>
 
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="p-5 pt-0">
         <Button
           onClick={() => onPlay(video)}
-          className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full transition-all duration-300 group-hover:shadow-lg"
+          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/25"
         >
           <Play className="mr-2 h-4 w-4" />
           Watch Now

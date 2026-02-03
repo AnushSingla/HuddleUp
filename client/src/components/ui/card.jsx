@@ -3,29 +3,32 @@ import clsx from 'clsx';
 
 export function Card({ children, className }) {
   return (
-    <div className={`rounded-lg border bg-white p-4 shadow-sm ${className}`}>
+    <div className={`rounded-xl bg-slate-900 p-6 shadow-xl shadow-black/20 ring-1 ring-white/10 ${className}`}>
       {children}
     </div>
   );
 }
 
-export function CardHeader({ children }) {
-  return <div className="mb-2">{children}</div>;
+export function CardHeader({ children, className }) {
+  return <div className={clsx('mb-4', className)}>{children}</div>;
 }
 
-export function CardTitle({ children }) {
-  return <h2 className="text-lg font-semibold">{children}</h2>;
+export function CardTitle({ children, className }) {
+  return <h2 className={clsx('text-xl font-bold text-white', className)}>{children}</h2>;
 }
 
-export function CardDescription({ children }) {
-  return <p className="text-sm text-gray-500">{children}</p>;
+export function CardDescription({ children, className }) {
+  return <p className={clsx('text-sm text-slate-400', className)}>{children}</p>;
 }
 
-export function CardContent({ children }) {
-  return <div className="mt-2">{children}</div>;
+export function CardContent({ children, className }) {
+  return <div className={clsx('mt-4', className)}>{children}</div>;
 }
 
-export const CardFooter = ({ children, className }) => (
-  <div className={clsx('mt-4 border-t pt-2 text-sm text-muted-foreground', className)}>
-    {children}
-  </div> )
+export function CardFooter({ children, className }) {
+  return (
+    <div className={clsx('mt-6 border-t border-slate-800 pt-4 text-sm text-slate-500', className)}>
+      {children}
+    </div>
+  );
+}
