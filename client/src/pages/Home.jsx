@@ -44,20 +44,40 @@ export default function Home() {
       </div>
 
       {/* Feature Cards */}
-      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-6 opacity-80">
-        <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-green-600 text-center border border-green-100">
-          <div className="text-2xl mb-2">📤</div>
-          <div className="text-sm font-medium cursor-pointer hover:text-green-600 transition-colors" onClick={() => navigate('/upload')}>Upload</div>
+      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-6 opacity-90">
+        {/* Upload */}
+        <div onClick={() => navigate('/upload')}
+          className="group cursor-pointer bg-white/60 backdrop-blur-sm rounded-lg p-4 text-green-600 text-center border border-green-100
+            transition-all duration-300 ease-in-out
+            hover:scale-110 hover:shadow-xl hover:bg-white/80">
+          <div className="text-2xl mb-2 transition-transform duration-300 group-hover:animate-bounce">📤</div>
+          <div className="text-sm font-medium group-hover:text-green-700">Upload</div>
         </div>
-        <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-blue-600 text-center border border-blue-100">
-          <div className="text-2xl mb-2">🔍</div>
-          <div className="text-sm font-medium cursor-pointer hover:text-green-600 transition-colors" onClick={() => navigate('/explore')}>Explore</div>
+
+        {/* Explore */}
+        <div
+          onClick={() => navigate('/explore')}
+          className="group cursor-pointer bg-white/60 backdrop-blur-sm rounded-lg p-4 text-blue-600 text-center border border-blue-100
+               transition-all duration-300 ease-in-out
+               hover:scale-110 hover:shadow-xl hover:bg-white/80"
+        >
+          <div className="text-2xl mb-2 transition-transform duration-300 group-hover:animate-pulse">🔍</div>
+          <div className="text-sm font-medium group-hover:text-blue-700">Explore</div>
         </div>
-        <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-green-600 text-center border border-green-100">
-          <div className="text-2xl mb-2">👥</div>
-          <div className="text-sm font-medium cursor-pointer hover:text-green-600 transition-colors"onClick={() => navigate('/posts')}>Post</div>
+
+        {/* Post */}
+        <div
+          onClick={() => navigate('/posts')}
+          className="group cursor-pointer bg-white/60 backdrop-blur-sm rounded-lg p-4 text-green-600 text-center border border-green-100
+               transition-all duration-300 ease-in-out
+               hover:scale-110 hover:shadow-xl hover:bg-white/80"
+        >
+          <div className="text-2xl mb-2 transition-transform duration-300 group-hover:animate-bounce">👥</div>
+          <div className="text-sm font-medium group-hover:text-green-700">Post</div>
         </div>
+
       </div>
+
     </div>
   )
 }
