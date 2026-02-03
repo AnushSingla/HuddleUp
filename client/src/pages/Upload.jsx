@@ -54,6 +54,12 @@ const Upload = () => {
 
     const token = localStorage.getItem('token');
     console.log("Token from localStorage:", token);
+    if (!token) {
+      toast.error("Please login first");
+      navigate('/login');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
@@ -73,7 +79,7 @@ const Upload = () => {
       toast.success("Video Uploaded Successfully");
       navigate('/explore');
     } catch (err) {
-      console.error(err);
+      // console.error("err");
       alert(err.response?.data?.message || '❌ Upload failed');
     }
   };

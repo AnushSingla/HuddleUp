@@ -25,6 +25,12 @@ const CreatePost = () => {
     }
 
     setIsSubmitting(true);
+    if (!getToken()) {
+      toast.error("Please login first");
+      navigate('/login');
+      return;
+    }
+
 
     try {
       const res = await API.post('/posts', {
