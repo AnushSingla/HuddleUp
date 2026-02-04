@@ -17,9 +17,10 @@ export default function CommentSection({ contentId, contentType }) {
             ? `/comments/post/${contentId}`
             : `/comments/${contentId}`;
         const res = await API.get(endpoint);
-        setComments(res.data);
+        setComments(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error('Error loading comments:', err);
+        setComments([]);
       } finally {
         setIsLoading(false);
       }

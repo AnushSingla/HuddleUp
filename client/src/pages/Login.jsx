@@ -13,26 +13,27 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  
+
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsLoading(true);
+    e.preventDefault();
+    setIsLoading(true);
 
-  try {
-    const res = await API.post("auth/login", form); // sends { email, password }
+    try {
+      const res = await API.post("auth/login", form); // sends { email, password }
 
-    // ✅ Save token to localStorage
-    localStorage.setItem("token", res.data.token);
+      // ✅ Save token to localStorage
+      localStorage.setItem("token", res.data.token);
 
-    toast.success("Login Successful! Welcome back to HuddleUp.");
-    navigate("/");
-  } catch (err) {
-    toast.error(err?.response?.data?.message || "Login Failed. Invalid credentials.");
-  } finally {
-    setIsLoading(false);
-  }
-};
+      toast.success("Login Successful! Welcome back to HuddleUp.");
+      navigate("/");
+    } catch (err) {
+      const errorMsg = typeof err.response?.data === 'string' ? err.response.data : (err.response?.data?.message || "Login Failed. Invalid credentials.");
+      toast.error(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -94,8 +95,8 @@ export default function Login() {
               </div>
 
               {/* Submit Button */}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 disabled={isLoading}
               >

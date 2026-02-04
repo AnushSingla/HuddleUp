@@ -1,35 +1,40 @@
 const mongoose = require("mongoose")
 
 const CommentSchema = new mongoose.Schema({
-    videoId:{
-      type:mongoose.Schema.Types.ObjectId,
-      ref:'Video',
-      required:false,
+    videoId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Video',
+        required: false,
     },
     postId: {
-       type: mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Post',
-       default: null,
-        required:false,
+        default: null,
+        required: false,
     },
-    userId:{
-         type:mongoose.Schema.Types.ObjectId,
-         ref:'User',
-         required:true
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     },
-    text:{
-        type:String,
-        required:true
+    text: {
+        type: String,
+        required: true
     },
-    parentId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'Comment',
-         default: null,
+    parentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment',
+        default: null,
     },
-    likes : [{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'User'
+    likes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     }]
-},{timestamps:true});
+}, { timestamps: true });
 
-module.exports = mongoose.model("Comment",CommentSchema)
+CommentSchema.index({ videoId: 1 });
+CommentSchema.index({ postId: 1 });
+CommentSchema.index({ userId: 1 });
+CommentSchema.index({ createdAt: -1 });
+
+module.exports = mongoose.model("Comment", CommentSchema)

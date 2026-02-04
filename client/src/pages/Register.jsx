@@ -1,37 +1,38 @@
 import React from 'react'
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {API} from "../api"
+import { API } from "../api"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Mail, Lock, ArrowRight ,User} from "lucide-react";
+import { Mail, Lock, ArrowRight, User } from "lucide-react";
 import { toast } from 'sonner';
 
 
 export default function Register() {
-const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-const[form,setform] = useState({username:"",email:"",password:""})
-const navigate = useNavigate();
- const handlesubmit = async (e) => {
+  const [form, setform] = useState({ username: "", email: "", password: "" })
+  const navigate = useNavigate();
+  const handlesubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const res = await API.post("auth/register", form);
-      toast.success("Profile Created! Welcome  to HuddleUp.");
+      toast.success("Profile Created! Welcome to HuddleUp.");
       navigate("/login");
     } catch (err) {
       console.error(err.response?.data || err.message);
-      toast.error("Failed. Invalid credentials.");
+      const errorMsg = typeof err.response?.data === 'string' ? err.response.data : "Registration failed. Please try again.";
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
   };
   return (
-     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
@@ -107,8 +108,8 @@ const navigate = useNavigate();
               </div>
 
               {/* Submit Button */}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 disabled={isLoading}
               >
@@ -147,9 +148,9 @@ const navigate = useNavigate();
         </div>
       </div>
     </div>
-    
-    
-    
+
+
+
   )
 }
 

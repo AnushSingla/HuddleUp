@@ -35,7 +35,7 @@ export default function Navbar() {
             </NavLink>
           </div>
 
-          {/* ✅ FIXED Navigation Links */}
+          {/* ✅ Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
             {[
               { to: "/", label: "Home" },
@@ -72,8 +72,8 @@ export default function Navbar() {
             {loggedIn ? (
               <Button
                 onClick={handleLogout}
-                variant="outline"
-                className="border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white hover:border-zinc-600 rounded-lg px-5 h-10 text-sm font-medium transition-all duration-200"
+                className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 h-10 rounded-xl border-none shadow-md"
+                style={{ backgroundColor: '#dc2626', color: 'white' }}
               >
                 Logout
               </Button>

@@ -4,6 +4,7 @@ import CommentSection from './CommentSection';
 import { API } from '@/api';
 import { getToken } from '@/utils/auth';
 import { Button } from './ui/button';
+import { toast } from 'sonner';
 
 const VideoPlayer = ({ video, onClose }) => {
   const videoRef = useRef(null);
@@ -49,16 +50,27 @@ const VideoPlayer = ({ video, onClose }) => {
   }, [isPlaying, hasViewed, videoId]);
 
   const handleLike = async () => {
+    const token = getToken();
+    if (!token) {
+      toast.error("Please login first to like videos");
+      return;
+    }
+
     try {
       const res = await API.post(
         `/videos/${videoId}/like`,
         {},
-        { headers: { Authorization: `Bearer ${getToken()}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setIsLiked(res.data.liked);
       setLikes(res.data.likes);
     } catch (err) {
       console.error('Failed to toggle like:', err);
+      if (err.response?.status === 401) {
+        toast.error("Please login first to like videos");
+      } else {
+        toast.error("Failed to like video. Please try again.");
+      }
     }
   };
 

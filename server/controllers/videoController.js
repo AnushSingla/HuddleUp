@@ -5,6 +5,10 @@ exports.createVideo = async(req,res)=>{
         console.log("File:", req.file);
         console.log("Body:", req.body);
 
+        if (!req.user || !req.user.id) {
+          return res.status(401).json({ message: "Unauthorized: User not authenticated" });
+        }
+
         const {title,description,category} = req.body;
         if (!req.file) {
         return res.status(400).json({ message: "No video file uploaded" });
@@ -24,7 +28,7 @@ exports.createVideo = async(req,res)=>{
     }
     catch(err){
         console.error(err);
-        res.status(500).json(err.message)
+        res.status(500).json({ message: "Error uploading video", error: err.message })
     }
   
 }
@@ -43,8 +47,12 @@ exports.getAllVideos = async(req,res)=>{
 
 exports.deleteVideo = async (req, res) => {
   try {
-    const videoId = req.params.id; // ✅ Fix here
+    const videoId = req.params.id;
     const userId = req.user.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized: User not authenticated" });
+    }
 
     const video = await Video.findById(videoId);
 
@@ -52,7 +60,7 @@ exports.deleteVideo = async (req, res) => {
       return res.status(404).json({ message: "Video not found" });
     }
 
-    if (!video.postedBy || video.postedBy.toString() !== userId) {
+    if (!video.postedBy || video.postedBy.toString() !== userId.toString()) {
       return res.status(403).json({ message: "Not Allowed To Delete" });
     }
 
@@ -62,6 +70,6 @@ exports.deleteVideo = async (req, res) => {
 
   } catch (err) {
     console.error('❌ deleteVideo error:', err);
-    res.status(500).json({ message: "Error deleting video" });
+    res.status(500).json({ message: "Error deleting video", error: err.message });
   }
 };

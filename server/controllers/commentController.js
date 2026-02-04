@@ -10,34 +10,30 @@ exports.createComment = async (req, res) => {
   console.log("🟡 Incoming Comment:", { text, videoId, postId, parentId, userId });
 
   try {
+    let { videoId, postId } = req.body;
+
+    // Inherit from parent if missing (for replies)
+    if (!videoId && !postId && parentId) {
+      console.log("🔍 Inheriting target from parent:", parentId);
+      const parentComment = await Comment.findById(parentId);
+      if (parentComment) {
+        videoId = parentComment.videoId;
+        postId = parentComment.postId;
+      }
+    }
+
     if (!text || (!videoId && !postId)) {
-      console.warn("⚠️ Missing text or target (videoId/postId)");
-      return res.status(400).json({ message: "Missing content or target (videoId/postId)" });
+      console.warn("⚠️ Missing target after inheritance check:", { videoId, postId, text });
+      return res.status(400).json({ message: "Missing target (videoId/postId)" });
     }
 
     const commentData = {
       text,
       userId: new mongoose.Types.ObjectId(userId),
       parentId: parentId ? new mongoose.Types.ObjectId(parentId) : null,
+      videoId: videoId ? new mongoose.Types.ObjectId(videoId) : null,
+      postId: postId ? new mongoose.Types.ObjectId(postId) : null
     };
-
-    // Validate and assign videoId if present
-    if (videoId) {
-      if (!mongoose.Types.ObjectId.isValid(videoId)) {
-        console.error("❌ Invalid videoId:", videoId);
-        return res.status(400).json({ message: "Invalid videoId" });
-      }
-      commentData.videoId = new mongoose.Types.ObjectId(videoId);
-    }
-
-    // Validate and assign postId if present
-    if (postId) {
-      if (!mongoose.Types.ObjectId.isValid(postId)) {
-        console.error("❌ Invalid postId:", postId);
-        return res.status(400).json({ message: "Invalid postId" });
-      }
-      commentData.postId = new mongoose.Types.ObjectId(postId);
-    }
 
     console.log("🛠 Final commentData to be saved:", commentData);
 
@@ -50,12 +46,14 @@ exports.createComment = async (req, res) => {
 
     res.status(201).json({
       _id: saved._id,
-      author: saved.userId.username,
+      author: saved.userId?.username || 'Anonymous',
       content: saved.text,
       createdAt: saved.createdAt,
       parentId: saved.parentId,
       replies: [],
-      targetId: saved.videoId?.toString() || saved.postId?.toString(),
+      likes: saved.likes || [],
+      videoId: saved.videoId,
+      postId: saved.postId
     });
   } catch (err) {
     console.error("🔥 Error creating comment:", err);
@@ -69,7 +67,7 @@ exports.createComment = async (req, res) => {
 exports.getAllComments = async (req, res) => {
   try {
     const videoId = req.params.videoId;
-     console.log("Fetching comments for videoId:", videoId); 
+    console.log("Fetching comments for videoId:", videoId);
 
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
@@ -80,23 +78,23 @@ exports.getAllComments = async (req, res) => {
       .populate('userId', 'username')
       .sort({ createdAt: -1 })
       .lean();
-       console.log("Returning comments:", comments);
+    console.log("Returning comments:", comments);
 
     const formatted = comments.map(comment => ({
-      id: comment._id,
+      _id: comment._id,
       author: comment.userId?.username || 'Anonymous',
       content: comment.text,
-      timestamp: comment.createdAt,
+      createdAt: comment.createdAt,
       parentId: comment.parentId?.toString() || null,
-      videoId: comment.videoId?.toString(), 
+      videoId: comment.videoId?.toString(),
+      postId: comment.postId?.toString(),
       replies: [],
       likes: comment.likes || [],
-
     }));
 
     // nest replies
     const commentMap = {};
-    formatted.forEach(c => commentMap[c.id] = c);
+    formatted.forEach(c => commentMap[c._id] = c);
 
     const topLevel = [];
     formatted.forEach(c => {
@@ -129,18 +127,19 @@ exports.getAllPostComments = async (req, res) => {
       .lean();
 
     const formatted = comments.map(comment => ({
-      id: comment._id,
+      _id: comment._id,
       author: comment.userId?.username || 'Anonymous',
       content: comment.text,
-      timestamp: comment.createdAt,
+      createdAt: comment.createdAt,
       parentId: comment.parentId?.toString() || null,
       postId: comment.postId?.toString(),
+      videoId: comment.videoId?.toString(),
       replies: [],
-       likes: comment.likes || [],
+      likes: comment.likes || [],
     }));
 
     const commentMap = {};
-    formatted.forEach(c => commentMap[c.id] = c);
+    formatted.forEach(c => commentMap[c._id] = c);
 
     const topLevel = [];
     formatted.forEach(c => {
@@ -159,35 +158,33 @@ exports.getAllPostComments = async (req, res) => {
 };
 
 
-exports.likeVideo = async(req,res)=>{
-  const {id} = req.params;
+exports.likeVideo = async (req, res) => {
+  const { id } = req.params;
   const userId = req.user.id;
-  try{
-    const video =await Video.findById(id);
-    if(!video) return res.status(404).json({message:"Video not Found"})
-    const likedindex = video.likes.indexOf(userId)
-    if(likedindex==-1){
-      video.likes.push(userId);
-    }else{
-      video.likes.splice(likedindex,1)
-    }
-    await video.save();
-    res.json({likes:video.likes.length,liked:likedindex===-1});
-  }catch(err){
+
+  try {
+    const video = await Video.findById(id);
+    if (!video) return res.status(404).json({ message: "Video not Found" });
+
+    const isLiked = video.likes.includes(userId);
+    const update = isLiked ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
+
+    const updatedVideo = await Video.findByIdAndUpdate(id, update, { new: true });
+
+    res.json({ likes: updatedVideo.likes.length, liked: !isLiked });
+  } catch (err) {
     res.status(500).json({ message: "Error liking video", error: err.message });
   }
 }
 
-exports.viewVideo = async(req,res)=>{
-  const {id} = req.params;
-  try{
-    const video = await Video.findById(id)
-    if(!video) return res.status(404).json({message:"Video Not Found"})
-    video.views += 1;
-    await video.save();
-    res.json({views:video.views})
-    
-  }catch(err){
+exports.viewVideo = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const video = await Video.findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true });
+    if (!video) return res.status(404).json({ message: "Video Not Found" })
+    res.json({ views: video.views })
+
+  } catch (err) {
     res.status(500).json({ message: "Error incrementing view", error: err.message });
   }
 }
@@ -203,7 +200,7 @@ exports.getSingleVideo = async (req, res) => {
     const currentUserId = req.user?.id || null;
 
     res.json({
-      likes: video.likes ||[],
+      likes: video.likes || [],
       views: video.views || 0,
       currentUserId: currentUserId
     });
@@ -239,20 +236,17 @@ exports.toggleLikeComment = async (req, res) => {
     const comment = await Comment.findById(req.params.id);
     if (!comment) return res.status(404).json({ message: 'Comment not found' });
 
-    const userId = req.user.id; // from verifyToken middleware
+    const userId = req.user.id;
 
-    const alreadyLiked = comment.likes.includes(userId);
-    if (alreadyLiked) {
-      comment.likes = comment.likes.filter(id => id !== userId);
-    } else {
-      comment.likes.push(userId);
-    }
+    const isLiked = comment.likes.includes(userId);
+    const update = isLiked ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
 
-    await comment.save();
-    res.status(200).json({ likes: comment.likes.length, liked: !alreadyLiked });
+    const updatedComment = await Comment.findByIdAndUpdate(req.params.id, update, { new: true });
+
+    res.status(200).json({ likes: updatedComment.likes.length, liked: !isLiked });
   } catch (err) {
     console.error('Like error:', err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 

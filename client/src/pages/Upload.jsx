@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import {Button} from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import Textarea from '@/components/ui/textarea';
 
 import { useNavigate } from 'react-router-dom';
@@ -65,9 +65,8 @@ const Upload = () => {
     formData.append('video', videoFile);
 
     try {
-      const res = await API.post('/video/upload', formData, {
+      await API.post('/video/upload', formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
@@ -75,7 +74,7 @@ const Upload = () => {
       toast.success("Video Uploaded Successfully");
       navigate('/explore');
     } catch (err) {
-      alert(err.response?.data?.message || '❌ Upload failed');
+      toast.error(err.response?.data?.message || '❌ Upload failed');
     }
   };
 
@@ -97,20 +96,19 @@ const Upload = () => {
         {/* Enhanced Form Container */}
         <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-green-100/50 p-8 lg:p-12 hover:shadow-3xl transition-all duration-500">
           <form onSubmit={handleSubmit} className="space-y-8">
-            
+
             {/* Enhanced Upload Area */}
             <div className="group">
               <label className="block text-green-700 font-bold text-lg mb-6 tracking-wide">
                 📹 Upload Video <span className="text-blue-600 text-sm font-normal">*</span>
               </label>
               <div
-                className={`group relative border-4 border-dashed rounded-3xl p-12 lg:p-16 text-center transition-all duration-500 cursor-pointer hover:shadow-2xl hover:-translate-y-2 ${
-                  isDragging
+                className={`group relative border-4 border-dashed rounded-3xl p-12 lg:p-16 text-center transition-all duration-500 cursor-pointer hover:shadow-2xl hover:-translate-y-2 ${isDragging
                     ? 'border-green-400 bg-gradient-to-br from-green-50/90 to-blue-50/90 shadow-2xl ring-4 ring-green-200/50'
                     : videoFile
-                    ? 'border-green-400 bg-gradient-to-br from-green-50 to-blue-50 shadow-xl ring-2 ring-green-200/50'
-                    : 'border-blue-200 hover:border-green-300 bg-gradient-to-br from-blue-50/50 to-green-50/50 shadow-lg'
-                }`}
+                      ? 'border-green-400 bg-gradient-to-br from-green-50 to-blue-50 shadow-xl ring-2 ring-green-200/50'
+                      : 'border-blue-200 hover:border-green-300 bg-gradient-to-br from-blue-50/50 to-green-50/50 shadow-lg'
+                  }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -146,9 +144,9 @@ const Upload = () => {
                         className="hidden"
                         id="video-upload"
                       />
-                      <Button 
-                        type="button" 
-                        variant="outline" 
+                      <Button
+                        type="button"
+                        variant="outline"
                         size="lg"
                         className="border-2 border-green-300 bg-white/80 backdrop-blur-sm text-green-700 font-semibold px-8 py-6 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 group-hover:bg-green-50"
                       >
@@ -186,10 +184,10 @@ const Upload = () => {
                 <label className="block text-green-700 font-bold text-lg tracking-wide">
                   🏷️ Category <span className="text-red-500">*</span>
                 </label>
-                <select 
-                  value={category} 
-                  onChange={(e) => setCategory(e.target.value)} 
-                  required 
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  required
                   className="w-full border-2 border-blue-200 rounded-2xl px-6 py-5 text-lg focus:outline-none focus:ring-4 focus:ring-green-300/50 focus:border-green-400 shadow-sm hover:shadow-md transition-all duration-300 bg-white/80 backdrop-blur-sm appearance-none"
                 >
                   <option value="" disabled hidden className="text-gray-400">Select video category</option>
