@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, NavLink } from 'react-router-dom';
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { NavLink } from 'react-router-dom';
 
 export default function Navbar() {
   const location = useLocation();
@@ -25,14 +24,18 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-zinc-950 border-b border-zinc-800">
       <div className="container mx-auto px-6 py-3">
         <div className="flex justify-between items-center">
+
           {/* Logo */}
           <div className="flex items-center">
-            <NavLink to="/" className="text-2xl font-bold text-white hover:opacity-90 transition-opacity">
+            <NavLink
+              to="/"
+              className="text-2xl font-bold text-white hover:opacity-90 transition-opacity"
+            >
               🏆 HuddleUp
             </NavLink>
           </div>
 
-          {/* Navigation Links */}
+          {/* ✅ FIXED Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
             {[
               { to: "/", label: "Home" },
@@ -40,25 +43,31 @@ export default function Navbar() {
               { to: "/explore", label: "Explore" },
               { to: "/posts", label: "Discussion" }
             ].map(({ to, label }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) => `
-                  relative font-medium text-sm uppercase tracking-wide
-                  transition-colors duration-200
-                  ${isActive ? 'text-white' : 'text-zinc-400 hover:text-white'}
-                `}
-              >
-                {label}
-                <span className={`
-                  absolute -bottom-1 left-0 h-0.5 bg-blue-500 transition-all duration-300
-                  ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}
-                `} />
+              <NavLink key={to} to={to}>
+                {({ isActive }) => (
+                  <div
+                    className={`
+                      group relative font-medium text-sm uppercase tracking-wide
+                      transition-colors duration-200
+                      ${isActive ? 'text-white' : 'text-zinc-400 hover:text-white'}
+                    `}
+                  >
+                    {label}
+
+                    <span
+                      className={`
+                        absolute -bottom-1 left-0 h-0.5 bg-blue-500
+                        transition-all duration-300
+                        ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}
+                      `}
+                    />
+                  </div>
+                )}
               </NavLink>
             ))}
           </div>
 
-          {/* Authentication Section */}
+          {/* Authentication */}
           <div className="flex items-center gap-3">
             {loggedIn ? (
               <Button
@@ -87,7 +96,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile button */}
           <div className="md:hidden">
             <button className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-200">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -95,6 +104,7 @@ export default function Navbar() {
               </svg>
             </button>
           </div>
+
         </div>
       </div>
     </nav>

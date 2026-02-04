@@ -39,8 +39,8 @@ export default function Footer() {
                 <h3 className="text-lg font-semibold text-white mb-3">Quick Links</h3>
                 <ul className="space-y-2">
                   {[
-                    { href: "https://www.linkedin.com/in/your-profile", label: "About" },
-                    { href: "https://wa.me/91xxxxxxxxxx", label: "Contact" },
+                    { href: "https://www.linkedin.com/in/anush-singla-1b0899311/", label: "About" },
+                    { href: "https://wa.me/918860406089", label: "Contact" },
                     { href: "/privacy", label: "Privacy" }
                   ].map((link) => (
                     <li key={link.label}>
@@ -69,10 +69,10 @@ export default function Footer() {
                 <h3 className="text-lg font-semibold text-white mb-3">Follow Us</h3>
                 <div className="flex gap-3">
                   {[
-                    { Icon: FaInstagram, href: "#", color: "hover:text-pink-500" },
-                    { Icon: FaTwitter, href: "#", color: "hover:text-blue-400" },
-                    { Icon: FaGithub, href: "#", color: "hover:text-white" },
-                    { Icon: FaLinkedin, href: "#", color: "hover:text-blue-600" }
+                    { Icon: FaInstagram, href: "https://www.instagram.com/anush_singla18/", color: "hover:text-pink-500" },
+                    { Icon: FaTwitter, href: "https://x.com/dev_anush18", color: "hover:text-blue-400" },
+                    { Icon: FaGithub, href: "https://github.com/AnushSingla", color: "hover:text-white" },
+                    { Icon: FaLinkedin, href: "https://www.linkedin.com/in/anush-singla-1b0899311/", color: "hover:text-blue-600" }
                   ].map(({ Icon, href, color }, idx) => (
                     <a
                       key={idx}
