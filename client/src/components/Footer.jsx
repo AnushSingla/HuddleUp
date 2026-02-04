@@ -41,7 +41,7 @@ export default function Footer() {
                   {[
                     { href: "https://www.linkedin.com/in/anush-singla-1b0899311/", label: "About" },
                     { href: "https://wa.me/918860406089", label: "Contact" },
-                    { href: "/privacy", label: "Privacy" }
+                    { href: "/", label: "Home" }
                   ].map((link) => (
                     <li key={link.label}>
                       <a
