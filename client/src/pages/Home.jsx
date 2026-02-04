@@ -103,30 +103,37 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Feature Grid */}
-      <div className="container mx-auto px-6 z-10">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              onClick={() => navigate(feature.path)}
-              className={`group cursor-pointer bg-zinc-900/50 backdrop-blur-sm rounded-xl p-6 border ${feature.border} 
-                hover:-translate-y-1 hover:border-zinc-700 hover:bg-zinc-900 
-                transition-all duration-200`}
-            >
-              <div className={`w-14 h-14 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center text-white mb-4 
-                group-hover:scale-110 transition-transform duration-200 shadow-lg`}>
-                {feature.icon}
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors duration-200">
-                {feature.title}
-              </h3>
-              <p className="text-zinc-400 text-sm">
-                {feature.desc}
-              </p>
-            </div>
-          ))}
+      {/* Feature Cards */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-6 opacity-90">
+        {/* Upload */}
+        <div onClick={() => navigate('/upload')}
+          className="group cursor-pointer bg-white/80 backdrop-blur-sm rounded-xl p-6 text-green-600 text-center border border-green-100
+            transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:bg-white hover:-translate-y-2"
+        >
+          <div className="text-3xl mb-3 group-hover:animate-bounce transition-all">📤</div>
+          <div className="text-base font-bold group-hover:text-green-700">Upload</div>
         </div>
+
+        {/* Explore */}
+        <div
+          onClick={() => navigate('/explore')}
+          className="group cursor-pointer bg-white/80 backdrop-blur-sm rounded-xl p-6 text-blue-600 text-center border border-blue-100
+            transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:bg-white hover:-translate-y-2"
+        >
+          <div className="text-3xl mb-3 group-hover:animate-pulse transition-all">🔍</div>
+          <div className="text-base font-bold group-hover:text-blue-700">Explore</div>
+        </div>
+
+        {/* Post */}
+        <div
+          onClick={() => navigate('/posts')}
+          className="group cursor-pointer bg-white/80 backdrop-blur-sm rounded-xl p-6 text-green-600 text-center border border-green-100
+            transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:bg-white hover:-translate-y-2"
+        >
+          <div className="text-3xl mb-3 group-hover:animate-bounce transition-all">👥</div>
+          <div className="text-base font-bold group-hover:text-green-700">Post</div>
+        </div>
+
       </div>
     </div>
   );
