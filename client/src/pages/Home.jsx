@@ -44,7 +44,7 @@ export default function Home() {
       </div>
 
       {/* Feature Cards */}
-      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 flex space-x-6 opacity-90">
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-6 opacity-90">
         {/* Upload */}
         <div onClick={() => navigate('/upload')}
           className="group cursor-pointer bg-white/80 backdrop-blur-sm rounded-xl p-6 text-green-600 text-center border border-green-100
@@ -73,6 +73,7 @@ export default function Home() {
           <div className="text-3xl mb-3 group-hover:animate-bounce transition-all">👥</div>
           <div className="text-base font-bold group-hover:text-green-700">Post</div>
         </div>
+
       </div>
     </div>
   )
