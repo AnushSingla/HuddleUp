@@ -6,7 +6,20 @@ const Textarea = ({ value, onChange, placeholder, className = '', ...props }) =>
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className={`w-full border border-blue-200 focus:ring-green-300 min-h-[120px] p-3 rounded-lg outline-none focus:border-green-400 ${className}`}
+      className={`
+        w-full min-h-[120px] 
+        px-5 py-4
+        bg-slate-900/80 text-white placeholder-slate-500
+        border border-slate-700 rounded-xl
+        backdrop-blur-sm
+        resize-y
+        focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20
+        focus:bg-slate-900
+        hover:border-slate-600 hover:bg-slate-800/90
+        transition-all duration-300 ease-out
+        disabled:opacity-50 disabled:cursor-not-allowed
+        ${className}
+      `}
       {...props}
     />
   );

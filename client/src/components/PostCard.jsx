@@ -11,7 +11,6 @@ const PostCard = ({ post }) => {
   const [likes, setLikes] = useState(post.likes?.length || 0);
   const [showComments, setShowComments] = useState(false);
 
-
   const postId = post._id;
 
   const handleLike = async () => {
@@ -40,27 +39,44 @@ const PostCard = ({ post }) => {
     return date.toLocaleDateString();
   };
 
+  const getCategoryColor = (category) => {
+    switch (category?.toUpperCase()) {
+      case 'UNHEARD STORIES': return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'MATCH ANALYSIS': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'SPORTS AROUND THE GLOBE': return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
+      default: return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
+    }
+  };
+
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200 border-l-4 border-l-green-500">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2 hover:text-blue-600 cursor-pointer">
+    <Card className="group bg-slate-900 border-slate-800 rounded-xl overflow-hidden hover:-translate-y-1 hover:border-slate-700 transition-all duration-200">
+      <CardHeader className="p-5 pb-3">
+        <div className="flex items-start gap-4">
+          {/* Avatar/Image placeholder */}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+            {post.postedBy?.username?.charAt(0).toUpperCase() || 'A'}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors duration-200">
               {post.title}
             </h3>
-            <div className="flex items-center gap-4 text-sm text-gray-500">
-              <div className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                <span>{post.postedBy?.username || 'Anonymous'}</span>
+            
+            <div className="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5" />
+                <span className="text-slate-400">{post.postedBy?.username || 'Anonymous'}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
+              
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5" />
                 <span>{formatDate(post.createdAt)}</span>
               </div>
+              
               {post.category && (
-                <div className="flex items-center gap-1">
-                  <Tag className="h-4 w-4" />
-                  <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
+                <div className="flex items-center gap-1.5">
+                  <Tag className="h-3.5 w-3.5" />
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getCategoryColor(post.category)}`}>
                     {post.category}
                   </span>
                 </div>
@@ -70,46 +86,44 @@ const PostCard = ({ post }) => {
         </div>
       </CardHeader>
       
-      <CardContent className="pt-0">
+      <CardContent className="p-5 pt-0">
         <div className="mb-4">
-          
-            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{post.content}</p>
-          
+          <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-wrap">
+            {post.content}
+          </p>
         </div>
         
-        <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
+        <div className="flex items-center gap-2 pt-4 border-t border-slate-800">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLike}
-            className={`flex items-center gap-2 transition-colors ${
+            className={`flex items-center gap-2 rounded-lg transition-all duration-200 ${
               isLiked 
-                ? 'text-red-600 hover:text-red-700 hover:bg-red-50' 
-                : 'text-gray-600 hover:text-red-600 hover:bg-red-50'
+                ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' 
+                : 'text-slate-400 hover:text-red-400 hover:bg-red-500/10'
             }`}
           >
             <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-            <span>{likes}</span>
+            <span className="font-medium">{likes}</span>
           </Button>
           
-         <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowComments(!showComments)} // toggle comments
-          className="flex items-center gap-2 text-gray-600 hover:text-white-600 hover:bg-blue-50"
-         >
-        <MessageCircle className="h-4 w-4" />
-        <span>
-            Comments
-        </span>
-        </Button>
-
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowComments(!showComments)}
+            className="flex items-center gap-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all duration-200"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span className="font-medium">Comments</span>
+          </Button>
         </div>
+
         {showComments && (
-       <div className="mt-4 border-t pt-4">
-       <h4 className="text-sm text-gray-600 mb-2 font-medium">Comments</h4>
-       <CommentSection  contentId={post._id} contentType="post"/>
-       </div>
+          <div className="mt-4 pt-4 border-t border-slate-800">
+            <h4 className="text-sm text-slate-400 mb-3 font-medium">Comments</h4>
+            <CommentSection contentId={post._id} contentType="post" />
+          </div>
         )}
       </CardContent>
     </Card>
