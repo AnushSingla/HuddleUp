@@ -44,7 +44,6 @@ export default function Home() {
       </div>
 
       {/* Feature Cards */}
-      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-6 opacity-90">
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-6 opacity-90">
         {/* Upload */}
         <div onClick={() => navigate('/upload')}
@@ -76,7 +75,6 @@ export default function Home() {
         </div>
 
       </div>
-
     </div>
   )
 }
