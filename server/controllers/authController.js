@@ -11,11 +11,14 @@ exports.register = async(req,res)=>{
         await newUser.save();
          console.log("User saved:", newUser);
 
-
          res.status(201).json("User registered");
     }catch(err){
         console.log("Error in register:", err);
-        res.status(500).json(err.message)
+        if (err.code === 11000) {
+            const field = Object.keys(err.keyPattern)[0];
+            return res.status(400).json(`${field.charAt(0).toUpperCase() + field.slice(1)} already exists`);
+        }
+        res.status(500).json(err.message || "Internal Server Error")
     }
 }
 

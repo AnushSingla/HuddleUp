@@ -8,8 +8,12 @@ import { API } from '@/api';
 import { getUserId, getToken } from '@/utils/auth';
 
 const VideoCard = ({ video, onPlay, onDelete }) => {
+  const userId = getUserId();
+  const videoOwnerId = video?.postedBy?._id || video?.postedBy;
+
   const handleDelete = async () => {
     const id = video._id || video.id;
+
     if (!id) {
       toast.error("Video ID not found");
       return;
@@ -54,12 +58,13 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
   };
 
   return (
-    <Card className="group bg-slate-900 border-slate-800 rounded-xl overflow-hidden hover:-translate-y-1 hover:border-slate-700 transition-all duration-200">
+    <Card className="group bg-slate-900 border-slate-800 rounded-xl overflow-hidden hover:-translate-y-1 hover:border-slate-700 transition-all duration-200 relative">
       {/* Delete Button */}
-      {video.postedBy?._id === getUserId() && (
+      {videoOwnerId === userId && (
         <button
           onClick={handleDelete}
           className="absolute top-3 right-3 z-10 p-2 rounded-lg bg-slate-800/80 text-slate-400 hover:text-red-400 hover:bg-red-500/20 transition-all duration-200"
+          title="Delete Video"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -68,7 +73,7 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
       {/* Thumbnail */}
       <div className="relative h-48 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        
+
         <Play className="h-16 w-16 text-white/80 drop-shadow-lg group-hover:scale-110 group-hover:text-white transition-all duration-300" />
 
         {/* Category Badge */}

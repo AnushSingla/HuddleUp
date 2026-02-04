@@ -17,10 +17,11 @@ const AllPosts = () => {
     const fetchPosts = async () => {
       try {
         const res = await API.get('/posts');
-        setPosts(res.data);
-        setFilteredPosts(res.data);
+        const postsData = Array.isArray(res.data) ? res.data : [];
+        setPosts(postsData);
+        setFilteredPosts(postsData);
 
-        const uniqueCategories = ['All', ...new Set(res.data.map(post => post.category).filter(Boolean))];
+        const uniqueCategories = ['All', ...new Set(postsData.map(post => post?.category).filter(Boolean))];
         setCategories(uniqueCategories);
       } catch (err) {
         console.error('Failed to fetch posts:', err);
@@ -34,7 +35,7 @@ const AllPosts = () => {
     let filtered = posts;
 
     if (searchTerm) {
-      filtered = filtered.filter(post => 
+      filtered = filtered.filter(post =>
         post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         post.content.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -98,7 +99,13 @@ const AllPosts = () => {
         <div className="space-y-6">
           {filteredPosts.length > 0 ? (
             filteredPosts.map(post => (
-              <PostCard key={post._id} post={post} />
+              <PostCard
+                key={post._id}
+                post={post}
+                onDelete={(id) => {
+                  setPosts(prev => prev.filter(p => p._id !== id));
+                }}
+              />
             ))
           ) : (
             <div className="text-center py-12">
@@ -107,8 +114,8 @@ const AllPosts = () => {
                 {posts.length === 0 ? 'No posts yet' : 'No posts found'}
               </h3>
               <p className="text-gray-500 mb-6">
-                {posts.length === 0 
-                  ? 'Be the first to start a discussion!' 
+                {posts.length === 0
+                  ? 'Be the first to start a discussion!'
                   : 'Try adjusting your search or filter criteria'}
               </p>
               {posts.length === 0 && (

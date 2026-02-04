@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Send } from 'lucide-react';
 import { API } from '@/api';
 import { getToken } from '@/utils/auth';
+import { toast } from 'sonner';
 
 export default function CommentInput({
   parentId = null,
@@ -17,6 +18,12 @@ export default function CommentInput({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!comment.trim()) return;
+
+    if (!getToken()) {
+      toast.error(parentId ? "Please login to reply" : "Please login to comment");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload = {
