@@ -1,6 +1,7 @@
 // Explore.jsx
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
 import Navbar from '@/components/Navbar';
 import VideoCard from '@/components/VideoCard';
 import CategoryFilter from '@/components/CategoryFilter';
@@ -65,6 +66,7 @@ const Explore = () => {
     setSelectedVideo(null);
   };
 
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-white">
       
@@ -132,10 +134,10 @@ const Explore = () => {
                 : "Try adjusting your search or filter criteria."}
             </p>
             <button
-              onClick={() => window.location.href = '/upload'}
-              className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full transition-all duration-300 hover:shadow-lg transform hover:scale-105"
+              onClick={() => navigate('/upload')}
+              className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-2xl text-lg font-semibold shadow-xl hover:shadow-2xl hover:-translate-y-1 hover:scale-105 transition-all duration-300"
             >
-              Upload Your First Video
+              🚀 Upload Your First Video
             </button>
           </div>
         )}

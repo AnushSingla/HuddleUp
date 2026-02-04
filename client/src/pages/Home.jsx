@@ -45,6 +45,7 @@ export default function Home() {
 
       {/* Feature Cards */}
       <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-6 opacity-90">
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-6 opacity-90">
         {/* Upload */}
         <div onClick={() => navigate('/upload')}
           className="group cursor-pointer bg-white/60 backdrop-blur-sm rounded-lg p-4 text-green-600 text-center border border-green-100
@@ -77,6 +78,7 @@ export default function Home() {
         </div>
 
       </div>
+    </div>
 
     </div>
   )
