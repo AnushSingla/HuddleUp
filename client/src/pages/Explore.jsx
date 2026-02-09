@@ -20,16 +20,16 @@ const Explore = () => {
     const fetchVideos = async () => {
       try {
         const res = await API.get('/videos');
-        const allVideos = res.data;
+        const allVideos = Array.isArray(res.data) ? res.data : [];
 
         setVideos(allVideos);
         setFilteredVideos(allVideos);
 
         const counts = {
           ALL: allVideos.length,
-          'UNHEARD STORIES': allVideos.filter(v => v.category === 'UNHEARD STORIES').length,
-          'MATCH ANALYSIS': allVideos.filter(v => v.category === 'MATCH ANALYSIS').length,
-          'SPORTS AROUND THE GLOBE': allVideos.filter(v => v.category === 'SPORTS AROUND THE GLOBE').length
+          'UNHEARD STORIES': allVideos.filter(v => v?.category === 'UNHEARD STORIES').length,
+          'MATCH ANALYSIS': allVideos.filter(v => v?.category === 'MATCH ANALYSIS').length,
+          'SPORTS AROUND THE GLOBE': allVideos.filter(v => v?.category === 'SPORTS AROUND THE GLOBE').length
         };
         setVideoCounts(counts);
       } catch (error) {
@@ -49,8 +49,8 @@ const Explore = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(video =>
-        video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (video.description && video.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        video?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (video?.description && video?.description?.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -157,9 +157,9 @@ const Explore = () => {
       </div>
 
       {selectedVideo && (
-        <VideoPlayer 
-          video={selectedVideo} 
-          onClose={handleClosePlayer} 
+        <VideoPlayer
+          video={selectedVideo}
+          onClose={handleClosePlayer}
           onDelete={(id) => setVideos(prev => prev.filter(v => v._id !== id))}
         />
       )}
