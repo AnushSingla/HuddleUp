@@ -1,16 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate, NavLink } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { logout, isLoggedIn } from "../utils/auth";
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+import { toast } from "sonner";
 
 export default function Navbar() {
   const location = useLocation();
-  const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const navigate = useNavigate();
+
+  const [loggedIn, setLoggedIn] = useState(isLoggedIn());
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setLoggedIn(isLoggedIn());
+    setOpen(false);
   }, [location]);
 
   const handleLogout = () => {
@@ -20,93 +24,127 @@ export default function Navbar() {
     navigate("/login");
   };
 
+  const links = [
+    { to: "/", label: "Home" },
+    { to: "/upload", label: "Upload" },
+    { to: "/explore", label: "Explore" },
+    { to: "/posts", label: "Discussion" }
+  ];
+
   return (
-    <nav className="sticky top-0 z-50 bg-zinc-950 border-b border-zinc-800">
-      <div className="container mx-auto px-6 py-3">
-        <div className="flex justify-between items-center">
+    <nav className="sticky top-0 z-50 backdrop-blur-xl bg-zinc-950/70 border-b border-white/10">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="h-16 flex items-center justify-between">
 
           {/* Logo */}
-          <div className="flex items-center">
-            <NavLink
-              to="/"
-              className="text-2xl font-bold text-white hover:opacity-90 transition-opacity"
-            >
-              🏆 HuddleUp
-            </NavLink>
-          </div>
+          <NavLink
+            to="/"
+            className="text-xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent"
+          >
+            HuddleUp
+          </NavLink>
 
-          {/* ✅ Navigation Links */}
+          {/* Desktop Links */}
           <div className="hidden md:flex items-center gap-8">
-            {[
-              { to: "/", label: "Home" },
-              { to: "/upload", label: "Upload" },
-              { to: "/explore", label: "Explore" },
-              { to: "/posts", label: "Discussion" }
-            ].map(({ to, label }) => (
+            {links.map(({ to, label }) => (
               <NavLink key={to} to={to}>
                 {({ isActive }) => (
-                  <div
-                    className={`
-                      group relative font-medium text-sm uppercase tracking-wide
-                      transition-colors duration-200
-                      ${isActive ? 'text-white' : 'text-zinc-400 hover:text-white'}
-                    `}
+                  <span
+                    className={`relative text-sm font-medium transition-colors
+                    ${isActive ? "text-white" : "text-zinc-400 hover:text-white"}`}
                   >
                     {label}
-
                     <span
-                      className={`
-                        absolute -bottom-1 left-0 h-0.5 bg-blue-500
-                        transition-all duration-300
-                        ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}
-                      `}
+                      className={`absolute left-0 -bottom-1 h-[2px] bg-gradient-to-r from-blue-500 to-purple-500 transition-all
+                      ${isActive ? "w-full" : "w-0 group-hover:w-full"}`}
                     />
-                  </div>
+                  </span>
                 )}
               </NavLink>
             ))}
           </div>
 
-          {/* Authentication */}
-          <div className="flex items-center gap-3">
+          {/* Auth Buttons (Desktop) */}
+          <div className="hidden md:flex items-center gap-3">
             {loggedIn ? (
               <Button
                 onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 h-10 rounded-xl border-none shadow-md"
-                style={{ backgroundColor: '#dc2626', color: 'white' }}
+                className="rounded-xl px-5 bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20"
               >
                 Logout
               </Button>
             ) : (
-              <div className="flex items-center gap-3">
+              <>
                 <Button
-                  onClick={() => navigate("/login")}
                   variant="ghost"
-                  className="text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg px-5 h-10 text-sm font-medium transition-all duration-200"
+                  onClick={() => navigate("/login")}
+                  className="text-zinc-400 hover:text-white"
                 >
                   Login
                 </Button>
                 <Button
                   onClick={() => navigate("/register")}
-                  className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-5 h-10 text-sm font-medium transition-all duration-200 shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40"
+                  className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg shadow-blue-600/30"
                 >
                   Register
                 </Button>
-              </div>
+              </>
             )}
           </div>
 
-          {/* Mobile button */}
-          <div className="md:hidden">
-            <button className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-200">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-
+          {/* Mobile Toggle */}
+          <button
+            onClick={() => setOpen(!open)}
+            className="md:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition"
+          >
+            {open ? <X /> : <Menu />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {open && (
+        <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl">
+          <div className="px-6 py-4 space-y-4">
+            {links.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className="block text-zinc-300 hover:text-white transition"
+              >
+                {label}
+              </NavLink>
+            ))}
+
+            <div className="pt-4 border-t border-white/10 flex gap-3">
+              {loggedIn ? (
+                <Button
+                  onClick={handleLogout}
+                  className="w-full bg-red-600 hover:bg-red-700"
+                >
+                  Logout
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/login")}
+                    className="w-full border-zinc-700"
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/register")}
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600"
+                  >
+                    Register
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
