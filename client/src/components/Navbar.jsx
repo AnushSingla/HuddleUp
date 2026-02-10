@@ -28,7 +28,8 @@ export default function Navbar() {
     { to: "/", label: "Home" },
     { to: "/upload", label: "Upload" },
     { to: "/explore", label: "Explore" },
-    { to: "/posts", label: "Discussion" }
+    { to: "/posts", label: "Discussion" },
+    { to: "/contact", label: "Contact" }
   ];
 
   return (
