@@ -76,3 +76,40 @@ exports.deletePost = async (req, res) => {
     res.status(500).json({ message: "Error deleting post", error: err.message });
   }
 }
+
+// Update an existing post (only owner can edit)
+exports.updatePost = async (req, res) => {
+  try {
+    const postId = req.params.postId;
+    const userId = req.user.id;
+    const { title, content, category } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized: User not authenticated" });
+    }
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    if (post.postedBy.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Not Allowed To Edit" });
+    }
+
+    if (typeof title === "string") post.title = title;
+    if (typeof content === "string") post.content = content;
+    if (typeof category === "string") post.category = category;
+
+    const updatedPost = await post.save();
+    const populatedPost = await updatedPost.populate("postedBy", "username");
+
+    res.status(200).json({
+      message: "Post updated successfully",
+      post: populatedPost,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error updating post", error: err.message });
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PostCard from './PostCard';
@@ -7,29 +8,34 @@ import { PlusCircle, Search, MessageSquare, Filter } from 'lucide-react';
 import { API } from '@/api';
 
 const AllPosts = () => {
+  const location = useLocation();
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [categories, setCategories] = useState(['All']);
 
+  const fetchPosts = async () => {
+    try {
+      const res = await API.get('/posts');
+      const postsData = Array.isArray(res.data) ? res.data : [];
+      setPosts(postsData);
+      setFilteredPosts(postsData);
+      const uniqueCategories = ['All', ...new Set(postsData.map(post => post?.category).filter(Boolean))];
+      setCategories(uniqueCategories);
+    } catch (err) {
+      console.error('Failed to fetch posts:', err);
+    }
+  };
+
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const res = await API.get('/posts');
-        const postsData = Array.isArray(res.data) ? res.data : [];
-        setPosts(postsData);
-        setFilteredPosts(postsData);
-
-        const uniqueCategories = ['All', ...new Set(postsData.map(post => post?.category).filter(Boolean))];
-        setCategories(uniqueCategories);
-      } catch (err) {
-        console.error('Failed to fetch posts:', err);
-      }
-    };
-
     fetchPosts();
   }, []);
+
+  // Refetch when we navigate back to this page (e.g. after edit) so list shows updated content
+  useEffect(() => {
+    if (location.pathname === '/posts') fetchPosts();
+  }, [location.pathname]);
 
   useEffect(() => {
     let filtered = posts;

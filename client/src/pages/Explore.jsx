@@ -1,14 +1,14 @@
 // Explore.jsx
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
-import { useNavigate } from "react-router-dom";
-import Navbar from '@/components/Navbar';
+import { useNavigate, useLocation } from "react-router-dom";
 import VideoCard from '@/components/VideoCard';
 import CategoryFilter from '@/components/CategoryFilter';
 import VideoPlayer from '@/components/VideoPlayer';
 import { API } from '@/api';
 
 const Explore = () => {
+  const location = useLocation();
   const [videos, setVideos] = useState([]);
   const [filteredVideos, setFilteredVideos] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
@@ -16,29 +16,31 @@ const Explore = () => {
   const [videoCounts, setVideoCounts] = useState({});
   const [selectedVideo, setSelectedVideo] = useState(null);
 
+  const fetchVideos = async () => {
+    try {
+      const res = await API.get('/videos');
+      const allVideos = Array.isArray(res.data) ? res.data : [];
+      setVideos(allVideos);
+      setFilteredVideos(allVideos);
+      const counts = {
+        ALL: allVideos.length,
+        'UNHEARD STORIES': allVideos.filter(v => v?.category === 'UNHEARD STORIES').length,
+        'MATCH ANALYSIS': allVideos.filter(v => v?.category === 'MATCH ANALYSIS').length,
+        'SPORTS AROUND THE GLOBE': allVideos.filter(v => v?.category === 'SPORTS AROUND THE GLOBE').length
+      };
+      setVideoCounts(counts);
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        const res = await API.get('/videos');
-        const allVideos = Array.isArray(res.data) ? res.data : [];
-
-        setVideos(allVideos);
-        setFilteredVideos(allVideos);
-
-        const counts = {
-          ALL: allVideos.length,
-          'UNHEARD STORIES': allVideos.filter(v => v?.category === 'UNHEARD STORIES').length,
-          'MATCH ANALYSIS': allVideos.filter(v => v?.category === 'MATCH ANALYSIS').length,
-          'SPORTS AROUND THE GLOBE': allVideos.filter(v => v?.category === 'SPORTS AROUND THE GLOBE').length
-        };
-        setVideoCounts(counts);
-      } catch (error) {
-        console.error('Error fetching videos:', error);
-      }
-    };
-
     fetchVideos();
   }, []);
+
+  useEffect(() => {
+    if (location.pathname === '/explore') fetchVideos();
+  }, [location.pathname]);
 
   useEffect(() => {
     let filtered = [...videos];
