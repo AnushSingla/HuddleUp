@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { Mail, Phone, MapPin, MessageCircle, Users, AlertCircle, Star, Settings } from "lucide-react";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  MessageCircle,
+  Users,
+  AlertCircle,
+  Star,
+  Settings,
+} from "lucide-react";
 
 const initialState = {
   firstName: "",
@@ -24,6 +33,7 @@ export default function Contact() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+
     if (type === "checkbox") {
       setForm((prev) => ({
         ...prev,
@@ -38,137 +48,256 @@ export default function Contact() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: handle form submission (API or email)
-    alert("Message sent! (Demo)");
+    alert("Message sent! 🚀 (Demo)");
     setForm(initialState);
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-10 max-w-5xl mx-auto py-16 px-4 md:px-0">
-      {/* Form Section */}
+    <div className="flex flex-col md:flex-row gap-12 max-w-6xl mx-auto py-20 px-4">
+      
+      {/* ================= FORM SECTION ================= */}
       <form
-        className="flex-1 bg-gradient-to-br from-zinc-50 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800 rounded-2xl shadow-2xl p-10 space-y-6 border border-zinc-200 dark:border-zinc-700"
         onSubmit={handleSubmit}
+        className="flex-1 backdrop-blur-xl bg-white/70 dark:bg-zinc-900/70 
+        border border-zinc-200 dark:border-zinc-700 
+        rounded-3xl shadow-2xl p-10 space-y-6
+        transition-all duration-500 hover:shadow-blue-500/20"
       >
-        <h2 className="text-4xl font-extrabold mb-2 text-zinc-900 dark:text-white tracking-tight">Contact HuddleUp Team</h2>
-        <p className="mb-6 text-zinc-600 dark:text-zinc-300 text-base">
+        <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight
+  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
+  bg-clip-text text-transparent
+  transition-all duration-500 ease-out
+  hover:scale-105
+  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
+  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
+  cursor-default">
+          Contact HuddleUp Team
+        </h2>
+
+        <p className="text-zinc-600 dark:text-zinc-300">
           Have questions about HuddleUp, need support, or want to give feedback? Our team is here to help you 24/7. Reach out and we’ll get back to you as soon as possible.
         </p>
+
+        {/* INPUT ROW */}
         <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-1">First name</label>
-            <input
-              className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-4 py-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-400 outline-none transition"
-              type="text"
-              name="firstName"
-              placeholder="First name"
-              value={form.firstName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-1">Last name</label>
-            <input
-              className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-4 py-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-400 outline-none transition"
-              type="text"
-              name="lastName"
-              placeholder="Last name"
-              value={form.lastName}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          {["firstName", "lastName"].map((field, i) => (
+            <div key={i} className="flex-1">
+              <label className="text-sm font-medium tracking-tight
+  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
+  bg-clip-text text-transparent
+  transition-all duration-500 ease-out
+  hover:scale-105
+  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
+  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
+  cursor-default">
+                {field === "firstName" ? "First Name" : "Last Name"}
+              </label>
+              <input
+                type="text"
+                name={field}
+                required
+                value={form[field]}
+                onChange={handleChange}
+                placeholder={field === "firstName" ? "John" : "Doe"}
+                className="w-full mt-1 px-4 py-2 rounded-xl 
+                bg-white/80 dark:bg-zinc-800/80 
+                border border-zinc-300 dark:border-zinc-700
+                transition-all duration-300
+                hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/20
+                focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+          ))}
         </div>
+
+        {/* EMAIL + PHONE */}
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-1">Email</label>
+            <label className="text-sm font-medium tracking-tight
+  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
+  bg-clip-text text-transparent
+  transition-all duration-500 ease-out
+  hover:scale-105
+  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
+  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
+  cursor-default">
+              Email
+            </label>
             <input
-              className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-4 py-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-400 outline-none transition"
               type="email"
               name="email"
-              placeholder="you@company.com"
+              required
               value={form.email}
               onChange={handleChange}
-              required
+              placeholder="you@example.com"
+              className="w-full mt-1 px-4 py-2 rounded-xl 
+              bg-white/80 dark:bg-zinc-800/80 
+              border border-zinc-300 dark:border-zinc-700
+              transition-all duration-300
+              hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/20
+              focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
+
           <div className="flex-1">
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-1">Phone number</label>
+            <label className="text-sm font-medium tracking-tight
+  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
+  bg-clip-text text-transparent
+  transition-all duration-500 ease-out
+  hover:scale-105
+  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
+  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
+  cursor-default">
+              Phone
+            </label>
             <input
-              className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-4 py-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-400 outline-none transition"
               type="tel"
               name="phone"
-              placeholder="+1 (555) 000-0000"
               value={form.phone}
               onChange={handleChange}
+              placeholder="+1 000 000 0000"
+              className="w-full mt-1 px-4 py-2 rounded-xl 
+              bg-white/80 dark:bg-zinc-800/80 
+              border border-zinc-300 dark:border-zinc-700
+              transition-all duration-300
+              hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/20
+              focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
         </div>
+
+        {/* MESSAGE */}
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-1">Message</label>
+          <label className="text-sm font-medium tracking-tight
+  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
+  bg-clip-text text-transparent
+  transition-all duration-500 ease-out
+  hover:scale-105
+  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
+  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
+  cursor-default">
+            Message
+          </label>
           <textarea
-            className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-4 py-2 min-h-[100px] bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-400 outline-none transition"
             name="message"
-            placeholder="Leave us a message..."
+            required
             value={form.message}
             onChange={handleChange}
-            required
+            placeholder="Write your message..."
+            className="w-full mt-1 px-4 py-3 min-h-[120px] rounded-xl 
+            bg-white/80 dark:bg-zinc-800/80 
+            border border-zinc-300 dark:border-zinc-700
+            transition-all duration-300
+            hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/20
+            focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
+
+        {/* SERVICES */}
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-2">What can we help you with?</label>
+          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-3 block">
+            What can we help you with?
+          </label>
+
           <div className="grid grid-cols-2 gap-3">
             {servicesList.map((service) => (
-              <label key={service} className="flex items-center gap-2 text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 rounded-lg px-3 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-zinc-700 transition border border-transparent hover:border-blue-400">
+              <label
+                key={service}
+                className="group flex items-center gap-2 
+                bg-zinc-100/80 dark:bg-zinc-800/80 
+                px-3 py-2 rounded-xl cursor-pointer
+                transition-all duration-300
+                hover:-translate-y-1 hover:shadow-lg
+                hover:shadow-blue-500/20 hover:border-blue-500
+                border border-transparent"
+              >
                 <input
                   type="checkbox"
                   name="services"
                   value={service}
                   checked={form.services.includes(service)}
                   onChange={handleChange}
-                  className="accent-blue-500 w-4 h-4"
+                  className="accent-blue-500"
                 />
-                {service === "Technical support" && <Settings className="w-4 h-4 text-blue-400" />}
-                {service === "Account & login help" && <Users className="w-4 h-4 text-blue-400" />}
-                {service === "Community guidelines" && <Star className="w-4 h-4 text-blue-400" />}
-                {service === "Report a bug" && <AlertCircle className="w-4 h-4 text-blue-400" />}
-                {service === "Feature request" && <MessageCircle className="w-4 h-4 text-blue-400" />}
-                {service === "General feedback" && <Mail className="w-4 h-4 text-blue-400" />}
-                <span>{service}</span>
+
+                {service === "Technical support" && (
+                  <Settings className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
+                )}
+                {service === "Account & login help" && (
+                  <Users className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
+                )}
+                {service === "Community guidelines" && (
+                  <Star className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
+                )}
+                {service === "Report a bug" && (
+                  <AlertCircle className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
+                )}
+                {service === "Feature request" && (
+                  <MessageCircle className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
+                )}
+                {service === "General feedback" && (
+                  <Mail className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
+                )}
+
+                <span className="text-sm">{service}</span>
               </label>
             ))}
           </div>
         </div>
+
+        {/* SUBMIT BUTTON */}
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold text-lg shadow-lg hover:from-blue-700 hover:to-purple-700 transition"
+          className="w-full py-3 rounded-2xl text-lg font-semibold text-white
+          bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
+          transition-all duration-300
+          hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/40
+          hover:from-purple-600 hover:to-blue-600
+          active:scale-95"
         >
-          Send message
+          Send Message 🚀
         </button>
       </form>
 
-      {/* Contact Info Section */}
-      <div className="flex-1 space-y-8 text-zinc-100">
-        <div className="bg-gradient-to-br from-blue-900/60 to-zinc-900/80 rounded-2xl shadow-xl p-8 border border-zinc-800">
-          <h3 className="font-semibold text-xl mb-4 flex items-center gap-2"><MessageCircle className="w-5 h-5 text-blue-400" /> Chat with us</h3>
-          <ul className="space-y-2">
-            <li><a href="#" className="flex items-center gap-2 underline text-blue-400 hover:text-blue-300"><MessageCircle className="w-4 h-4" /> Start a live chat</a></li>
-            <li><a href="mailto:support@huddleup.com" className="flex items-center gap-2 underline text-blue-400 hover:text-blue-300"><Mail className="w-4 h-4" /> Shoot us an email</a></li>
-            <li><a href="https://x.com/huddleup" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 underline text-blue-400 hover:text-blue-300"><Users className="w-4 h-4" /> Message us on X</a></li>
-          </ul>
+      {/* ================= CONTACT INFO ================= */}
+      <div className="flex-1 space-y-8">
+
+        {/* CHAT CARD */}
+        <div className="group p-8 rounded-3xl bg-gradient-to-br from-blue-900/60 to-zinc-900/80 
+        border border-zinc-800 shadow-xl
+        transition-all duration-300 hover:-translate-y-2 hover:shadow-blue-500/30">
+
+          <h3 className="flex items-center gap-2 text-xl font-semibold text-white">
+            <MessageCircle className="w-5 h-5 text-blue-400 group-hover:scale-110 transition" />
+            Chat with us
+          </h3>
+
+          <div className="mt-4 space-y-2 text-blue-300">
+            <a href="#" className="block hover:text-fuchsia-400 transition">
+              Start live chat
+            </a>
+            <a href="mailto:support@huddleup.com" className="block hover:text-fuchsia-400 transition">
+              support@huddleup.com
+            </a>
+          </div>
         </div>
-        <div className="bg-gradient-to-br from-purple-900/60 to-zinc-900/80 rounded-2xl shadow-xl p-8 border border-zinc-800">
-          <h3 className="font-semibold text-xl mb-4 flex items-center gap-2"><Phone className="w-5 h-5 text-purple-400" /> Call us</h3>
-          <p className="mb-2 text-zinc-400">Call our team Mon-Fri from 8am to 5pm.</p>
-          <a href="tel:+18001234567" className="flex items-center gap-2 text-purple-300 underline font-medium hover:text-purple-200"><Phone className="w-4 h-4" /> +1 (800) 123-4567</a>
-        </div>
-        <div className="bg-gradient-to-br from-blue-800/60 to-zinc-900/80 rounded-2xl shadow-xl p-8 border border-zinc-800">
-          <h3 className="font-semibold text-xl mb-4 flex items-center gap-2"><MapPin className="w-5 h-5 text-blue-300" /> Visit us</h3>
-          <a href="https://maps.google.com/?q=HuddleUp+HQ,+Dhaka,+Bangladesh" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-300 underline hover:text-blue-200">
-            <MapPin className="w-4 h-4" /> HuddleUp
+
+        {/* CALL CARD */}
+        <div className="group p-8 rounded-3xl bg-gradient-to-br from-purple-900/60 to-zinc-900/80 
+        border border-zinc-800 shadow-xl
+        transition-all duration-300 hover:-translate-y-2 hover:shadow-purple-500/30">
+
+          <h3 className="flex items-center gap-2 text-xl font-semibold text-white">
+            <Phone className="w-5 h-5 text-purple-400 group-hover:scale-110 transition" />
+            Call us
+          </h3>
+
+          <p className="text-zinc-400 mt-3">Call our team Mon-Fri from 8am to 5pm</p>
+          <a href="tel:+18001234567" className="text-purple-300 hover:text-fuchsia-400 transition">
+            +1 (800) 123-4567
           </a>
         </div>
+
       </div>
     </div>
   );
