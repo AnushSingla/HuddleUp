@@ -63,47 +63,79 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
     }
   };
 
-  return (
-    <Card className="group bg-slate-900 border-slate-800 rounded-xl overflow-hidden hover:-translate-y-1 hover:border-slate-700 transition-all duration-200 relative">
-      {/* Edit & Delete - only for video owner */}
+
+    return (
+  <div className="group relative rounded-3xl overflow-hidden transition-all duration-500">
+
+    {/* ===== Gradient Border Glow Effect ===== */}
+    <div className="absolute -inset-[1px] rounded-3xl bg-gradient-to-r 
+    from-emerald-500/0 via-indigo-500/0 to-emerald-500/0 
+    group-hover:from-emerald-500/40 group-hover:via-indigo-500/40 group-hover:to-emerald-500/40 
+    blur-md opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+
+    <Card className="relative bg-slate-900/90 backdrop-blur-xl border border-slate-800 
+    rounded-3xl overflow-hidden shadow-lg 
+    transition-all duration-500
+    group-hover:-translate-y-3 group-hover:shadow-2xl">
+
+      {/* ===== OWNER ACTIONS ===== */}
       {videoOwnerId === userId && (
-        <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
+        <div className="absolute top-4 right-4 z-20 flex gap-2">
           <button
             onClick={handleEdit}
-            className="p-2 rounded-lg bg-slate-800/80 text-slate-400 hover:text-blue-400 hover:bg-blue-500/20 transition-all duration-200"
-            title="Edit Video"
+            className="p-2 rounded-xl bg-slate-800/80 backdrop-blur-md 
+            text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/20 
+            transition-all duration-300"
           >
             <Pencil className="w-4 h-4" />
           </button>
+
           <button
             onClick={handleDelete}
-            className="p-2 rounded-lg bg-slate-800/80 text-slate-400 hover:text-red-400 hover:bg-red-500/20 transition-all duration-200"
-            title="Delete Video"
+            className="p-2 rounded-xl bg-slate-800/80 backdrop-blur-md 
+            text-slate-400 hover:text-red-400 hover:bg-red-500/20 
+            transition-all duration-300"
           >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Thumbnail */}
-      <div className="relative h-48 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+      {/* ===== THUMBNAIL ===== */}
+      <div className="relative h-52 overflow-hidden">
 
-        <Play className="h-16 w-16 text-white/80 drop-shadow-lg group-hover:scale-110 group-hover:text-white transition-all duration-300" />
+        {/* Background Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950"></div>
 
-        {/* Category Badge */}
-        <div className="absolute top-3 left-3">
-          <Badge className={`${getCategoryColor(video.category)} border text-xs font-medium backdrop-blur-sm`}>
-            {getCategoryIcon(video.category)} {video.category?.trim()}
-          </Badge>
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-500"></div>
+
+        {/* Play Icon */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md 
+          flex items-center justify-center 
+          transition-all duration-500
+          group-hover:scale-110 group-hover:bg-white/20">
+            <Play className="w-8 h-8 text-white" />
+          </div>
         </div>
 
-        {/* Preview Overlay */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
+        {/* Category Badge */}
+        <div className="absolute top-4 left-4">
+          <span className="px-3 py-1 text-xs font-semibold rounded-full 
+          bg-white/10 backdrop-blur-md border border-white/20 text-white">
+            {getCategoryIcon(video.category)} {video.category}
+          </span>
+        </div>
+
+        {/* Preview Button */}
+        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500">
           <Button
             size="sm"
-            className="opacity-0 group-hover:opacity-100 transition-all duration-300 bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 rounded-lg"
             onClick={() => onPlay(video)}
+            className="bg-gradient-to-r from-emerald-500 to-indigo-500 
+            text-white rounded-xl shadow-md hover:shadow-xl 
+            transition-all duration-300"
           >
             <Eye className="mr-2 h-4 w-4" />
             Preview
@@ -111,43 +143,53 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
         </div>
       </div>
 
-      <CardContent className="p-5">
-        {/* Title */}
-        <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors duration-200">
+      {/* ===== CONTENT ===== */}
+      <CardContent className="p-6">
+
+        <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2 
+        group-hover:text-emerald-400 transition-colors duration-300">
           {video.title}
         </h3>
 
-        {/* Description */}
         {video.description && (
-          <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+          <p className="text-slate-400 text-sm mb-5 line-clamp-2">
             {video.description}
           </p>
         )}
 
-        {/* Meta Info */}
         <div className="flex items-center justify-between text-xs text-slate-500">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <Calendar className="h-3.5 w-3.5" />
-            <span>{formatDate(video.createdAt)}</span>
+            {formatDate(video.createdAt)}
           </div>
-          <div className="flex items-center gap-1.5">
+
+          <div className="flex items-center gap-2">
             <User className="h-3.5 w-3.5" />
-            <span>{video.postedBy?.username || 'Unknown'}</span>
+            {video.postedBy?.username || "Unknown"}
           </div>
         </div>
       </CardContent>
 
-      <CardFooter className="p-5 pt-0">
+      {/* ===== FOOTER BUTTON ===== */}
+      <CardFooter className="px-6 pb-6 pt-0">
         <Button
           onClick={() => onPlay(video)}
-          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/25"
+          className="w-full rounded-2xl bg-gradient-to-r 
+          from-emerald-500 to-indigo-500 
+          text-white font-semibold 
+          transition-all duration-300
+          hover:scale-[1.02] hover:shadow-xl"
         >
           <Play className="mr-2 h-4 w-4" />
           Watch Now
         </Button>
       </CardFooter>
+
     </Card>
-  );
+  </div>
+);
+
+
 };
 
 export default VideoCard;
