@@ -69,31 +69,31 @@ const PostCard = ({ post, onDelete }) => {
 
   const getCategoryColor = (category) => {
     switch (category?.toUpperCase()) {
-      case 'UNHEARD STORIES': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'MATCH ANALYSIS': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'SPORTS AROUND THE GLOBE': return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
-      default: return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
+      case 'UNHEARD STORIES': return 'bg-green-100 text-green-700 border-green-300';
+      case 'MATCH ANALYSIS': return 'bg-blue-100 text-blue-700 border-blue-300';
+      case 'SPORTS AROUND THE GLOBE': return 'bg-cyan-100 text-cyan-700 border-cyan-300';
+      default: return 'bg-gray-100 text-gray-600 border-gray-300';
     }
   };
 
   return (
-    <Card className="group bg-slate-900 border-slate-800 rounded-xl overflow-hidden hover:-translate-y-1 hover:border-slate-700 transition-all duration-200">
+    <Card className="group bg-white border-gray-200 rounded-xl overflow-hidden hover:-translate-y-1 hover:border-green-300 hover:shadow-md transition-all duration-200">
       <CardHeader className="p-5 pb-3 relative">
         <div className="flex items-start gap-4">
           {/* Avatar/Image placeholder */}
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
             {post.postedBy?.username?.charAt(0).toUpperCase() || 'A'}
           </div>
 
           <div className="flex-1 min-w-0 pr-8">
-            <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors duration-200">
+            <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-green-600 transition-colors duration-200">
               {post.title}
             </h3>
 
-            <div className="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
+            <div className="flex items-center gap-4 text-xs text-gray-400 flex-wrap">
               <div className="flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5" />
-                <span className="text-slate-400">{post.postedBy?.username || 'Anonymous'}</span>
+                <span className="text-gray-600">{post.postedBy?.username || 'Anonymous'}</span>
               </div>
 
               <div className="flex items-center gap-1.5">
@@ -114,41 +114,43 @@ const PostCard = ({ post, onDelete }) => {
 
           {/* Edit & Delete - only for post owner */}
           {userId === postOwnerId && (
+
             <div className="absolute top-4 right-4 flex items-center gap-1">
               <button
                 onClick={handleEdit}
-                className="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-full transition-all duration-200"
+                className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-all duration-200"
                 title="Edit Post"
               >
                 <Pencil className="h-4 w-4" />
               </button>
               <button
                 onClick={handleDelete}
-                className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-all duration-200"
+                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200"
                 title="Delete Post"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
+
           )}
         </div>
       </CardHeader>
 
       <CardContent className="p-5 pt-0">
         <div className="mb-4">
-          <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
             {post.content}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 pt-4 border-t border-slate-800">
+        <div className="flex items-center gap-2 pt-4 border-t border-gray-200">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLike}
             className={`flex items-center gap-2 rounded-lg transition-all duration-200 ${isLiked
-                ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
-                : 'text-slate-400 hover:text-red-400 hover:bg-red-500/10'
+                ? 'text-red-500 hover:text-red-400 hover:bg-red-50'
+                : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
               }`}
           >
             <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
@@ -159,7 +161,7 @@ const PostCard = ({ post, onDelete }) => {
             variant="ghost"
             size="sm"
             onClick={() => setShowComments(!showComments)}
-            className="flex items-center gap-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all duration-200"
+            className="flex items-center gap-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
           >
             <MessageCircle className="h-4 w-4" />
             <span className="font-medium">Comments</span>
@@ -167,8 +169,8 @@ const PostCard = ({ post, onDelete }) => {
         </div>
 
         {showComments && (
-          <div className="mt-4 pt-4 border-t border-slate-800">
-            <h4 className="text-sm text-slate-400 mb-3 font-medium">Comments</h4>
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <h4 className="text-sm text-gray-500 mb-3 font-medium">Comments</h4>
             <CommentSection contentId={post._id} contentType="post" />
           </div>
         )}
