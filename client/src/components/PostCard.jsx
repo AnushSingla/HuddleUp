@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, Calendar, Tag, User, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, MessageCircle, Calendar, Tag, User, Trash2, Pencil } from 'lucide-react';
 import CommentSection from './CommentSection';
 import { API } from '@/api';
 import { getToken, getUserId } from '@/utils/auth';
 import { toast } from 'sonner';
 
 const PostCard = ({ post, onDelete }) => {
+  const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [likes, setLikes] = useState(post.likes?.length || 0);
   const [showComments, setShowComments] = useState(false);
@@ -15,6 +17,10 @@ const PostCard = ({ post, onDelete }) => {
   const postId = post._id;
   const userId = getUserId();
   const postOwnerId = post.postedBy?._id || post.postedBy;
+
+  const handleEdit = () => {
+    navigate('/create-post', { state: { editPost: post } });
+  };
 
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
@@ -106,15 +112,24 @@ const PostCard = ({ post, onDelete }) => {
             </div>
           </div>
 
-          {/* Delete Button - Fixed Positioning */}
+          {/* Edit & Delete - only for post owner */}
           {userId === postOwnerId && (
-            <button
-              onClick={handleDelete}
-              className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-all duration-200"
-              title="Delete Post"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            <div className="absolute top-4 right-4 flex items-center gap-1">
+              <button
+                onClick={handleEdit}
+                className="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-full transition-all duration-200"
+                title="Edit Post"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleDelete}
+                className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-all duration-200"
+                title="Delete Post"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           )}
         </div>
       </CardHeader>

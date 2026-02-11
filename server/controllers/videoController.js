@@ -73,3 +73,41 @@ exports.deleteVideo = async (req, res) => {
     res.status(500).json({ message: "Error deleting video", error: err.message });
   }
 };
+
+// Update an existing video (only owner can edit metadata)
+exports.updateVideo = async (req, res) => {
+  try {
+    const videoId = req.params.id;
+    const userId = req.user.id;
+    const { title, description, category } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized: User not authenticated" });
+    }
+
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    if (!video.postedBy || video.postedBy.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Not Allowed To Edit" });
+    }
+
+    if (typeof title === "string") video.title = title;
+    if (typeof description === "string") video.description = description;
+    if (typeof category === "string") video.category = category;
+
+    const updatedVideo = await video.save();
+    const populatedVideo = await updatedVideo.populate("postedBy", "username _id");
+
+    res.status(200).json({
+      message: "Video updated successfully",
+      video: populatedVideo,
+    });
+  } catch (err) {
+    console.error('❌ updateVideo error:', err);
+    res.status(500).json({ message: "Error updating video", error: err.message });
+  }
+};

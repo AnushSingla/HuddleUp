@@ -3,13 +3,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import Badge from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Play, Calendar, User, Eye, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Play, Calendar, User, Eye, Trash2, Pencil } from 'lucide-react';
 import { API } from '@/api';
 import { getUserId, getToken } from '@/utils/auth';
 
 const VideoCard = ({ video, onPlay, onDelete }) => {
+  const navigate = useNavigate();
   const userId = getUserId();
   const videoOwnerId = video?.postedBy?._id || video?.postedBy;
+
+  const handleEdit = () => {
+    navigate('/edit-video', { state: { video } });
+  };
 
   const handleDelete = async () => {
     const id = video._id || video.id;
@@ -59,15 +65,24 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
 
   return (
     <Card className="group bg-slate-900 border-slate-800 rounded-xl overflow-hidden hover:-translate-y-1 hover:border-slate-700 transition-all duration-200 relative">
-      {/* Delete Button */}
+      {/* Edit & Delete - only for video owner */}
       {videoOwnerId === userId && (
-        <button
-          onClick={handleDelete}
-          className="absolute top-3 right-3 z-10 p-2 rounded-lg bg-slate-800/80 text-slate-400 hover:text-red-400 hover:bg-red-500/20 transition-all duration-200"
-          title="Delete Video"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
+          <button
+            onClick={handleEdit}
+            className="p-2 rounded-lg bg-slate-800/80 text-slate-400 hover:text-blue-400 hover:bg-blue-500/20 transition-all duration-200"
+            title="Edit Video"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleDelete}
+            className="p-2 rounded-lg bg-slate-800/80 text-slate-400 hover:text-red-400 hover:bg-red-500/20 transition-all duration-200"
+            title="Delete Video"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       )}
 
       {/* Thumbnail */}

@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Upload from './pages/Upload';
 import Explore from './pages/Explore';
+import EditVideo from './pages/EditVideo';
 import Friends from './pages/Friends';
 
 // Components
@@ -42,6 +43,7 @@ function AppContent() {
             <Route path="/" element={<Home />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/explore" element={<Explore />} />
+            <Route path="/edit-video" element={<EditVideo />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/posts" element={<AllPosts />} />
             <Route path="/create-post" element={<CreatePost />} />
