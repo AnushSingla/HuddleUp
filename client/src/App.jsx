@@ -10,6 +10,7 @@ import Upload from './pages/Upload';
 import Explore from './pages/Explore';
 import EditVideo from './pages/EditVideo';
 import Friends from './pages/Friends';
+import Contact from './pages/Contact';
 
 // Components
 import Navbar from './components/Navbar';
@@ -47,6 +48,7 @@ function AppContent() {
             <Route path="/friends" element={<Friends />} />
             <Route path="/posts" element={<AllPosts />} />
             <Route path="/create-post" element={<CreatePost />} />
+            <Route path="/contact" element={<Contact />} />
           </Routes>
         </div>
       </main>
