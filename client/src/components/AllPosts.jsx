@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PostCard from './PostCard';
@@ -9,6 +9,7 @@ import { API } from '@/api';
 
 const AllPosts = () => {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,6 +37,16 @@ const AllPosts = () => {
   useEffect(() => {
     if (location.pathname === '/posts') fetchPosts();
   }, [location.pathname]);
+
+  // Scroll to post when opening a shared link (e.g. /posts?post=id)
+  const highlightPostId = searchParams.get('post');
+  useEffect(() => {
+    if (!highlightPostId || posts.length === 0) return;
+    const el = document.getElementById(`post-${highlightPostId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [highlightPostId, posts]);
 
   useEffect(() => {
     let filtered = posts;
@@ -105,13 +116,14 @@ const AllPosts = () => {
         <div className="space-y-6">
           {filteredPosts.length > 0 ? (
             filteredPosts.map(post => (
-              <PostCard
-                key={post._id}
-                post={post}
-                onDelete={(id) => {
-                  setPosts(prev => prev.filter(p => p._id !== id));
-                }}
-              />
+              <div key={post._id} id={`post-${post._id}`}>
+                <PostCard
+                  post={post}
+                  onDelete={(id) => {
+                    setPosts(prev => prev.filter(p => p._id !== id));
+                  }}
+                />
+              </div>
             ))
           ) : (
             <div className="text-center py-12">

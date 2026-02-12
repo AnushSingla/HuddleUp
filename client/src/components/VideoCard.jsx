@@ -4,9 +4,10 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import Badge from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Play, Calendar, User, Eye, Trash2, Pencil } from 'lucide-react';
+import { Play, Calendar, User, Eye, Trash2, Pencil, Share2 } from 'lucide-react';
 import { API } from '@/api';
 import { getUserId, getToken } from '@/utils/auth';
+import { getShareUrl, shareLink } from '@/utils/share';
 
 const VideoCard = ({ video, onPlay, onDelete }) => {
   const navigate = useNavigate();
@@ -15,6 +16,19 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
 
   const handleEdit = () => {
     navigate('/edit-video', { state: { video } });
+  };
+
+  const videoId = video._id || video.id;
+  const handleShare = async () => {
+    if (!videoId) return;
+    const url = getShareUrl('video', videoId);
+    await shareLink(
+      url,
+      video.title || 'Video on HuddleUp',
+      video.description?.slice(0, 100) || '',
+      (msg) => toast.success(msg),
+      (msg) => toast.error(msg)
+    );
   };
 
   const handleDelete = async () => {
@@ -170,11 +184,11 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
         </div>
       </CardContent>
 
-      {/* ===== FOOTER BUTTON ===== */}
-      <CardFooter className="px-6 pb-6 pt-0">
+      {/* ===== FOOTER BUTTONS ===== */}
+      <CardFooter className="px-6 pb-6 pt-0 flex items-center gap-3">
         <Button
           onClick={() => onPlay(video)}
-          className="w-full rounded-2xl bg-gradient-to-r 
+          className="flex-1 rounded-2xl bg-gradient-to-r 
           from-emerald-500 to-indigo-500 
           text-white font-semibold 
           transition-all duration-300
@@ -182,6 +196,15 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
         >
           <Play className="mr-2 h-4 w-4" />
           Watch Now
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleShare}
+          className="shrink-0 border-slate-700 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10 rounded-lg"
+          title="Share video"
+        >
+          <Share2 className="h-4 w-4" />
         </Button>
       </CardFooter>
 
