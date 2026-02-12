@@ -195,48 +195,73 @@ const Explore = () => {
           </div>
         </div>
 
-        {/* Here would be the video grid and the empty state (not shown in snippet) */}
-        {/* Existing layout for videos / empty state stays as in updated main branch */}
+        {/* ================= VIDEO GRID / EMPTY STATE ================= */}
+        {filteredVideos.length > 0 ? (
+          <div className="mt-16">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {filteredVideos.map((video) => (
+                <VideoCard
+                  key={video._id}
+                  video={{
+                    ...video,
+                    id: video._id,
+                    videoUrl: video.videoUrl?.startsWith("/uploads")
+                      ? `http://localhost:5000${video.videoUrl}`
+                      : video.videoUrl,
+                  }}
+                  onPlay={handleVideoPlay}
+                  onDelete={(id) =>
+                    setVideos((prev) => prev.filter((v) => v._id !== id))
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="relative flex flex-col items-center justify-center py-32 text-center overflow-hidden">
+            {/* ===== Background Glow ===== */}
+            <div className="absolute -top-32 w-[500px] h-[500px] bg-emerald-400/20 rounded-full blur-[120px]" />
+            <div className="absolute -bottom-32 w-[500px] h-[500px] bg-indigo-400/20 rounded-full blur-[120px]" />
 
-        <div className="relative flex flex-col items-center justify-center py-32 text-center overflow-hidden">
-          {/* ===== Background Glow ===== */}
-          <div className="absolute -top-32 w-[500px] h-[500px] bg-emerald-400/20 rounded-full blur-[120px]" />
-          <div className="absolute -bottom-32 w-[500px] h-[500px] bg-indigo-400/20 rounded-full blur-[120px]" />
-
-          {/* ===== Floating Icon Card ===== */}
-          <div className="relative mb-10 group">
-            <div
-              className="w-32 h-32 rounded-3xl bg-gradient-to-br from-emerald-500 to-indigo-500 
+            {/* ===== Floating Icon Card ===== */}
+            <div className="relative mb-10 group">
+              <div
+                className="w-32 h-32 rounded-3xl bg-gradient-to-br from-emerald-500 to-indigo-500 
     flex items-center justify-center shadow-2xl
     transition-all duration-500
     group-hover:scale-110 group-hover:rotate-3"
-            >
-              <div className="text-white text-5xl">🏏</div>
+              >
+                <div className="text-white text-5xl">🏏</div>
+              </div>
             </div>
-          </div>
 
-          {/* ===== Title ===== */}
-          <h2 className="text-4xl font-bold text-slate-800 mb-5 tracking-tight">
-            No Videos Found
-          </h2>
+            {/* ===== Title ===== */}
+            <h2 className="text-4xl font-bold text-slate-800 mb-5 tracking-tight">
+              No Videos Found
+            </h2>
 
-          {/* ===== Subtitle ===== */}
-          <p className="text-slate-600 text-lg max-w-md mb-12 leading-relaxed">
-            Be the first to upload an exciting sports video and inspire the
-            community.
-          </p>
+            {/* ===== Subtitle ===== */}
+            <p className="text-slate-600 text-lg max-w-md mb-12 leading-relaxed">
+              Be the first to upload an exciting sports video and inspire the
+              community.
+            </p>
 
-          {/* ===== CTA Button ===== */}
-          <button
-            onClick={() => navigate("/upload")}
-            className="relative px-10 py-4 rounded-2xl font-semibold text-white
+            {/* ===== CTA Button ===== */}
+            <button
+              onClick={() => navigate("/upload")}
+              className="relative px-10 py-4 rounded-2xl font-semibold text-white
     bg-gradient-to-r from-emerald-500 to-indigo-500
     shadow-lg transition-all duration-300
     hover:scale-105 hover:-translate-y-1 hover:shadow-2xl"
-          >
-            🚀 Upload Your First Video
-          </button>
-        </div>
+            >
+              🚀 Upload Your First Video
+            </button>
+          </div>
+        )}
+
+        {selectedVideo && (
+          <VideoPlayer video={selectedVideo} onClose={handleClosePlayer} />
+        )}
       </div>
     </div>
 
