@@ -1,243 +1,243 @@
-import React, { useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import Textarea from '@/components/ui/textarea';
+import React, { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import Textarea from "@/components/ui/textarea";
+import { useNavigate } from "react-router-dom";
+import { UploadCloud, FileVideo, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
+import { API } from "../api";
 
-import { useNavigate } from 'react-router-dom';
-import { Upload as UploadIcon, Video, FileVideo } from 'lucide-react';
-import { toast } from 'sonner';
-import { API } from '../api';
+const MAX_FILE_SIZE_MB = 100;
 
 const Upload = () => {
   const fileInputRef = useRef(null);
-
   const navigate = useNavigate();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
   const [videoFile, setVideoFile] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [previewURL, setPreviewURL] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [fileError, setFileError] = useState("");
 
   const handleFileSelect = (file) => {
-    if (file && file.type.startsWith('video/')) {
-      setVideoFile(file);
+    if (!file || !file.type.startsWith("video/")) {
+      setFileError("Please select a valid video file.");
+      return;
     }
-  };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
+    const sizeMB = file.size / (1024 * 1024);
 
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
+    if (sizeMB > MAX_FILE_SIZE_MB) {
+      setFileError(`File exceeds ${MAX_FILE_SIZE_MB}MB limit.`);
+      return;
+    }
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    handleFileSelect(file);
+    setFileError("");
+    setVideoFile(file);
+    setPreviewURL(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!videoFile || !title || !category) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields and select a video file",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast.error("Please login first");
-      navigate('/login');
+      toast.error("Please complete all required fields");
       return;
     }
 
     const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    formData.append('category', category);
-    formData.append('video', videoFile);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("category", category);
+    formData.append("video", videoFile);
 
     try {
-      await API.post('/video/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      setIsUploading(true);
+
+      await API.post("/video/upload", formData, {
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setUploadProgress(percent);
         },
       });
 
-      toast.success("Video Uploaded Successfully");
-      navigate('/explore');
+      toast.success("Video Uploaded Successfully 🚀");
+      navigate("/explore");
     } catch (err) {
-      toast.error(err.response?.data?.message || '❌ Upload failed');
+      toast.error("Upload failed");
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-white">
-      <div className="max-w-4xl mx-auto px-4 py-12 lg:py-20">
-        {/* Enhanced Header */}
-        <div className="text-center mb-12 lg:mb-16 group">
-          <div className="inline-block p-4 bg-white/60 backdrop-blur-sm rounded-2xl shadow-xl mb-6 group-hover:scale-105 transition-all duration-500">
-            <h1 className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 leading-tight">
-              🎬 Share Your Story
-            </h1>
+    <div className="min-h-screen bg-gray-900 text-gray-200 flex items-center justify-center px-6 py-16">
+      <div className="w-full max-w-5xl bg-gray-800 shadow-2xl rounded-2xl border border-gray-700 p-10">
+
+        {/* HEADER */}
+        {/* HEADER */}
+<div className="mb-12 text-center group">
+  <div className="inline-block relative">
+    
+    <h1 className="
+      text-4xl md:text-5xl font-extrabold 
+      bg-gradient-to-r from-emerald-400 via-blue-500 to-indigo-500
+      bg-[length:200%_200%] bg-clip-text text-transparent
+      transition-all duration-700
+      group-hover:animate-gradient
+      group-hover:scale-105
+    ">
+      Share Your Game Story
+    </h1>
+
+    {/* Glow Effect */}
+    <div className="
+      absolute inset-0 blur-2xl opacity-0 
+      group-hover:opacity-40
+      transition duration-700
+      bg-gradient-to-r from-emerald-400 via-blue-500 to-indigo-500
+    "></div>
+
+  </div>
+
+  <p className="text-gray-400 mt-4 text-lg transition duration-500 group-hover:text-gray-200">
+    Upload match analysis, unheard stories, or global sports moments.
+  </p>
+</div>
+
+
+        <form onSubmit={handleSubmit} className="space-y-8">
+
+          {/* UPLOAD AREA */}
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-gray-600 rounded-xl p-10 text-center cursor-pointer hover:border-blue-500 transition"
+          >
+            {previewURL ? (
+              <>
+                <video
+                  src={previewURL}
+                  controls
+                  className="w-full max-h-64 rounded-lg mb-4"
+                />
+                <p className="text-sm text-gray-400">
+                  {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
+                </p>
+              </>
+            ) : (
+              <>
+                <UploadCloud className="mx-auto h-12 w-12 text-gray-500 mb-3" />
+                <p className="text-gray-300 font-medium">
+                  Drag & drop or click to upload
+                </p>
+                <p className="text-gray-500 text-sm">
+                  Max file size: {MAX_FILE_SIZE_MB}MB
+                </p>
+              </>
+            )}
+
+            <input
+              type="file"
+              accept="video/*"
+              ref={fileInputRef}
+              onChange={(e) => handleFileSelect(e.target.files[0])}
+              className="hidden"
+            />
           </div>
-          <p className="text-xl lg:text-2xl text-blue-700 font-light max-w-3xl mx-auto leading-relaxed backdrop-blur-sm">
-            Upload your videos – unheard stories, match analysis, or sports around the globe
-          </p>
-        </div>
 
-        {/* Enhanced Form Container */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-green-100/50 p-8 lg:p-12 hover:shadow-3xl transition-all duration-500">
-          <form onSubmit={handleSubmit} className="space-y-8">
-
-            {/* Enhanced Upload Area */}
-            <div className="group">
-              <label className="block text-green-700 font-bold text-lg mb-6 tracking-wide">
-                📹 Upload Video <span className="text-blue-600 text-sm font-normal">*</span>
-              </label>
-              <div
-                className={`group relative border-4 border-dashed rounded-3xl p-12 lg:p-16 text-center transition-all duration-500 cursor-pointer hover:shadow-2xl hover:-translate-y-2 ${isDragging
-                    ? 'border-green-400 bg-gradient-to-br from-green-50/90 to-blue-50/90 shadow-2xl ring-4 ring-green-200/50'
-                    : videoFile
-                      ? 'border-green-400 bg-gradient-to-br from-green-50 to-blue-50 shadow-xl ring-2 ring-green-200/50'
-                      : 'border-blue-200 hover:border-green-300 bg-gradient-to-br from-blue-50/50 to-green-50/50 shadow-lg'
-                  }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {videoFile ? (
-                  <div className="space-y-4 animate-fade-in">
-                    <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto shadow-xl">
-                      <FileVideo className="h-10 w-10 text-white drop-shadow-md" />
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-xl font-bold text-green-700 truncate max-w-md mx-auto">{videoFile.name}</p>
-                      <p className="text-blue-600 font-mono text-sm bg-white/60 px-3 py-1 rounded-full inline-block">
-                        {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-green-400 rounded-2xl flex items-center justify-center mx-auto shadow-2xl group-hover:rotate-6 transition-all duration-700">
-                      <Video className="h-14 w-14 text-white drop-shadow-lg" />
-                    </div>
-                    <div className="space-y-3">
-                      <p className="text-xl font-bold text-blue-700 mb-3 leading-tight">
-                        Drag & drop your video here, or{' '}
-                        <span className="text-green-600">click to browse</span>
-                      </p>
-                      <input
-                        type="file"
-                        accept="video/*"
-                        ref={fileInputRef}
-                        onChange={(e) => handleFileSelect(e.target.files[0])}
-                        className="hidden"
-                        id="video-upload"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="lg"
-                        className="border-2 border-green-300 bg-white/80 backdrop-blur-sm text-green-700 font-semibold px-8 py-6 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 group-hover:bg-green-50"
-                      >
-                        <UploadIcon className="mr-3 h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
-                        Choose Video File
-                      </Button>
-                    </div>
-                    <p className="text-blue-500 text-sm font-medium bg-white/70 px-4 py-2 rounded-xl inline-block backdrop-blur-sm">
-                      Supports MP4, MOV, AVI • Up to 100MB
-                    </p>
-                  </div>
-                )}
-              </div>
+          {/* FILE ERROR */}
+          {fileError && (
+            <div className="flex items-center gap-2 text-red-400 text-sm bg-red-900/30 border border-red-700 p-3 rounded-lg">
+              <AlertTriangle size={16} />
+              {fileError}
             </div>
+          )}
 
-            {/* Form Fields - Enhanced */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Title */}
-              <div className="space-y-3">
-                <label className="block text-green-700 font-bold text-lg tracking-wide">
-                  🎤 Video Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. 'My First Match Analysis - Epic Comeback!'"
-                  className="w-full px-6 py-5 text-lg border-2 border-blue-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-300/50 focus:border-green-400 shadow-sm hover:shadow-md transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                  required
+          {/* UPLOAD PROGRESS */}
+          {isUploading && (
+            <div>
+              <div className="w-full bg-gray-700 rounded-full h-3">
+                <div
+                  className="bg-blue-500 h-3 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
                 />
               </div>
+              <p className="text-sm text-gray-400 mt-2">
+                Uploading... {uploadProgress}%
+              </p>
+            </div>
+          )}
 
-              {/* Category */}
-              <div className="space-y-3">
-                <label className="block text-green-700 font-bold text-lg tracking-wide">
-                  🏷️ Category <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  required
-                  className="w-full border-2 border-blue-200 rounded-2xl px-6 py-5 text-lg focus:outline-none focus:ring-4 focus:ring-green-300/50 focus:border-green-400 shadow-sm hover:shadow-md transition-all duration-300 bg-white/80 backdrop-blur-sm appearance-none"
+          {/* TITLE */}
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-gray-300">
+              Video Title *
+            </label>
+            <input
+              type="text"
+              placeholder="Epic comeback match analysis..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 
+              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+              placeholder:text-gray-500 text-white"
+              required
+            />
+          </div>
+
+          {/* CATEGORY */}
+          <div>
+            <label className="block text-sm font-semibold mb-3 text-gray-300">
+              Select Category *
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {["UNHEARD STORIES", "MATCH ANALYSIS", "SPORTS AROUND THE GLOBE"].map((cat) => (
+                <button
+                  type="button"
+                  key={cat}
+                  onClick={() => setCategory(cat)}
+                  className={`py-3 rounded-lg border transition text-sm font-medium
+                  ${category === cat
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600"
+                  }`}
                 >
-                  <option value="" disabled hidden className="text-gray-400">Select video category</option>
-                  <option value="UNHEARD STORIES" className="py-4">📢 Unheard Stories</option>
-                  <option value="MATCH ANALYSIS" className="py-4">📊 Match Analysis</option>
-                  <option value="SPORTS AROUND THE GLOBE" className="py-4">✈️ Sports Around The Globe</option>
-                </select>
-              </div>
+                  {cat}
+                </button>
+              ))}
             </div>
+          </div>
 
-            {/* Description */}
-            <div className="space-y-3">
-              <label className="block text-green-700 font-bold text-lg tracking-wide">
-                📝 Description (Optional)
-              </label>
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Share the story behind your video, key highlights, or what viewers should know..."
-                className="w-full px-6 py-6 text-lg border-2 border-blue-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-300/50 focus:border-green-400 shadow-sm hover:shadow-md transition-all duration-300 resize-vertical min-h-[140px] bg-white/80 backdrop-blur-sm"
-              />
-            </div>
+          {/* DESCRIPTION */}
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-gray-300">
+              Description
+            </label>
+            <Textarea
+              placeholder="Share highlights or background story..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="bg-gray-700 border border-gray-600 rounded-lg px-4 py-3
+              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+              placeholder:text-gray-500 text-white min-h-[120px]"
+            />
+          </div>
 
-            {/* Enhanced Submit Button */}
-            <div className="flex justify-center pt-8">
-              <Button
-                type="submit"
-                size="lg"
-                className="group bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-16 py-7 text-xl font-black rounded-3xl shadow-2xl hover:shadow-3xl hover:-translate-y-2 hover:scale-105 transition-all duration-500 border-0 relative overflow-hidden"
-              >
-                <span className="relative z-10 flex items-center gap-3">
-                  🚀 Upload & Share
-                  <div className="w-2 h-2 bg-white/30 rounded-full group-hover:animate-ping group-hover:scale-110 transition-all duration-300"></div>
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent -skew-x-12 -translate-x-40 group-hover:translate-x-40 transition-transform duration-1000"></div>
-              </Button>
-            </div>
-          </form>
-        </div>
+          {/* SUBMIT */}
+          <Button
+            type="submit"
+            disabled={isUploading}
+            className="w-full bg-blue-600 hover:bg-blue-700 py-3 text-lg font-semibold rounded-lg transition transform hover:scale-[1.02] shadow-lg disabled:opacity-50"
+          >
+            {isUploading ? "Uploading..." : "Upload & Share"}
+          </Button>
+
+        </form>
       </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out;
-        }
-      `}</style>
     </div>
   );
 };
