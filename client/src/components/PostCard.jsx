@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Heart, MessageCircle, Calendar, Tag, User, Trash2, Pencil } from 'lucide-react';
+import { Heart, MessageCircle, Calendar, Tag, User, Trash2, Pencil, Share2 } from 'lucide-react';
 import CommentSection from './CommentSection';
 import { API } from '@/api';
 import { getToken, getUserId } from '@/utils/auth';
+import { getShareUrl, shareLink } from '@/utils/share';
 import { toast } from 'sonner';
 
 const PostCard = ({ post, onDelete }) => {
@@ -20,6 +21,17 @@ const PostCard = ({ post, onDelete }) => {
 
   const handleEdit = () => {
     navigate('/create-post', { state: { editPost: post } });
+  };
+
+  const handleShare = async () => {
+    const url = getShareUrl('post', postId);
+    await shareLink(
+      url,
+      post.title || 'Post on HuddleUp',
+      post.content?.slice(0, 100) || '',
+      (msg) => toast.success(msg),
+      (msg) => toast.error(msg)
+    );
   };
 
   const handleDelete = async () => {
@@ -165,6 +177,17 @@ const PostCard = ({ post, onDelete }) => {
           >
             <MessageCircle className="h-4 w-4" />
             <span className="font-medium">Comments</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleShare}
+            className="flex items-center gap-2 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all duration-200"
+            title="Share post"
+          >
+            <Share2 className="h-4 w-4" />
+            <span className="font-medium">Share</span>
           </Button>
         </div>
 

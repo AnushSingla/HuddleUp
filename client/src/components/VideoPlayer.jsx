@@ -1,8 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { X, ThumbsUp, Eye, Heart } from 'lucide-react';
+import { X, Eye, Heart, Share2 } from 'lucide-react';
 import CommentSection from './CommentSection';
 import { API } from '@/api';
 import { getToken } from '@/utils/auth';
+import { getShareUrl, shareLink } from '@/utils/share';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 
@@ -74,6 +75,18 @@ const VideoPlayer = ({ video, onClose }) => {
     }
   };
 
+  const handleShare = async () => {
+    if (!videoId) return;
+    const url = getShareUrl('video', videoId);
+    await shareLink(
+      url,
+      video.title || 'Video on HuddleUp',
+      video.description?.slice(0, 100) || '',
+      (msg) => toast.success(msg),
+      (msg) => toast.error(msg)
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
       <div className="relative w-full max-w-5xl h-[90vh] bg-white rounded-2xl shadow-xl flex flex-col overflow-hidden">
@@ -83,9 +96,18 @@ const VideoPlayer = ({ video, onClose }) => {
             <h2 className="text-xl font-semibold text-gray-800">{video.title}</h2>
             <p className="text-sm text-gray-500">{video.category}</p>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition">
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleShare}
+              className="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+              title="Share video"
+            >
+              <Share2 className="h-5 w-5" />
+            </button>
+            <button onClick={onClose} className="p-2 text-gray-500 hover:text-gray-700 transition">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Video */}
