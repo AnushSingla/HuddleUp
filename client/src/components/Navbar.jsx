@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X,Bell} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
-import { Menu, X, Bell } from "lucide-react";
+
 import axios from "axios";
 
 export default function Navbar() {
