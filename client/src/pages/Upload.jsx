@@ -67,7 +67,9 @@ const Upload = () => {
       toast.success("Video Uploaded Successfully 🚀");
       navigate("/explore");
     } catch (err) {
-      toast.error("Upload failed");
+      console.error("Upload error:", err);
+      const errMsg = err.response?.data?.message || err.message || "Upload failed";
+      toast.error(`Upload failed: ${errMsg}`);
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -75,69 +77,54 @@ const Upload = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-200 flex items-center justify-center px-6 py-16">
-      <div className="w-full max-w-5xl bg-gray-800 shadow-2xl rounded-2xl border border-gray-700 p-10">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors duration-500 py-24 px-6 relative overflow-hidden">
+      {/* Background Glows */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-        {/* HEADER */}
-        {/* HEADER */}
-<div className="mb-12 text-center group">
-  <div className="inline-block relative">
-    
-    <h1 className="
-      text-4xl md:text-5xl font-extrabold 
-      bg-gradient-to-r from-emerald-400 via-blue-500 to-indigo-500
-      bg-[length:200%_200%] bg-clip-text text-transparent
-      transition-all duration-700
-      group-hover:animate-gradient
-      group-hover:scale-105
-    ">
-      Share Your Game Story
-    </h1>
+      <div className="max-w-4xl mx-auto relative z-10">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
+            Share Your <span className="bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent">Game Story</span>
+          </h1>
+          <p className="text-zinc-500 dark:text-zinc-400 text-lg max-w-2xl mx-auto leading-relaxed">
+            Upload match analysis, unheard stories, or global sports moments.
+          </p>
+        </div>
 
-    {/* Glow Effect */}
-    <div className="
-      absolute inset-0 blur-2xl opacity-0 
-      group-hover:opacity-40
-      transition duration-700
-      bg-gradient-to-r from-emerald-400 via-blue-500 to-indigo-500
-    "></div>
-
-  </div>
-
-  <p className="text-gray-400 mt-4 text-lg transition duration-500 group-hover:text-gray-200">
-    Upload match analysis, unheard stories, or global sports moments.
-  </p>
-</div>
-
-
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-[32px] p-8 md:p-12 shadow-2xl shadow-indigo-500/5 space-y-10">
 
           {/* UPLOAD AREA */}
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-gray-600 rounded-xl p-10 text-center cursor-pointer hover:border-blue-500 transition"
+            className={`group relative border-2 border-dashed rounded-[24px] p-12 text-center cursor-pointer transition-all duration-300
+            ${videoFile
+                ? "border-emerald-500/50 bg-emerald-500/5"
+                : "border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50 hover:bg-emerald-500/5 dark:hover:bg-emerald-500/10"
+              }`}
           >
             {previewURL ? (
-              <>
+              <div className="relative">
                 <video
                   src={previewURL}
                   controls
-                  className="w-full max-h-64 rounded-lg mb-4"
+                  className="w-full max-h-[300px] rounded-2xl shadow-2xl mx-auto"
                 />
-                <p className="text-sm text-gray-400">
-                  {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
-                </p>
-              </>
+                <div className="mt-4 flex items-center justify-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                  <FileVideo className="w-4 h-4" />
+                  <span>{(videoFile.size / (1024 * 1024)).toFixed(2)} MB Selected</span>
+                </div>
+              </div>
             ) : (
-              <>
-                <UploadCloud className="mx-auto h-12 w-12 text-gray-500 mb-3" />
-                <p className="text-gray-300 font-medium">
-                  Drag & drop or click to upload
+              <div className="py-6">
+                <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <UploadCloud className="h-8 w-8 text-emerald-500" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Select Video File</h3>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm max-w-xs mx-auto">
+                  Drag & drop your sports video here or click to browse (Max {MAX_FILE_SIZE_MB}MB)
                 </p>
-                <p className="text-gray-500 text-sm">
-                  Max file size: {MAX_FILE_SIZE_MB}MB
-                </p>
-              </>
+              </div>
             )}
 
             <input
@@ -151,89 +138,92 @@ const Upload = () => {
 
           {/* FILE ERROR */}
           {fileError && (
-            <div className="flex items-center gap-2 text-red-400 text-sm bg-red-900/30 border border-red-700 p-3 rounded-lg">
-              <AlertTriangle size={16} />
-              {fileError}
+            <div className="flex items-center gap-3 text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 p-4 rounded-2xl">
+              <AlertTriangle className="w-5 h-5 shrink-0" />
+              <span className="font-medium">{fileError}</span>
             </div>
           )}
 
           {/* UPLOAD PROGRESS */}
           {isUploading && (
-            <div>
-              <div className="w-full bg-gray-700 rounded-full h-3">
+            <div className="space-y-3">
+              <div className="flex justify-between text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
+                <span>Uploading to Arena...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-2 overflow-hidden">
                 <div
-                  className="bg-blue-500 h-3 rounded-full transition-all duration-300"
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
-              <p className="text-sm text-gray-400 mt-2">
-                Uploading... {uploadProgress}%
-              </p>
             </div>
           )}
 
-          {/* TITLE */}
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-300">
-              Video Title *
-            </label>
-            <input
-              type="text"
-              placeholder="Epic comeback match analysis..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 
-              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-              placeholder:text-gray-500 text-white"
-              required
-            />
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* TITLE */}
+            <div className="space-y-3">
+              <label className="text-sm font-bold text-zinc-500 dark:text-zinc-400 ml-1 uppercase tracking-wider">
+                Video Title *
+              </label>
+              <input
+                type="text"
+                placeholder="Epic match comeback..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-5 py-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 
+                bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white placeholder-zinc-400
+                focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50
+                transition-all duration-300 shadow-sm"
+                required
+              />
+            </div>
 
-          {/* CATEGORY */}
-          <div>
-            <label className="block text-sm font-semibold mb-3 text-gray-300">
-              Select Category *
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {["UNHEARD STORIES", "MATCH ANALYSIS", "SPORTS AROUND THE GLOBE"].map((cat) => (
-                <button
-                  type="button"
-                  key={cat}
-                  onClick={() => setCategory(cat)}
-                  className={`py-3 rounded-lg border transition text-sm font-medium
-                  ${category === cat
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+            {/* CATEGORY */}
+            <div className="space-y-3">
+              <label className="text-sm font-bold text-zinc-500 dark:text-zinc-400 ml-1 uppercase tracking-wider">
+                Select Category *
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-5 py-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 
+                bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white
+                focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50
+                transition-all duration-300 shadow-sm appearance-none cursor-pointer"
+                required
+              >
+                <option value="" disabled>Choose a category...</option>
+                <option value="UNHEARD STORIES">UNHEARD STORIES</option>
+                <option value="MATCH ANALYSIS">MATCH ANALYSIS</option>
+                <option value="SPORTS AROUND THE GLOBE">SPORTS AROUND THE GLOBE</option>
+              </select>
             </div>
           </div>
 
           {/* DESCRIPTION */}
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-300">
-              Description
+          <div className="space-y-3">
+            <label className="text-sm font-bold text-zinc-500 dark:text-zinc-400 ml-1 uppercase tracking-wider">
+              Background Story
             </label>
             <Textarea
-              placeholder="Share highlights or background story..."
+              placeholder="Tell us more about this moment..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="bg-gray-700 border border-gray-600 rounded-lg px-4 py-3
-              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-              placeholder:text-gray-500 text-white min-h-[120px]"
+              className="w-full px-5 py-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 
+              bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white placeholder-zinc-400
+              focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50
+              transition-all duration-300 shadow-sm min-h-[120px]"
             />
           </div>
 
-          {/* SUBMIT */}
+          {/* SUBMIT BUTTON */}
           <Button
             type="submit"
             disabled={isUploading}
-            className="w-full bg-blue-600 hover:bg-blue-700 py-3 text-lg font-semibold rounded-lg transition transform hover:scale-[1.02] shadow-lg disabled:opacity-50"
+            className="w-full h-14 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-extrabold text-sm uppercase tracking-widest transition-all duration-300 hover:bg-emerald-500 dark:hover:bg-emerald-400 border-none shadow-xl shadow-zinc-950/20 dark:shadow-emerald-500/10 disabled:opacity-50"
           >
-            {isUploading ? "Uploading..." : "Upload & Share"}
+            {isUploading ? "TRANSMITTING DATA..." : "PUBLISH TO ARENA"}
           </Button>
 
         </form>
