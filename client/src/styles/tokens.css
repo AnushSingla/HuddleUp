@@ -34,34 +34,60 @@
   --r-full: 9999px;
 
   /* ═══════════════════════════════════════════════════ */
-  /* COLOR SEMANTICS - Intent-based, not decoration */
+  /* COLOR SEMANTICS - Kinetic Contrast Theory */
+  /* Sports-inspired palette for motion, energy, impact */
   /* ═══════════════════════════════════════════════════ */
   
-  /* Backgrounds */
-  --bg-primary: #0A0F1C;
-  --bg-surface: #111827;
-  --bg-elevated: #1F2937;
-  --bg-overlay: rgba(17, 24, 39, 0.95);
+  /* Deep Midnight - Stadium Night Feel */
+  --bg-primary: #0B0D1A;
+  --bg-surface: #141824;
+  --bg-elevated: #1D2235;
+  --bg-overlay: rgba(11, 13, 26, 0.95);
   
-  /* Accents */
-  --accent: #6C5CE7;
-  --accent-hover: #5B4CD6;
-  --accent-2: #00D4FF;
-  --accent-2-hover: #00BFEA;
-  --accent-success: #00E676;
-  --accent-warning: #FFD600;
-  --accent-danger: #FF3D00;
+  /* Electric Accent - Ball Energy (Motion + Impact) */
+  --accent: #00E5FF;
+  --accent-hover: #00D1EA;
+  --accent-glow: rgba(0, 229, 255, 0.3);
   
-  /* Text */
-  --text-main: #F9FAFB;
-  --text-sub: #9CA3AF;
-  --text-muted: #6B7280;
-  --text-on-accent: #FFFFFF;
+  /* Turf Green - Field Realism (Grounding) */
+  --turf-green: #1BE87C;
+  --turf-green-hover: #16D06D;
+  --turf-green-muted: rgba(27, 232, 124, 0.2);
   
-  /* Borders */
-  --border-subtle: rgba(255, 255, 255, 0.1);
-  --border-medium: rgba(255, 255, 255, 0.2);
-  --border-strong: rgba(255, 255, 255, 0.3);
+  /* Clay Red - Court Realism (Tactile) */
+  --clay-red: #FF4757;
+  --clay-red-hover: #EE3546;
+  --clay-red-muted: rgba(255, 71, 87, 0.2);
+  
+  /* Ice White - Motion Trails (Clarity) */
+  --ice-white: #F7FAFC;
+  --ice-white-soft: #E2E8F0;
+  --ice-white-muted: rgba(247, 250, 252, 0.15);
+  
+  /* Sun Yellow - Highlight Moments (Attention) */
+  --sun-yellow: #FFD93D;
+  --sun-yellow-hover: #F0CA2D;
+  --sun-yellow-glow: rgba(255, 217, 61, 0.25);
+  
+  /* Semantic Mappings - For existing component compatibility */
+  --accent-2: var(--turf-green);
+  --accent-2-hover: var(--turf-green-hover);
+  --accent-success: var(--turf-green);
+  --accent-warning: var(--sun-yellow);
+  --accent-danger: var(--clay-red);
+  
+  /* Text - High Contrast for Motion */
+  --text-main: var(--ice-white);
+  --text-sub: #94A3B8;
+  --text-muted: #64748B;
+  --text-on-accent: #0B0D1A;
+  --text-energy: var(--accent);
+  
+  /* Borders - Kinetic Layers */
+  --border-subtle: rgba(0, 229, 255, 0.08);
+  --border-medium: rgba(0, 229, 255, 0.15);
+  --border-strong: rgba(0, 229, 255, 0.25);
+  --border-field: rgba(27, 232, 124, 0.2);
 
   /* ═══════════════════════════════════════════════════ */
   /* TYPOGRAPHY SCALE - Hierarchy through contrast */
@@ -132,10 +158,24 @@
 }
 
 .text-gradient-accent {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--turf-green) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.text-gradient-kinetic {
+  background: linear-gradient(90deg, var(--accent) 0%, var(--sun-yellow) 50%, var(--clay-red) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: kineticFlow 3s ease infinite;
+}
+
+@keyframes kineticFlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 .grid-masonry {
@@ -187,4 +227,91 @@
 
 .scrollbar-custom::-webkit-scrollbar-thumb:hover {
   background: var(--border-medium);
+}
+
+/* ═══════════════════════════════════════════════════ */
+/* KINETIC SPORTS UTILITIES */
+/* ═══════════════════════════════════════════════════ */
+
+.stadium-glow {
+  box-shadow: 
+    0 0 20px var(--accent-glow),
+    0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.field-line {
+  border: 2px solid var(--border-field);
+  position: relative;
+}
+
+.field-line::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 1px solid var(--turf-green-muted);
+  border-radius: inherit;
+}
+
+.motion-trail {
+  position: relative;
+  overflow: hidden;
+}
+
+.motion-trail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--ice-white-muted), transparent);
+  animation: trailPass 2s ease-in-out infinite;
+}
+
+@keyframes trailPass {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.impact-button {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border: 2px solid var(--accent);
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.impact-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, var(--ice-white-muted) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.impact-button:hover::before {
+  opacity: 1;
+}
+
+.impact-button:active {
+  transform: scale(0.95);
+  box-shadow: 0 0 30px var(--accent-glow);
+}
+
+.turf-accent {
+  color: var(--turf-green);
+  text-shadow: 0 0 10px var(--turf-green-muted);
+}
+
+.court-accent {
+  color: var(--clay-red);
+  text-shadow: 0 0 10px var(--clay-red-muted);
+}
+
+.spotlight {
+  color: var(--sun-yellow);
+  text-shadow: 0 0 15px var(--sun-yellow-glow);
+  font-weight: var(--fw-bold);
 }
