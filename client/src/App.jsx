@@ -19,6 +19,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AllPosts from './components/AllPosts';
 import CreatePost from './components/CreatePost';
+import Feedback from './pages/Feedback';
 
 function AppContent() {
   const location = useLocation();
@@ -52,6 +53,7 @@ function AppContent() {
             <Route path="/create-post" element={<CreatePost />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
+            <Route path="/Feedback" element={<Feedback />} />
           </Routes>
         </div>
       </main>

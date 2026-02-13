@@ -30,7 +30,8 @@ export default function Navbar() {
     { to: "/explore", label: "Explore" },
     { to: "/posts", label: "Discussion" },
     { to: "/contact", label: "Contact" },
-    { to: "/about", label: "About" }
+    { to: "/about", label: "About" },
+    { to: "/feedback", label: "Feedback" }
   ];
 
   return (
