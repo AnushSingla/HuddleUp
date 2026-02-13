@@ -1,302 +1,261 @@
 import React, { useState } from "react";
-import {
-  Mail,
-  Phone,
-  MapPin,
-  MessageCircle,
-  Users,
-  AlertCircle,
-  Star,
-  Settings,
-} from "lucide-react";
-
-const initialState = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  message: "",
-  services: [],
-};
-
-const servicesList = [
-  "Technical support",
-  "Account & login help",
-  "Community guidelines",
-  "Report a bug",
-  "Feature request",
-  "General feedback",
-];
+import { motion } from "framer-motion";
+import { Mail, Send, MessageSquare, Twitter, Github } from "lucide-react";
 
 export default function Contact() {
-  const [form, setForm] = useState(initialState);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    message: ""
+  });
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    if (type === "checkbox") {
-      setForm((prev) => ({
-        ...prev,
-        services: checked
-          ? [...prev.services, value]
-          : prev.services.filter((s) => s !== value),
-      }));
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
-    }
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("Message sent! 🚀 (Demo)");
-    setForm(initialState);
+    alert("Message sent! We'll get back to you soon.");
+    setForm({ name: "", email: "", message: "" });
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-12 max-w-6xl mx-auto py-20 px-4">
+    <div className="min-h-screen px-6 md:px-12 py-24" 
+      style={{ background: 'var(--bg-primary)', color: 'var(--text-main)' }}>
       
-      {/* ================= FORM SECTION ================= */}
-      <form
-        onSubmit={handleSubmit}
-        className="flex-1 backdrop-blur-xl bg-white/70 dark:bg-zinc-900/70 
-        border border-zinc-200 dark:border-zinc-700 
-        rounded-3xl shadow-2xl p-10 space-y-6
-        transition-all duration-500 hover:shadow-blue-500/20"
-      >
-        <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight
-  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-  bg-clip-text text-transparent
-  transition-all duration-500 ease-out
-  hover:scale-105
-  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
-  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
-  cursor-default">
-          Contact HuddleUp Team
-        </h2>
+      <div className="max-w-[1200px] mx-auto">
+        
+        {/* Direct, Conversational Intro */}
+        <div className="mb-20">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="font-black mb-6"
+            style={{
+              fontSize: 'clamp(40px, 7vw, 80px)',
+              lineHeight: '1.1',
+              letterSpacing: '-0.03em'
+            }}>
+            Let's talk<span style={{ color: 'var(--accent)' }}>.</span>
+          </motion.h1>
 
-        <p className="text-zinc-600 dark:text-zinc-300">
-          Have questions about HuddleUp, need support, or want to give feedback? Our team is here to help you 24/7. Reach out and we’ll get back to you as soon as possible.
-        </p>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-xl max-w-2xl"
+            style={{ color: 'var(--text-sub)', lineHeight: 'var(--lh-relaxed)' }}>
+            Got questions? Ideas? Bug reports? Just want to say hi? 
+            We're real people who actually read these. Pick your method below.
+          </motion.p>
+        </div>
 
-        {/* INPUT ROW */}
-        <div className="flex gap-4">
-          {["firstName", "lastName"].map((field, i) => (
-            <div key={i} className="flex-1">
-              <label className="text-sm font-medium tracking-tight
-  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-  bg-clip-text text-transparent
-  transition-all duration-500 ease-out
-  hover:scale-105
-  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
-  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
-  cursor-default">
-                {field === "firstName" ? "First Name" : "Last Name"}
-              </label>
-              <input
-                type="text"
-                name={field}
-                required
-                value={form[field]}
-                onChange={handleChange}
-                placeholder={field === "firstName" ? "John" : "Doe"}
-                className="w-full mt-1 px-4 py-2 rounded-xl 
-                bg-white/80 dark:bg-zinc-800/80 
-                border border-zinc-300 dark:border-zinc-700
-                transition-all duration-300
-                hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/20
-                focus:ring-2 focus:ring-blue-500 outline-none"
-              />
+        {/* Two Column Layout - Quick Contact + Form */}
+        <div className="grid md:grid-cols-5 gap-16">
+          
+          {/* Left: Quick Contact Methods */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="md:col-span-2 space-y-8">
+            
+            <div>
+              <p className="text-sm font-mono mb-8 tracking-wide" 
+                style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+                FASTEST WAYS TO REACH US
+              </p>
+
+              {/* Email */}
+              <div className="mb-8 p-6 rounded-lg interactive-card group"
+                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 flex items-center justify-center rounded-lg"
+                    style={{ background: 'var(--accent)', color: 'var(--bg-primary)' }}>
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Email</h3>
+                </div>
+                <a href="mailto:support@huddleup.com" 
+                  className="block hover-lift"
+                  style={{ color: 'var(--accent)', fontSize: 'var(--text-lg)' }}>
+                  support@huddleup.com
+                </a>
+                <p className="text-sm mt-2" style={{ color: 'var(--text-sub)' }}>
+                  Response within 24 hours
+                </p>
+              </div>
+
+              {/* Discord */}
+              <div className="mb-8 p-6 rounded-lg interactive-card group"
+                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 flex items-center justify-center rounded-lg"
+                    style={{ background: 'var(--turf-green)', color: 'var(--bg-primary)' }}>
+                    <MessageSquare className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Discord Community</h3>
+                </div>
+                <a href="#" 
+                  className="block hover-lift"
+                  style={{ color: 'var(--turf-green)', fontSize: 'var(--text-lg)' }}>
+                  discord.gg/huddleup
+                </a>
+                <p className="text-sm mt-2" style={{ color: 'var(--text-sub)' }}>
+                  Live chat with the team
+                </p>
+              </div>
+
+              {/* Social */}
+              <div>
+                <p className="text-sm mb-4" style={{ color: 'var(--text-sub)' }}>
+                  Or find us on social:
+                </p>
+                <div className="flex gap-4">
+                  <a href="#" className="w-12 h-12 flex items-center justify-center rounded-lg hover-lift"
+                    style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+                    <Twitter className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+                  </a>
+                  <a href="#" className="w-12 h-12 flex items-center justify-center rounded-lg hover-lift"
+                    style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+                    <Github className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+                  </a>
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
 
-        {/* EMAIL + PHONE */}
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="text-sm font-medium tracking-tight
-  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-  bg-clip-text text-transparent
-  transition-all duration-500 ease-out
-  hover:scale-105
-  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
-  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
-  cursor-default">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              required
-              value={form.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              className="w-full mt-1 px-4 py-2 rounded-xl 
-              bg-white/80 dark:bg-zinc-800/80 
-              border border-zinc-300 dark:border-zinc-700
-              transition-all duration-300
-              hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/20
-              focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-          </div>
+          </motion.div>
 
-          <div className="flex-1">
-            <label className="text-sm font-medium tracking-tight
-  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-  bg-clip-text text-transparent
-  transition-all duration-500 ease-out
-  hover:scale-105
-  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
-  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
-  cursor-default">
-              Phone
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="+1 000 000 0000"
-              className="w-full mt-1 px-4 py-2 rounded-xl 
-              bg-white/80 dark:bg-zinc-800/80 
-              border border-zinc-300 dark:border-zinc-700
-              transition-all duration-300
-              hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/20
-              focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-          </div>
-        </div>
+          {/* Right: Simple Form */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="md:col-span-3">
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+              
+              <p className="text-sm font-mono mb-6 tracking-wide" 
+                style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+                OR SEND A MESSAGE
+              </p>
 
-        {/* MESSAGE */}
-        <div>
-          <label className="text-sm font-medium tracking-tight
-  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-  bg-clip-text text-transparent
-  transition-all duration-500 ease-out
-  hover:scale-105
-  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
-  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
-  cursor-default">
-            Message
-          </label>
-          <textarea
-            name="message"
-            required
-            value={form.message}
-            onChange={handleChange}
-            placeholder="Write your message..."
-            className="w-full mt-1 px-4 py-3 min-h-[120px] rounded-xl 
-            bg-white/80 dark:bg-zinc-800/80 
-            border border-zinc-300 dark:border-zinc-700
-            transition-all duration-300
-            hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/20
-            focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-        </div>
-
-        {/* SERVICES */}
-        <div>
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-3 block">
-            What can we help you with?
-          </label>
-
-          <div className="grid grid-cols-2 gap-3">
-            {servicesList.map((service) => (
-              <label
-                key={service}
-                className="group flex items-center gap-2 
-                bg-zinc-100/80 dark:bg-zinc-800/80 
-                px-3 py-2 rounded-xl cursor-pointer
-                transition-all duration-300
-                hover:-translate-y-1 hover:shadow-lg
-                hover:shadow-blue-500/20 hover:border-blue-500
-                border border-transparent"
-              >
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-main)' }}>
+                  Your name
+                </label>
                 <input
-                  type="checkbox"
-                  name="services"
-                  value={service}
-                  checked={form.services.includes(service)}
+                  type="text"
+                  name="name"
+                  required
+                  value={form.name}
                   onChange={handleChange}
-                  className="accent-blue-500"
+                  placeholder="What should we call you?"
+                  className="w-full px-4 py-3 rounded-lg transition-all"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    border: '2px solid var(--border-subtle)',
+                    color: 'var(--text-main)',
+                    fontSize: 'var(--text-base)'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
                 />
+              </div>
 
-                {service === "Technical support" && (
-                  <Settings className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
-                )}
-                {service === "Account & login help" && (
-                  <Users className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
-                )}
-                {service === "Community guidelines" && (
-                  <Star className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
-                )}
-                {service === "Report a bug" && (
-                  <AlertCircle className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
-                )}
-                {service === "Feature request" && (
-                  <MessageCircle className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
-                )}
-                {service === "General feedback" && (
-                  <Mail className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
-                )}
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-main)' }}>
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="your@email.com"
+                  className="w-full px-4 py-3 rounded-lg transition-all"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    border: '2px solid var(--border-subtle)',
+                    color: 'var(--text-main)',
+                    fontSize: 'var(--text-base)'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                />
+              </div>
 
-                <span className="text-sm">{service}</span>
-              </label>
-            ))}
-          </div>
+              {/* Message */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-main)' }}>
+                  What's on your mind?
+                </label>
+                <textarea
+                  name="message"
+                  required
+                  value={form.message}
+                  onChange={handleChange}
+                  rows={6}
+                  placeholder="Tell us everything..."
+                  className="w-full px-4 py-3 rounded-lg transition-all resize-none"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    border: '2px solid var(--border-subtle)',
+                    color: 'var(--text-main)',
+                    fontSize: 'var(--text-base)',
+                    lineHeight: 'var(--lh-relaxed)'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                />
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                className="px-8 py-4 font-semibold flex items-center gap-2 hover-lift group"
+                style={{
+                  background: 'var(--accent)',
+                  color: 'var(--bg-primary)',
+                  borderRadius: 'var(--r-md)',
+                  fontSize: 'var(--text-lg)',
+                  transition: 'all var(--transition-base)'
+                }}
+              >
+                <Send className="w-5 h-5" />
+                Send Message
+              </button>
+
+              <p className="text-sm mt-4" style={{ color: 'var(--text-sub)' }}>
+                Average response time: <span style={{ color: 'var(--turf-green)', fontWeight: 600 }}>12 hours</span>
+              </p>
+
+            </form>
+
+          </motion.div>
+
         </div>
 
-        {/* SUBMIT BUTTON */}
-        <button
-          type="submit"
-          className="w-full py-3 rounded-2xl text-lg font-semibold text-white
-          bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-          transition-all duration-300
-          hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/40
-          hover:from-purple-600 hover:to-blue-600
-          active:scale-95"
-        >
-          Send Message 🚀
-        </button>
-      </form>
-
-      {/* ================= CONTACT INFO ================= */}
-      <div className="flex-1 space-y-8">
-
-        {/* CHAT CARD */}
-        <div className="group p-8 rounded-3xl bg-gradient-to-br from-blue-900/60 to-zinc-900/80 
-        border border-zinc-800 shadow-xl
-        transition-all duration-300 hover:-translate-y-2 hover:shadow-blue-500/30">
-
-          <h3 className="flex items-center gap-2 text-xl font-semibold text-white">
-            <MessageCircle className="w-5 h-5 text-blue-400 group-hover:scale-110 transition" />
-            Chat with us
-          </h3>
-
-          <div className="mt-4 space-y-2 text-blue-300">
-            <a href="#" className="block hover:text-fuchsia-400 transition">
-              Start live chat
-            </a>
-            <a href="mailto:support@huddleup.com" className="block hover:text-fuchsia-400 transition">
-              support@huddleup.com
-            </a>
-          </div>
-        </div>
-
-        {/* CALL CARD */}
-        <div className="group p-8 rounded-3xl bg-gradient-to-br from-purple-900/60 to-zinc-900/80 
-        border border-zinc-800 shadow-xl
-        transition-all duration-300 hover:-translate-y-2 hover:shadow-purple-500/30">
-
-          <h3 className="flex items-center gap-2 text-xl font-semibold text-white">
-            <Phone className="w-5 h-5 text-purple-400 group-hover:scale-110 transition" />
-            Call us
-          </h3>
-
-          <p className="text-zinc-400 mt-3">Call our team Mon-Fri from 8am to 5pm</p>
-          <a href="tel:+18001234567" className="text-purple-300 hover:text-fuchsia-400 transition">
-            +1 (800) 123-4567
-          </a>
-        </div>
+        {/* Bottom Note */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="mt-32 p-8 rounded-lg"
+          style={{ 
+            background: 'var(--bg-secondary)', 
+            border: '1px solid var(--border-subtle)',
+            borderLeft: `4px solid var(--sun-yellow)`
+          }}>
+          <p className="text-sm" style={{ color: 'var(--text-sub)', lineHeight: 'var(--lh-relaxed)' }}>
+            <span className="font-semibold" style={{ color: 'var(--text-main)' }}>Heads up:</span>{" "}
+            We're a small team building something big. Response times might vary during major 
+            sporting events (we're watching too 👀), but we read every message. Promise.
+          </p>
+        </motion.div>
 
       </div>
     </div>

@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Navbar from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Search,
   Users,
@@ -160,35 +156,35 @@ const Friends = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'var(--accent)' }} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       
       <div className="max-w-6xl mx-auto p-4 md:p-6">
         <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: 'var(--text-main)' }}>
             Friends & Community
           </h1>
-          <p className="text-gray-600">
+          <p style={{ color: 'var(--text-sub)' }}>
             Connect with fellow sports enthusiasts
           </p>
         </div>
 
-        <div className="flex space-x-1 mb-6 bg-white rounded-lg p-1 shadow-sm">
+        <div className="flex space-x-1 mb-6 rounded-lg p-1" style={{ background: 'var(--bg-secondary)' }}>
           {["search", "friends", "requests"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 px-3 py-2 text-sm md:text-base rounded-md transition-colors flex items-center justify-center ${
-                activeTab === tab
-                  ? "bg-green-500 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className="flex-1 px-3 py-2 text-sm md:text-base rounded-md transition-all flex items-center justify-center"
+              style={{
+                background: activeTab === tab ? 'var(--turf-green)' : 'transparent',
+                color: activeTab === tab ? 'var(--bg-primary)' : 'var(--text-sub)'
+              }}
             >
               {tab === "search" && <Search className="h-4 w-4 mr-1 md:mr-2" />}
               {tab === "friends" && <Users className="h-4 w-4 mr-1 md:mr-2" />}
@@ -210,6 +206,13 @@ const Friends = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="max-w-md"
+                style={{
+                  background: 'var(--bg-surface)',
+                  border: '2px solid var(--border-subtle)',
+                  color: 'var(--text-main)'
+                }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
                 icon={<Search className="h-4 w-4" />}
               />
             </div>
@@ -220,31 +223,39 @@ const Friends = () => {
                 const isLoading = requestLoading[user._id];
 
                 return (
-                  <Card
+                  <div
                     key={user._id}
-                    className="hover:shadow-md transition-shadow"
+                    className="p-3 rounded-lg interactive-card"
+                    style={{
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-subtle)'
+                    }}
                   >
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center space-x-3 min-w-0">
-                          <Avatar className="h-9 w-9">
-                            <AvatarFallback className="bg-gray-200 text-gray-700">
-                              {user.username.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <h3 className="font-medium truncate">{user.username}</h3>
-                            <p className="text-xs text-gray-400">Status: {status}</p>
-                          </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center space-x-3 min-w-0">
+                        <div className="h-9 w-9 rounded-full flex items-center justify-center" style={{
+                          background: 'var(--accent)',
+                          color: 'var(--bg-primary)'
+                        }}>
+                          {user.username.charAt(0).toUpperCase()}
                         </div>
+                        <div className="min-w-0">
+                          <h3 className="font-medium truncate" style={{ color: 'var(--text-main)' }}>{user.username}</h3>
+                          <p className="text-xs" style={{ color: 'var(--text-sub)' }}>Status: {status}</p>
+                        </div>
+                      </div>
 
-                        <div className="flex-shrink-0">
-                          {status === "none" && (
-                            <Button
+                      <div className="flex-shrink-0">
+                        {status === "none" && (
+                          <button
                             onClick={() => sendFriendRequest(user)}
-                            size="sm"
                             disabled={isLoading}
-                            className="bg-green-500 hover:bg-green-600 text-white border-0"
+                            className="px-4 py-2 text-sm font-semibold flex items-center hover-lift disabled:opacity-50"
+                            style={{
+                              background: 'var(--turf-green)',
+                              color: 'var(--bg-primary)',
+                              borderRadius: 'var(--r-sm)'
+                            }}
                           >
                             {isLoading ? (
                               <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -252,26 +263,37 @@ const Friends = () => {
                               <UserPlus className="h-4 w-4 mr-2" />
                             )}
                             Add Friend
-                          </Button>
+                          </button>
                         )}
                         
                         {status === 'pending' && (
-                          <Button size="sm" variant="outline" disabled>
+                          <button className="px-4 py-2 text-sm font-semibold flex items-center" disabled style={{
+                            background: 'transparent',
+                            color: 'var(--text-sub)',
+                            border: '1px solid var(--border-subtle)',
+                            borderRadius: 'var(--r-sm)',
+                            opacity: '0.7'
+                          }}>
                             <UserCheck className="h-4 w-4 mr-2" />
                             Request Sent
-                          </Button>
+                          </button>
                         )}
                         
                         {status === 'friend' && (
-                          <Button size="sm" variant="outline" disabled>
+                          <button className="px-4 py-2 text-sm font-semibold flex items-center" disabled style={{
+                            background: 'transparent',
+                            color: 'var(--text-sub)',
+                            border: '1px solid var(--border-subtle)',
+                            borderRadius: 'var(--r-sm)',
+                            opacity: '0.7'
+                          }}>
                             <Users className="h-4 w-4 mr-2" />
                             Friends
-                          </Button>
-                          )}
-                        </div>
+                          </button>
+                        )}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -281,37 +303,41 @@ const Friends = () => {
         {activeTab === "friends" && (
           <div>
             {friends.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                    No friends yet
-                  </h3>
-                  <p className="text-gray-500">
-                    Start by searching for users to connect with!
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="p-8 text-center rounded-lg" style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-subtle)'
+              }}>
+                <Users className="h-12 w-12 mx-auto mb-4" style={{ color: 'var(--border-subtle)' }} />
+                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-sub)' }}>
+                  No friends yet
+                </h3>
+                <p style={{ color: 'var(--text-sub)' }}>
+                  Start by searching for users to connect with!
+                </p>
+              </div>
             ) : (
               <div className="grid gap-3">
                 {friends.map((friend) => (
-                  <Card
+                  <div
                     key={friend._id}
-                    className="hover:shadow-md transition-shadow"
+                    className="p-3 rounded-lg interactive-card"
+                    style={{
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-subtle)'
+                    }}
                   >
-                    <CardContent className="p-3">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-9 w-9">
-                          <AvatarFallback className="bg-gray-200 text-gray-700">
-                            {friend.username.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-medium">{friend.username}</h3>
-                        </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="h-9 w-9 rounded-full flex items-center justify-center" style={{
+                        background: 'var(--turf-green)',
+                        color: 'var(--bg-primary)'
+                      }}>
+                        {friend.username.charAt(0).toUpperCase()}
                       </div>
-                    </CardContent>
-                  </Card>
+                      <div>
+                        <h3 className="font-medium" style={{ color: 'var(--text-main)' }}>{friend.username}</h3>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
@@ -321,72 +347,74 @@ const Friends = () => {
         {activeTab === "requests" && (
           <div>
             {friendRequests.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                    No friend requests
-                  </h3>
-                  <p className="text-gray-500">
-                    You'll see incoming friend requests here.
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="p-8 text-center rounded-lg" style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-subtle)'
+              }}>
+                <UserPlus className="h-12 w-12 mx-auto mb-4" style={{ color: 'var(--border-subtle)' }} />
+                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-sub)' }}>
+                  No friend requests
+                </h3>
+                <p style={{ color: 'var(--text-sub)' }}>
+                  You'll see incoming friend requests here.
+                </p>
+              </div>
             ) : (
               <div className="grid gap-3">
                 {friendRequests.map((request) => {
                   const isLoading = requestLoading[request._id];
 
                   return (
-                    <Card
+                    <div
                       key={request._id}
-                      className="hover:shadow-md transition-shadow"
+                      className="p-3 rounded-lg interactive-card"
+                      style={{
+                        background: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-subtle)'
+                      }}
                     >
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <Avatar className="h-9 w-9">
-                              <AvatarFallback className="bg-gray-200 text-gray-700">
-                                {request.username.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0">
-                              <h3 className="font-medium truncate">{request.username}</h3>
-                              <p className="text-xs text-gray-500 truncate">
-                                Sent a friend request
-                              </p>
-                            </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center space-x-3 min-w-0">
+                          <div className="h-9 w-9 rounded-full flex items-center justify-center" style={{
+                            background: 'var(--accent)',
+                            color: 'var(--bg-primary)'
+                          }}>
+                            {request.username.charAt(0).toUpperCase()}
                           </div>
-
-                          <div className="flex-shrink-0 flex space-x-1">
-                            <Button
-                              onClick={() => acceptFriendRequest(request)}
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 hover:bg-green-50"
-                              disabled={isLoading}
-                              title="Accept"
-                            >
-                              {isLoading ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <UserCheck className="h-4 w-4 text-green-600" />
-                              )}
-                            </Button>
-                            <Button
-                              onClick={() => rejectFriendRequest(request)}
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 hover:bg-red-50"
-                              disabled={isLoading}
-                              title="Reject"
-                            >
-                              <UserX className="h-4 w-4 text-red-500" />
-                            </Button>
+                          <div className="min-w-0">
+                            <h3 className="font-medium truncate" style={{ color: 'var(--text-main)' }}>{request.username}</h3>
+                            <p className="text-xs truncate" style={{ color: 'var(--text-sub)' }}>
+                              Sent a friend request
+                            </p>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+
+                        <div className="flex-shrink-0 flex space-x-1">
+                          <button
+                            onClick={() => acceptFriendRequest(request)}
+                            className="h-8 w-8 flex items-center justify-center rounded hover-lift"
+                            disabled={isLoading}
+                            title="Accept"
+                            style={{ background: 'transparent' }}
+                          >
+                            {isLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" style={{ color: 'var(--turf-green)' }} />
+                            ) : (
+                              <UserCheck className="h-4 w-4" style={{ color: 'var(--turf-green)' }} />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => rejectFriendRequest(request)}
+                            className="h-8 w-8 flex items-center justify-center rounded hover-lift"
+                            disabled={isLoading}
+                            title="Reject"
+                            style={{ background: 'transparent' }}
+                          >
+                            <UserX className="h-4 w-4" style={{ color: 'var(--clay-red)' }} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
               </div>

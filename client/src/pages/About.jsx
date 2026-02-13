@@ -1,163 +1,185 @@
 import React from "react";
-import { Users, Target, Shield, Globe, Trophy, Heart } from "lucide-react";
+import { motion } from "framer-motion";
+import { Users, Zap, Shield } from "lucide-react";
 
 const About = () => {
-  const stats = [
-    { label: "Active Users", value: "10K+", icon: Users },
-    { label: "Sports Covered", value: "25+", icon: Trophy },
-    { label: "Countries", value: "50+", icon: Globe },
-    { label: "Daily Stories", value: "500+", icon: Heart },
-  ];
-
-  const values = [
-    {
-      title: "Community First",
-      description:
-        "We believe sports are better when shared. Our platform fosters meaningful connections between fans worldwide.",
-      icon: Users,
-    },
-    {
-      title: "Authentic Analysis",
-      description:
-        "From unheard stories to deep match analysis, we provide space for powerful sports journalism.",
-      icon: Target,
-    },
-    {
-      title: "Safe Environment",
-      description:
-        "We maintain a respectful and secure platform through strong moderation and clear guidelines.",
-      icon: Shield,
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 text-white overflow-hidden">
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)', color: 'var(--text-main)' }}>
+      
+      {/* Magazine-Style Hero - Asymmetric Layout */}
+      <section className="relative px-6 md:px-12 pt-32 pb-20 max-w-[1400px] mx-auto">
+        
+        {/* Kinetic accent mark - hand-drawn feel */}
+        <div className="absolute top-20 left-0 w-1 h-32 opacity-40" 
+          style={{ background: 'var(--accent)' }}></div>
 
-      {/* ================= HERO ================= */}
-      <section className="relative py-28 text-center px-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.2),transparent_70%)]"></div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid md:grid-cols-12 gap-12 items-start"
+        >
+          
+          {/* Left: Big Statement */}
+          <div className="md:col-span-7">
+            <p className="text-sm font-mono mb-6 tracking-wide" 
+              style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+              ABOUT HUDDLEUP
+            </p>
+            
+            <h1 className="font-black mb-8"
+              style={{
+                fontSize: 'clamp(40px, 7vw, 80px)',
+                lineHeight: '1.1',
+                letterSpacing: '-0.03em'
+              }}>
+              Built by fans,
+              <br />
+              <span style={{ color: 'var(--accent)' }}>for the culture</span>
+            </h1>
 
-        <h1 className="group text-5xl md:text-7xl font-black mb-6 tracking-tight text-center cursor-pointer transition-all duration-500">
+            <div className="space-y-6" style={{ 
+              fontSize: 'var(--text-lg)', 
+              lineHeight: 'var(--lh-relaxed)',
+              color: 'var(--text-sub)' 
+            }}>
+              <p>
+                HuddleUp isn't another social media clone with a sports sticker slapped on it. 
+                We're what happens when real fans get tired of yelling into the void on platforms 
+                that don't get it.
+              </p>
+              
+              <p>
+                Every feature here exists because someone said "I wish there was a place where..." 
+                and we actually listened. Upload your garage league highlights. Start heated debates 
+                about the GOAT. Find your crew who actually watches the same obscure sport you do.
+              </p>
 
-  <span className="inline-block transition-all duration-500 group-hover:scale-105 group-hover:tracking-wider">
-    Elevating the{" "}
-  </span>
+              <p style={{ color: 'var(--text-main)', fontWeight: 600 }}>
+                This is your stadium. We just keep the lights on.
+              </p>
+            </div>
+          </div>
 
-  <span
-    className="
-    relative inline-block
-    bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500
-    bg-[length:200%_200%]
-    bg-clip-text text-transparent
-    transition-all duration-700
-    group-hover:animate-gradient
-    group-hover:drop-shadow-[0_0_25px_rgba(99,102,241,0.8)]
-    "
-  >
-    Fan Experience
-
-    {/* Animated underline */}
-    <span className="
-      absolute left-0 -bottom-2 h-1 w-0
-      bg-gradient-to-r from-cyan-400 to-purple-500
-      transition-all duration-500
-      group-hover:w-full
-    "></span>
-  </span>
-
-</h1>
-
-        <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-          HuddleUp is a digital stadium where stories come alive, analysis runs deep,
-          and every fan has a voice.
-        </p>
-      </section>
-
-      {/* ================= STATS ================= */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <div
-                key={index}
-                className="group relative p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 
-                transition-all duration-500 hover:-translate-y-4 hover:scale-105 
-                hover:border-indigo-400 hover:shadow-[0_0_40px_rgba(99,102,241,0.4)]"
-              >
-                <div className="flex justify-center mb-4">
-                  <Icon className="w-8 h-8 text-indigo-400 group-hover:text-cyan-400 transition duration-500 group-hover:rotate-12" />
-                </div>
-
-                <h3 className="text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-                  {stat.value}
-                </h3>
-
-                <p className="text-sm uppercase tracking-wider text-slate-400 mt-2">
-                  {stat.label}
-                </p>
-
-                {/* Glow Layer */}
-                <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-r from-indigo-500/10 to-cyan-500/10 blur-xl"></div>
+          {/* Right: Quick Stats - Not Centered, Organic Placement */}
+          <div className="md:col-span-5 space-y-8 md:mt-16">
+            
+            {/* Stat 1 */}
+            <div className="pl-6" style={{ borderLeft: `3px solid var(--turf-green)` }}>
+              <div className="font-black text-5xl mb-1" style={{ color: 'var(--turf-green)' }}>
+                10K+
               </div>
-            );
-          })}
+              <div className="text-sm font-mono" style={{ color: 'var(--text-sub)' }}>
+                Active creators sharing daily
+              </div>
+            </div>
+
+            {/* Stat 2 */}
+            <div className="pl-6 md:ml-12" style={{ borderLeft: `3px solid var(--accent)` }}>
+              <div className="font-black text-5xl mb-1" style={{ color: 'var(--accent)' }}>
+                25+
+              </div>
+              <div className="text-sm font-mono" style={{ color: 'var(--text-sub)' }}>
+                Sports from cricket to curling
+              </div>
+            </div>
+
+            {/* Stat 3 */}
+            <div className="pl-6" style={{ borderLeft: `3px solid var(--sun-yellow)` }}>
+              <div className="font-black text-5xl mb-1" style={{ color: 'var(--sun-yellow)' }}>
+                50+
+              </div>
+              <div className="text-sm font-mono" style={{ color: 'var(--text-sub)' }}>
+                Countries represented
+              </div>
+            </div>
+
+          </div>
+        </motion.div>
+      </section>
+
+      {/* What Makes Us Different - Editorial Columns */}
+      <section className="px-6 md:px-12 py-24 max-w-[1400px] mx-auto">
+        
+        <h2 className="text-sm font-mono mb-16 tracking-wide" 
+          style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+          WHAT MAKES US DIFFERENT
+        </h2>
+
+        {/* Three Column Layout - Magazine Style */}
+        <div className="grid md:grid-cols-3 gap-12">
+          
+          {/* Column 1: Community */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="space-y-4"
+          >
+            <div className="w-12 h-12 flex items-center justify-center rounded-lg"
+              style={{ background: 'var(--accent)', color: 'var(--bg-primary)' }}>
+              <Users className="w-6 h-6" />
+            </div>
+            
+            <h3 className="text-2xl font-bold" style={{ color: 'var(--text-main)' }}>
+              Community First, Always
+            </h3>
+            
+            <p style={{ color: 'var(--text-sub)', lineHeight: 'var(--lh-relaxed)' }}>
+              No algorithm deciding what you see. No ads interrupting your flow. 
+              Just pure, unfiltered sports passion from people who actually care.
+            </p>
+          </motion.div>
+
+          {/* Column 2: Speed */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="space-y-4"
+          >
+            <div className="w-12 h-12 flex items-center justify-center rounded-lg"
+              style={{ background: 'var(--turf-green)', color: 'var(--bg-primary)' }}>
+              <Zap className="w-6 h-6" />
+            </div>
+            
+            <h3 className="text-2xl font-bold" style={{ color: 'var(--text-main)' }}>
+              Built for Speed
+            </h3>
+            
+            <p style={{ color: 'var(--text-sub)', lineHeight: 'var(--lh-relaxed)' }}>
+              Upload highlights in seconds. Stream without buffering. React in real-time. 
+              Because when the game is on, every second counts.
+            </p>
+          </motion.div>
+
+          {/* Column 3: Safety */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="space-y-4"
+          >
+            <div className="w-12 h-12 flex items-center justify-center rounded-lg"
+              style={{ background: 'var(--clay-red)', color: 'var(--bg-primary)' }}>
+              <Shield className="w-6 h-6" />
+            </div>
+            
+            <h3 className="text-2xl font-bold" style={{ color: 'var(--text-main)' }}>
+              Safe Space, Real Talk
+            </h3>
+            
+            <p style={{ color: 'var(--text-sub)', lineHeight: 'var(--lh-relaxed)' }}>
+              Rivalries are fun. Toxicity isn't. We keep it competitive but respectful, 
+              so everyone can bring their A-game without the BS.
+            </p>
+          </motion.div>
+
         </div>
       </section>
 
-      {/* ================= MISSION + VALUES ================= */}
-      <section className="py-28 px-6 max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
-
-          {/* LEFT CONTENT */}
-          <div>
-            <h2 className="text-4xl font-extrabold mb-6 relative inline-block">
-              <span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-                Our Mission
-              </span>
-              <span className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-purple-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
-            </h2>
-
-            <p className="text-lg text-slate-300 leading-relaxed mb-6">
-              Our mission is to unite sports fans across the globe through meaningful
-              conversations, in-depth analysis, and powerful storytelling.
-            </p>
-
-            <p className="text-lg text-slate-400 leading-relaxed">
-              We empower the community to share, engage, and celebrate sports together.
-            </p>
-          </div>
-
-          {/* RIGHT CARDS */}
-          <div className="grid gap-8">
-            {values.map((value, index) => {
-              const Icon = value.icon;
-              return (
-                <div
-                  key={index}
-                  className="group relative p-10 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10
-                  transition-all duration-500 hover:-translate-y-4 hover:scale-[1.02]
-                  hover:border-purple-400 hover:shadow-[0_0_50px_rgba(168,85,247,0.4)]"
-                >
-                  <Icon className="w-12 h-12 text-purple-400 mb-6 
-                    transition-all duration-500 group-hover:text-cyan-400 group-hover:rotate-6" />
-
-                  <h3 className="text-xl font-bold mb-3 text-white">
-                    {value.title}
-                  </h3>
-
-                  <p className="text-slate-400 leading-relaxed">
-                    {value.description}
-                  </p>
-
-                  {/* Background Glow */}
-                  <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 blur-2xl"></div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
     </div>
   );
 };
