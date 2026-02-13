@@ -320,8 +320,3 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
 };
 
 export default VideoCard;
-
-
-};
-
-export default VideoCard;
