@@ -3,9 +3,10 @@ import { X, Eye, Heart, Share2 } from 'lucide-react';
 import CommentSection from './CommentSection';
 import { API } from '@/api';
 import { getToken } from '@/utils/auth';
-import { getShareUrl, shareLink } from '@/utils/share';
+import { getAssetUrl } from '@/utils/url';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const VideoPlayer = ({ video, onClose }) => {
   const videoRef = useRef(null);
@@ -16,9 +17,7 @@ const VideoPlayer = ({ video, onClose }) => {
   const [hasViewed, setHasViewed] = useState(false);
   const videoId = video._id || video.id;
 
-  const videoUrl = video.videoUrl?.startsWith('/uploads')
-    ? `http://localhost:5000${video.videoUrl}`
-    : video.videoUrl;
+  const videoUrl = getAssetUrl(video.videoUrl);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -88,72 +87,95 @@ const VideoPlayer = ({ video, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-      <div className="relative w-full max-w-5xl h-[90vh] bg-white rounded-2xl shadow-xl flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b bg-white sticky top-0 z-10">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-800">{video.title}</h2>
-            <p className="text-sm text-gray-500">{video.category}</p>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/90 backdrop-blur-sm p-4 md:p-10"
+      >
+        <motion.div
+          initial={{ scale: 0.9, y: 20 }}
+          animate={{ scale: 1, y: 0 }}
+          exit={{ scale: 0.9, y: 20 }}
+          className="relative w-full max-w-6xl h-full max-h-[90vh] bg-white dark:bg-zinc-900 rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden border border-zinc-200 dark:border-zinc-800"
+        >
+          {/* Left Side: Video Content */}
+          <div className="flex-[1.5] flex flex-col bg-black relative">
+            {/* Header Overlay (Mobile/Small) - Hidden on larger screens if desired */}
+            <div className="absolute top-0 left-0 right-0 p-6 z-20 flex justify-between items-start pointer-events-none">
+              <div className="bg-black/40 backdrop-blur-md p-3 rounded-2xl border border-white/10 pointer-events-auto">
+                <h2 className="text-sm font-bold text-white line-clamp-1">{video.title}</h2>
+                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">{video.category}</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-3 bg-black/40 backdrop-blur-md text-white hover:bg-white/20 rounded-2xl border border-white/10 transition pointer-events-auto"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 flex items-center justify-center">
+              <video
+                ref={videoRef}
+                src={videoUrl}
+                controls
+                autoPlay
+                className="w-full h-full object-contain"
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+              />
+            </div>
+
+            {/* Bottom Actions Overlay */}
+            <div className="absolute bottom-6 left-6 right-6 z-20 flex items-center justify-between pointer-events-none">
+              <div className="flex items-center gap-4 pointer-events-auto">
+                <button
+                  onClick={handleLike}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md border transition-all ${isLiked
+                      ? 'bg-emerald-500 border-emerald-400 text-white shadow-lg shadow-emerald-500/20'
+                      : 'bg-black/40 border-white/10 text-white hover:bg-white/10'
+                    }`}
+                >
+                  <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                  <span className="text-xs font-bold">{likes}</span>
+                </button>
+
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-white">
+                  <Eye className="w-4 h-4" />
+                  <span className="text-xs font-bold">{views} Views</span>
+                </div>
+              </div>
+
+              <div className="pointer-events-auto">
+                <button
+                  onClick={handleShare}
+                  className="p-3 bg-black/40 backdrop-blur-md text-white hover:bg-white/10 rounded-xl border border-white/10 transition shadow-xl"
+                  title="Share video"
+                >
+                  <Share2 className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleShare}
-              className="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
-              title="Share video"
-            >
-              <Share2 className="h-5 w-5" />
-            </button>
-            <button onClick={onClose} className="p-2 text-gray-500 hover:text-gray-700 transition">
-              <X className="h-5 w-5" />
-            </button>
+
+          {/* Right Side: Discussions */}
+          <div className="flex-1 flex flex-col bg-zinc-50 dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800">
+            <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 italic">Debate Arena</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-500 font-medium">Join the global sports conversation</p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="p-6">
+                <CommentSection contentId={videoId} contentType="video" />
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* Video */}
-        <div className="bg-black">
-          <video
-            ref={videoRef}
-            src={videoUrl}
-            controls
-            className="w-full max-h-[40vh]"
-            onPlay={() => {
-              console.log("▶️ onPlay triggered");
-              setIsPlaying(true);
-            }}
-            onPause={() => setIsPlaying(false)}
-          />
-        </div>
-
-       
-<div className="flex items-center justify-between px-6 py-3 border-b bg-white">
-  
-  <div className="flex items-center gap-6">
-    <button
-      onClick={handleLike}
-      className={`flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-full transition ${
-        isLiked
-          ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-      }`}
-    >
-      <Heart className="w-4 h-4  text-red-600 fill-current" />
-      <span>{likes}</span>
-    </button>
-
-    <div className="flex items-center text-gray-600 text-sm">
-      <Eye className="w-4 h-4 mr-1" />
-      <span>{views} views</span>
-    </div>
-  </div>
-</div>
-
-        {/* Comments */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 bg-gray-50">
-          <CommentSection contentId={videoId} contentType="video" />
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

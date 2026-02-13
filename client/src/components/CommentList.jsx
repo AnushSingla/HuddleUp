@@ -63,34 +63,41 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0 }) {
   };
 
   return (
-    <div className={`relative ${level > 0 ? 'ml-12 border-l-2 border-blue-50 pl-4' : ''}`}>
-      <div className="flex items-start space-x-3 py-3">
+    <div className={`relative ${level > 0 ? 'ml-10 border-l border-zinc-200 dark:border-zinc-800/50 pl-6 my-4' : 'mb-6'}`}>
+      <div className="group/item relative flex items-start space-x-4 py-4 px-4 rounded-2xl transition-all duration-300 hover:bg-white dark:hover:bg-zinc-900 shadow-none hover:shadow-xl hover:shadow-emerald-500/5 border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800">
         {/* Avatar */}
-        <div className="flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+        <div className="flex-shrink-0 pt-1">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-indigo-500 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-emerald-500/10">
             {comment.author?.charAt(0).toUpperCase() || '?'}
           </div>
         </div>
 
         {/* Comment Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-bold text-gray-900">{comment.author}</span>
-            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
-              {formatTime(comment.createdAt || comment.timestamp)}
-            </span>
+          <div className="flex items-center gap-3 mb-1">
+            <span className="text-sm font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight">{comment.author}</span>
+            <div className="flex items-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+              <span className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-widest font-bold">
+                {formatTime(comment.createdAt || comment.timestamp)}
+              </span>
+            </div>
           </div>
 
-          <p className="text-sm text-gray-700 mt-1 leading-relaxed">{comment.content}</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
+            {comment.content}
+          </p>
 
-          {/* Like/Reply Actions */}
-          <div className="flex items-center mt-2 space-x-4">
+          {/* Actions Block */}
+          <div className="flex items-center mt-3 gap-6">
             <button
               onClick={handleLike}
-              className={`flex items-center space-x-1 p-1 rounded-md transition-colors ${isLiked ? 'text-red-500 bg-red-50' : 'text-gray-500 hover:text-red-500 hover:bg-red-50'}`}
+              className={`flex items-center gap-1.5 transition-all duration-300 ${isLiked ? 'text-emerald-500' : 'text-zinc-400 hover:text-emerald-500 group/like'}`}
             >
-              <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-              {likeCount > 0 && <span className="text-xs font-medium">{likeCount}</span>}
+              <div className={`p-1.5 rounded-lg transition-all ${isLiked ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-100 dark:bg-zinc-800 group-hover/like:bg-emerald-500/10'}`}>
+                <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current text-white' : ''}`} />
+              </div>
+              <span className="text-[11px] font-bold">{likeCount > 0 ? likeCount : 'Like'}</span>
             </button>
 
             <button
@@ -101,16 +108,18 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0 }) {
                 }
                 setShowReplyForm(!showReplyForm);
               }}
-              className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 font-bold uppercase tracking-wide px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
+              className="flex items-center gap-1.5 text-zinc-400 hover:text-emerald-500 group/reply transition-colors"
             >
-              <Reply className="w-3 h-3" />
-              <span>Reply</span>
+              <div className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 group-hover/reply:bg-emerald-500/10 transition-all">
+                <Reply className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[11px] font-bold uppercase tracking-wider">Reply</span>
             </button>
           </div>
 
-          {/* Reply Form */}
+          {/* Reply Form Injection */}
           {showReplyForm && (
-            <div className="mt-3">
+            <div className="mt-6 p-4 bg-emerald-50/30 dark:bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
               <CommentInput
                 parentId={comment._id}
                 contentId={comment.videoId || comment.postId}
@@ -120,47 +129,49 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0 }) {
                   setShowReplyForm(false);
                 }}
                 onCancel={() => setShowReplyForm(false)}
-                placeholder="Write a reply..."
                 autoFocus
               />
             </div>
           )}
 
-          {/* View Replies Button */}
+          {/* Nested Replies Toggle */}
           {comment.replies?.length > 0 && (
             <button
               onClick={() => setShowReplies(!showReplies)}
-              className="flex items-center mt-3 text-xs text-blue-500 font-bold hover:text-blue-700 transition-colors"
+              className="flex items-center mt-4 group/toggle"
             >
-              <div className="w-6 h-[1px] bg-blue-100 mr-2"></div>
-              {showReplies ? 'HIDE' : `VIEW ${comment.replies.length}`} REPL{comment.replies.length !== 1 ? 'IES' : 'Y'}
+              <div className="w-6 h-px bg-zinc-200 dark:bg-zinc-800 group-hover:bg-emerald-500 transition-colors" />
+              <span className="ml-3 text-[10px] font-extrabold text-zinc-400 dark:text-zinc-500 group-hover:text-emerald-500 uppercase tracking-widest transition-all">
+                {showReplies ? 'STOW' : 'SHOW'} {comment.replies.length} REACTION{comment.replies.length !== 1 ? 'S' : ''}
+              </span>
             </button>
           )}
         </div>
 
-        {/* Options Menu */}
-        <div className="relative">
+        {/* Floating Options Menu */}
+        <div className="relative opacity-0 group-hover/item:opacity-100 transition-opacity">
           <button
             onClick={() => setShowOptions(!showOptions)}
-            className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+            className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-all"
           >
-            <MoreVertical className="w-5 h-5" />
+            <MoreVertical className="w-4 h-4" />
           </button>
 
           {showOptions && (
-            <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200">
+            <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl py-2 z-20 border border-zinc-200 dark:border-zinc-800 overflow-hidden">
               <button
                 onClick={handleDelete}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-600"
+                className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 transition-all"
               >
-                Delete
+                <Trash2 className="w-3.5 h-3.5" />
+                DELETE COMMENT
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Replies */}
+      {/* REPLIES RENDER RECURSIVE */}
       {showReplies && (
         <div className="mt-2">
           {comment.replies?.map((reply, index) => (
@@ -182,17 +193,18 @@ export default function CommentList({ comments, onAddComment, onDeleteComment })
 
   if (!comments || comments.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <MessageCircle className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-        <p className="text-lg font-medium text-gray-600">No comments yet</p>
-        <p className="text-sm text-gray-500">Be the first to comment</p>
+      <div className="flex flex-col items-center justify-center py-16 px-6 text-center bg-zinc-50/50 dark:bg-zinc-900/30 rounded-[32px] border border-dashed border-zinc-200 dark:border-zinc-800">
+        <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-6 text-zinc-300 dark:text-zinc-600">
+          <MessageCircle className="w-8 h-8" />
+        </div>
+        <p className="text-lg font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight">Crickets so far...</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-[200px]">Be the first to ignite the debate in this arena!</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 border-t border-gray-200 pt-4">
-      <div className="text-lg font-medium text-gray-900">Comments</div>
+    <div className="space-y-2">
       {comments.map((comment, index) => (
         <CommentItem
           key={comment._id || `comment-${index}`}

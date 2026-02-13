@@ -1,11 +1,12 @@
 // Explore.jsx
 import React, { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Compass, Mic2, BarChart3, Globe, PlayCircle } from 'lucide-react';
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import VideoCard from '@/components/VideoCard';
-import CategoryFilter from '@/components/CategoryFilter';
 import VideoPlayer from '@/components/VideoPlayer';
 import { API } from '@/api';
+import { getAssetUrl } from '@/utils/url';
 
 const Explore = () => {
   const navigate = useNavigate();
@@ -91,170 +92,146 @@ const Explore = () => {
     setSelectedVideo(null);
   };
   return (
-    <div className="relative min-h-screen bg-slate-50 overflow-hidden">
+    <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors duration-500 overflow-hidden">
       {/* ======= BACKGROUND GLOW EFFECT ======= */}
-      <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-emerald-400/20 rounded-full blur-[120px]" />
-      <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-indigo-400/20 rounded-full blur-[120px]" />
+      <div className="absolute -top-40 -left-20 w-[600px] h-[600px] bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 -right-20 w-[500px] h-[500px] bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-6 py-20">
+      <div className="relative max-w-7xl mx-auto px-6 pt-32 pb-20">
         {/* ================= HEADER ================= */}
-        <div className="text-center mb-16">
-          <div
-            className="inline-flex items-center gap-4 px-8 py-4 bg-white/70 backdrop-blur-xl 
-      border border-slate-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500"
+        <div className="text-center mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-medium mb-6"
           >
-            <div
-              className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-indigo-500 
-        flex items-center justify-center text-white text-xl shadow-md"
-            >
-              🔍
-            </div>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            Discover Content
+          </motion.div>
 
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-indigo-600 bg-clip-text text-transparent">
-              Explore Sports Content
-            </h1>
-          </div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6"
+          >
+            Explore <span className="bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent">Sports Universe</span>
+          </motion.h1>
 
-          <p className="mt-6 text-slate-600 text-lg max-w-2xl mx-auto">
-            Discover amazing sports stories, analysis, and global highlights.
-          </p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-zinc-500 dark:text-zinc-400 text-lg max-w-2xl mx-auto leading-relaxed"
+          >
+            Immerse yourself in world-class sports stories, expert analysis, and exclusive highlights from across the globe.
+          </motion.p>
         </div>
 
         {/* ================= SEARCH + FILTER ================= */}
-        <div className="flex justify-center">
-          <div
-            className="w-full max-w-5xl bg-white/80 backdrop-blur-2xl 
-  border border-slate-200 rounded-3xl shadow-xl p-10"
-          >
+        <div className="w-full max-w-5xl mx-auto mb-16">
+          <div className="bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 md:p-8 shadow-2xl shadow-indigo-500/5">
             {/* SEARCH */}
-            <div className="relative max-w-xl mx-auto mb-10 group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-all duration-300" />
-
+            <div className="relative max-w-2xl mx-auto mb-8 group">
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 group-focus-within:text-emerald-500 transition-colors" />
               <input
                 type="text"
-                placeholder="Search sports videos..."
+                placeholder="Search by title, athlete, or sport..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-300 
-        bg-white shadow-sm text-slate-700 placeholder-slate-400
-        focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400
-        transition-all duration-300 hover:shadow-md"
+                className="w-full pl-14 pr-6 py-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 
+                bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white placeholder-zinc-400
+                focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50
+                transition-all duration-300 shadow-sm group-hover:shadow-md"
               />
             </div>
 
-            {/* CATEGORY GRID */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {/* CATEGORIES */}
+            <div className="flex flex-wrap items-center justify-center gap-3">
               {[
-                { name: "ALL", icon: "📦", count: videoCounts.ALL },
-                {
-                  name: "UNHEARD STORIES",
-                  icon: "📢",
-                  count: videoCounts["UNHEARD STORIES"],
-                },
-                {
-                  name: "MATCH ANALYSIS",
-                  icon: "📊",
-                  count: videoCounts["MATCH ANALYSIS"],
-                },
-                {
-                  name: "SPORTS AROUND THE GLOBE",
-                  icon: "🌍",
-                  count: videoCounts["SPORTS AROUND THE GLOBE"],
-                },
-              ].map((cat) => (
-                <button
+                { name: "ALL", icon: <PlayCircle className="w-4 h-4" />, count: videoCounts.ALL },
+                { name: "UNHEARD STORIES", icon: <Mic2 className="w-4 h-4" />, count: videoCounts["UNHEARD STORIES"] },
+                { name: "MATCH ANALYSIS", icon: <BarChart3 className="w-4 h-4" />, count: videoCounts["MATCH ANALYSIS"] },
+                { name: "SPORTS AROUND THE GLOBE", icon: <Globe className="w-4 h-4" />, count: videoCounts["SPORTS AROUND THE GLOBE"] },
+              ].map((cat, idx) => (
+                <motion.button
                   key={cat.name}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.1 + idx * 0.05 }}
                   onClick={() => setSelectedCategory(cat.name)}
-                  className={`group relative rounded-2xl p-5 text-left transition-all duration-300 
-          border shadow-md hover:shadow-xl hover:-translate-y-1
-          ${
-            selectedCategory === cat.name
-              ? "bg-gradient-to-r from-emerald-500 to-indigo-500 text-white border-transparent"
-              : "bg-white text-slate-700 border-slate-200 hover:border-emerald-300"
-          }`}
+                  className={`group relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl transition-all duration-300 
+                  border font-medium text-xs
+                  ${selectedCategory === cat.name
+                      ? "bg-emerald-500 text-white border-emerald-400 shadow-lg shadow-emerald-500/25"
+                      : "bg-white dark:bg-zinc-800/50 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50 hover:bg-emerald-500/5 dark:hover:bg-emerald-500/10"
+                    }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold flex items-center gap-2">
-                      {cat.icon} {cat.name}
-                    </span>
-
-                    <span
-                      className={`text-sm px-3 py-1 rounded-full 
-              ${
-                selectedCategory === cat.name
-                  ? "bg-white/20 text-white"
-                  : "bg-slate-100 text-slate-600"
-              }`}
-                    >
-                      {cat.count || 0}
-                    </span>
-                  </div>
-                </button>
+                  <span className={`${selectedCategory === cat.name ? "text-white" : "text-emerald-500"}`}>
+                    {cat.icon}
+                  </span>
+                  <span>{cat.name}</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold
+                    ${selectedCategory === cat.name
+                        ? "bg-white/20 text-white"
+                        : "bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400"
+                      }`}
+                  >
+                    {cat.count || 0}
+                  </span>
+                </motion.button>
               ))}
             </div>
           </div>
         </div>
 
-        {/* ================= VIDEO GRID / EMPTY STATE ================= */}
+        {/* ================= VIDEO GRID ================= */}
         {filteredVideos.length > 0 ? (
-          <div className="mt-16">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {filteredVideos.map((video) => (
-                <VideoCard
-                  key={video._id}
-                  video={{
-                    ...video,
-                    id: video._id,
-                    videoUrl: video.videoUrl?.startsWith("/uploads")
-                      ? `http://localhost:5000${video.videoUrl}`
-                      : video.videoUrl,
-                  }}
-                  onPlay={handleVideoPlay}
-                  onDelete={(id) =>
-                    setVideos((prev) => prev.filter((v) => v._id !== id))
-                  }
-                />
-              ))}
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
+          >
+            {filteredVideos.map((video) => (
+              <VideoCard
+                key={video._id}
+                video={{
+                  ...video,
+                  id: video._id,
+                }}
+                onPlay={handleVideoPlay}
+                onDelete={(id) =>
+                  setVideos((prev) => prev.filter((v) => v._id !== id))
+                }
+              />
+            ))}
+          </motion.div>
         ) : (
-          <div className="relative flex flex-col items-center justify-center py-32 text-center overflow-hidden">
-            {/* ===== Background Glow ===== */}
-            <div className="absolute -top-32 w-[500px] h-[500px] bg-emerald-400/20 rounded-full blur-[120px]" />
-            <div className="absolute -bottom-32 w-[500px] h-[500px] bg-indigo-400/20 rounded-full blur-[120px]" />
-
-            {/* ===== Floating Icon Card ===== */}
-            <div className="relative mb-10 group">
-              <div
-                className="w-32 h-32 rounded-3xl bg-gradient-to-br from-emerald-500 to-indigo-500 
-    flex items-center justify-center shadow-2xl
-    transition-all duration-500
-    group-hover:scale-110 group-hover:rotate-3"
-              >
-                <div className="text-white text-5xl">🏏</div>
+          <div className="relative flex flex-col items-center justify-center py-24 text-center">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="mb-8"
+            >
+              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-emerald-400 to-indigo-600 flex items-center justify-center shadow-2xl">
+                <span className="text-4xl text-white">🎬</span>
               </div>
-            </div>
+            </motion.div>
 
-            {/* ===== Title ===== */}
-            <h2 className="text-4xl font-bold text-slate-800 mb-5 tracking-tight">
-              No Videos Found
-            </h2>
-
-            {/* ===== Subtitle ===== */}
-            <p className="text-slate-600 text-lg max-w-md mb-12 leading-relaxed">
-              Be the first to upload an exciting sports video and inspire the
-              community.
+            <h2 className="text-3xl font-bold mb-4">No content found</h2>
+            <p className="text-zinc-500 dark:text-zinc-400 max-w-sm mb-10">
+              We couldn't find any videos matching your search or category. Try something else!
             </p>
 
-            {/* ===== CTA Button ===== */}
             <button
               onClick={() => navigate("/upload")}
-              className="relative px-10 py-4 rounded-2xl font-semibold text-white
-    bg-gradient-to-r from-emerald-500 to-indigo-500
-    shadow-lg transition-all duration-300
-    hover:scale-105 hover:-translate-y-1 hover:shadow-2xl"
+              className="px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition shadow-lg shadow-emerald-500/20"
             >
-              🚀 Upload Your First Video
+              Upload New Video
             </button>
           </div>
         )}
@@ -264,7 +241,6 @@ const Explore = () => {
         )}
       </div>
     </div>
-
   );
 };
 
