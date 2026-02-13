@@ -1,182 +1,130 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Users, Zap, Shield } from "lucide-react";
 
 const About = () => {
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)', color: 'var(--text-main)' }}>
       
-      {/* Magazine-Style Hero - Asymmetric Layout */}
-      <section className="relative px-6 md:px-12 pt-32 pb-20 max-w-[1400px] mx-auto">
+      {/* Narrative Layout - No Cards, Inline Stats */}
+      <section className="max-w-4xl mx-auto px-6 md:px-12 py-32">
         
-        {/* Kinetic accent mark - hand-drawn feel */}
-        <div className="absolute top-20 left-0 w-1 h-32 opacity-40" 
-          style={{ background: 'var(--accent)' }}></div>
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid md:grid-cols-12 gap-12 items-start"
+          className="space-y-12"
+          style={{
+            fontSize: 'clamp(20px, 3vw, 28px)',
+            lineHeight: '1.7',
+            color: 'var(--text-main)'
+          }}
         >
-          
-          {/* Left: Big Statement */}
-          <div className="md:col-span-7">
-            <p className="text-sm font-mono mb-6 tracking-wide" 
-              style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
-              ABOUT HUDDLEUP
+          <p>
+            We built HuddleUp because fans were yelling into the void after moments that deserved a crowd.
+          </p>
+
+          <p style={{ color: 'var(--text-sub)' }}>
+            Every platform promised community. Most delivered isolation. 
+            You'd upload the greatest play you've ever seen, and it would vanish in 60 seconds. 
+            You'd start a debate about the GOAT, and the algorithm would bury it for engagement-bait.
+          </p>
+
+          <p>
+            So we built something different.
+          </p>
+
+          <div className="py-8 border-l-4 pl-8" style={{ borderColor: 'var(--accent)' }}>
+            <p className="font-bold mb-6" style={{ color: 'var(--accent)', fontSize: 'clamp(18px, 2.5vw, 24px)' }}>
+              <span className="text-6xl font-black mr-3">10K+</span>
+              moments shared daily
             </p>
-            
-            <h1 className="font-black mb-8"
-              style={{
-                fontSize: 'clamp(40px, 7vw, 80px)',
-                lineHeight: '1.1',
-                letterSpacing: '-0.03em'
-              }}>
-              Built by fans,
-              <br />
-              <span style={{ color: 'var(--accent)' }}>for the culture</span>
-            </h1>
-
-            <div className="space-y-6" style={{ 
-              fontSize: 'var(--text-lg)', 
-              lineHeight: 'var(--lh-relaxed)',
-              color: 'var(--text-sub)' 
-            }}>
-              <p>
-                HuddleUp isn't another social media clone with a sports sticker slapped on it. 
-                We're what happens when real fans get tired of yelling into the void on platforms 
-                that don't get it.
-              </p>
-              
-              <p>
-                Every feature here exists because someone said "I wish there was a place where..." 
-                and we actually listened. Upload your garage league highlights. Start heated debates 
-                about the GOAT. Find your crew who actually watches the same obscure sport you do.
-              </p>
-
-              <p style={{ color: 'var(--text-main)', fontWeight: 600 }}>
-                This is your stadium. We just keep the lights on.
-              </p>
-            </div>
+            <p style={{ color: 'var(--text-sub)', fontSize: 'var(--text-lg)' }}>
+              From garage league highlights to World Cup analysis. 
+              If it matters to you, it has a home here.
+            </p>
           </div>
 
-          {/* Right: Quick Stats - Not Centered, Organic Placement */}
-          <div className="md:col-span-5 space-y-8 md:mt-16">
-            
-            {/* Stat 1 */}
-            <div className="pl-6" style={{ borderLeft: `3px solid var(--turf-green)` }}>
-              <div className="font-black text-5xl mb-1" style={{ color: 'var(--turf-green)' }}>
-                10K+
-              </div>
-              <div className="text-sm font-mono" style={{ color: 'var(--text-sub)' }}>
-                Active creators sharing daily
-              </div>
-            </div>
+          <p style={{ color: 'var(--text-sub)' }}>
+            We're not trying to replace Twitter for hot takes or YouTube for polished content. 
+            We're the place you go when something just happened and you need to talk about it <em>right now</em>.
+          </p>
 
-            {/* Stat 2 */}
-            <div className="pl-6 md:ml-12" style={{ borderLeft: `3px solid var(--accent)` }}>
-              <div className="font-black text-5xl mb-1" style={{ color: 'var(--accent)' }}>
-                25+
-              </div>
-              <div className="text-sm font-mono" style={{ color: 'var(--text-sub)' }}>
-                Sports from cricket to curling
-              </div>
-            </div>
-
-            {/* Stat 3 */}
-            <div className="pl-6" style={{ borderLeft: `3px solid var(--sun-yellow)` }}>
-              <div className="font-black text-5xl mb-1" style={{ color: 'var(--sun-yellow)' }}>
-                50+
-              </div>
-              <div className="text-sm font-mono" style={{ color: 'var(--text-sub)' }}>
-                Countries represented
-              </div>
-            </div>
-
+          <div className="py-8 border-l-4 pl-8" style={{ borderColor: 'var(--turf-green)' }}>
+            <p className="font-bold mb-6" style={{ color: 'var(--turf-green)', fontSize: 'clamp(18px, 2.5vw, 24px)' }}>
+              <span className="text-6xl font-black mr-3">25+</span>
+              sports from cricket to curling
+            </p>
+            <p style={{ color: 'var(--text-sub)', fontSize: 'var(--text-lg)' }}>
+              No sport is too big or too niche. 
+              Your passion is valid here.
+            </p>
           </div>
+
+          <p style={{ color: 'var(--text-sub)' }}>
+            We don't use recommendation algorithms. 
+            We don't sell your attention to advertisers. 
+            We don't optimize for "engagement" — we optimize for actual conversation between actual fans.
+          </p>
+
+          <div className="py-8 border-l-4 pl-8" style={{ borderColor: 'var(--sun-yellow)' }}>
+            <p className="font-bold mb-6" style={{ color: 'var(--sun-yellow)', fontSize: 'clamp(18px, 2.5vw, 24px)' }}>
+              <span className="text-6xl font-black mr-3">50+</span>
+              countries watching together
+            </p>
+            <p style={{ color: 'var(--text-sub)', fontSize: 'var(--text-lg)' }}>
+              Time zones don't matter when the game is on. 
+              Find your people, anywhere.
+            </p>
+          </div>
+
+          <p className="font-semibold" style={{ fontSize: 'clamp(24px, 4vw, 36px)', lineHeight: '1.3' }}>
+            This is your stadium.
+            <br />
+            <span style={{ color: 'var(--accent)' }}>We just keep the lights on.</span>
+          </p>
+
         </motion.div>
       </section>
 
-      {/* What Makes Us Different - Editorial Columns */}
-      <section className="px-6 md:px-12 py-24 max-w-[1400px] mx-auto">
-        
-        <h2 className="text-sm font-mono mb-16 tracking-wide" 
-          style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+      {/* What Makes Us Different - No Cards, Just Text */}
+      <section className="max-w-4xl mx-auto px-6 md:px-12 pb-32">
+        <h2 className="text-sm font-mono mb-12 tracking-wider" 
+          style={{ color: 'var(--text-sub)', letterSpacing: '0.2em' }}>
           WHAT MAKES US DIFFERENT
         </h2>
 
-        {/* Three Column Layout - Magazine Style */}
-        <div className="grid md:grid-cols-3 gap-12">
-          
-          {/* Column 1: Community */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="space-y-4"
-          >
-            <div className="w-12 h-12 flex items-center justify-center rounded-lg"
-              style={{ background: 'var(--accent)', color: 'var(--bg-primary)' }}>
-              <Users className="w-6 h-6" />
-            </div>
-            
-            <h3 className="text-2xl font-bold" style={{ color: 'var(--text-main)' }}>
+        <div className="space-y-16">
+          {/* Community First */}
+          <div>
+            <h3 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-main)' }}>
               Community First, Always
             </h3>
-            
-            <p style={{ color: 'var(--text-sub)', lineHeight: 'var(--lh-relaxed)' }}>
+            <p style={{ color: 'var(--text-sub)', fontSize: 'var(--text-lg)', lineHeight: 'var(--lh-relaxed)' }}>
               No algorithm deciding what you see. No ads interrupting your flow. 
               Just pure, unfiltered sports passion from people who actually care.
             </p>
-          </motion.div>
+          </div>
 
-          {/* Column 2: Speed */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="space-y-4"
-          >
-            <div className="w-12 h-12 flex items-center justify-center rounded-lg"
-              style={{ background: 'var(--turf-green)', color: 'var(--bg-primary)' }}>
-              <Zap className="w-6 h-6" />
-            </div>
-            
-            <h3 className="text-2xl font-bold" style={{ color: 'var(--text-main)' }}>
+          {/* Built for Speed */}
+          <div>
+            <h3 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-main)' }}>
               Built for Speed
             </h3>
-            
-            <p style={{ color: 'var(--text-sub)', lineHeight: 'var(--lh-relaxed)' }}>
+            <p style={{ color: 'var(--text-sub)', fontSize: 'var(--text-lg)', lineHeight: 'var(--lh-relaxed)' }}>
               Upload highlights in seconds. Stream without buffering. React in real-time. 
               Because when the game is on, every second counts.
             </p>
-          </motion.div>
+          </div>
 
-          {/* Column 3: Safety */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
-            className="space-y-4"
-          >
-            <div className="w-12 h-12 flex items-center justify-center rounded-lg"
-              style={{ background: 'var(--clay-red)', color: 'var(--bg-primary)' }}>
-              <Shield className="w-6 h-6" />
-            </div>
-            
-            <h3 className="text-2xl font-bold" style={{ color: 'var(--text-main)' }}>
+          {/* Safe Space */}
+          <div>
+            <h3 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-main)' }}>
               Safe Space, Real Talk
             </h3>
-            
-            <p style={{ color: 'var(--text-sub)', lineHeight: 'var(--lh-relaxed)' }}>
+            <p style={{ color: 'var(--text-sub)', fontSize: 'var(--text-lg)', lineHeight: 'var(--lh-relaxed)' }}>
               Rivalries are fun. Toxicity isn't. We keep it competitive but respectful, 
               so everyone can bring their A-game without the BS.
             </p>
-          </motion.div>
-
+          </div>
         </div>
       </section>
 
