@@ -1,4 +1,6 @@
 const Post = require("../models/Post")
+const Notification = require("../models/Notification");
+
 exports.createPost = async (req, res) => {
   try {
     const { title, content, category } = req.body;
@@ -29,7 +31,6 @@ exports.getAllPosts = async (req, res) => {
   }
 }
 
-
 exports.likePost = async (req, res) => {
   try {
     const postId = req.params.id;
@@ -39,18 +40,41 @@ exports.likePost = async (req, res) => {
     if (!post) return res.status(404).json({ message: "Post not found" });
 
     const isLiked = post.likes.includes(userId);
-    const update = isLiked ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
 
-    const updatedPost = await Post.findByIdAndUpdate(postId, update, { new: true });
+    const update = isLiked
+      ? { $pull: { likes: userId } }
+      : { $addToSet: { likes: userId } };
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      postId,
+      update,
+      { new: true }
+    );
+
+    // ✅ CREATE NOTIFICATION ONLY WHEN LIKING (not unliking)
+    if (!isLiked && post.postedBy.toString() !== userId.toString()) {
+      await Notification.create({
+        recipient: post.postedBy,
+        sender: userId,
+        type: "like",
+        post: post._id,
+      });
+    }
 
     res.status(200).json({
       likedByUser: !isLiked,
       likesCount: updatedPost.likes.length,
     });
+
   } catch (err) {
-    res.status(500).json({ message: "Error toggling like", error: err.message });
+    res.status(500).json({
+      message: "Error toggling like",
+      error: err.message,
+    });
   }
-}
+};
+
+
 
 exports.deletePost = async (req, res) => {
   try {

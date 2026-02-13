@@ -6,6 +6,7 @@ const path = require('path');
 const authRoutes = require("./routes/auth")
 const videoRoutes = require("./routes/video")
 const commentRoutes = require("./routes/comment")
+const notificationRoutes = require("./routes/notification");
 const postRoutes = require("./routes/post")
 const friendRoutes = require("./routes/friend")
 
@@ -29,6 +30,7 @@ app.use("/api", videoRoutes)
 app.use("/api", commentRoutes)
 app.use("/api", postRoutes)
 app.use("/api", friendRoutes)
+app.use("/api/notifications", notificationRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/favicon.ico", (req, res) => res.status(204));
