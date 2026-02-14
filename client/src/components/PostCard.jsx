@@ -8,6 +8,8 @@ import { API } from '@/api';
 import { getToken, getUserId } from '@/utils/auth';
 import { getShareUrl, shareLink } from '@/utils/share';
 import { toast } from 'sonner';
+import { motion } from "framer-motion";
+
 
 const PostCard = ({ post, onDelete }) => {
   const navigate = useNavigate();
