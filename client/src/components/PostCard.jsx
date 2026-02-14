@@ -3,6 +3,7 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Heart, MessageCircle, Calendar, Tag, User, Trash2, Pencil, Share2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import CommentSection from './CommentSection';
 import { API } from '@/api';
 import { getToken, getUserId } from '@/utils/auth';

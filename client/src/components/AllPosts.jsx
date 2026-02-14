@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import PostCard from './PostCard';
 import { Link } from 'react-router-dom';
 import { PlusCircle, Search, MessageSquare, Filter } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { API } from '@/api';
 
 const AllPosts = () => {
