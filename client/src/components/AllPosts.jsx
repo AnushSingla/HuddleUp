@@ -6,6 +6,8 @@ import PostCard from './PostCard';
 import { Link } from 'react-router-dom';
 import { PlusCircle, Search, MessageSquare, Filter } from 'lucide-react';
 import { API } from '@/api';
+import { motion } from "framer-motion";
+
 
 const AllPosts = () => {
   const location = useLocation();
