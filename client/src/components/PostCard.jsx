@@ -8,6 +8,7 @@ import { API } from '@/api';
 import { getToken, getUserId } from '@/utils/auth';
 import { getShareUrl, shareLink } from '@/utils/share';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 const PostCard = ({ post, onDelete }) => {
   const navigate = useNavigate();
@@ -157,10 +158,7 @@ const PostCard = ({ post, onDelete }) => {
             variant="ghost"
             size="sm"
             onClick={handleLike}
-            className={`h-11 px-6 flex items-center gap-2.5 rounded-2xl transition-all duration-300 border ${isLiked
-                ? 'bg-red-50 dark:bg-red-500/10 text-red-500 border-red-100 dark:border-red-500/20'
-                : 'bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 border-zinc-100 dark:border-zinc-800/50 hover:bg-red-50 dark:hover:bg-red-500/5 hover:text-red-500 hover:border-red-100'
-              }`}
+            className="h-11 px-6 flex items-center gap-2.5 rounded-2xl transition-all duration-300 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white border border-blue-500 shadow-lg shadow-blue-600/20"
           >
             <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
             <span className="font-bold">{likes}</span>
@@ -170,10 +168,7 @@ const PostCard = ({ post, onDelete }) => {
             variant="ghost"
             size="sm"
             onClick={() => setShowComments(!showComments)}
-            className={`h-11 px-6 flex items-center gap-2.5 rounded-2xl transition-all duration-300 border ${showComments
-                ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20'
-                : 'bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 border-zinc-100 dark:border-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/5 hover:text-emerald-600 hover:border-emerald-100'
-              }`}
+            className="h-11 px-6 flex items-center gap-2.5 rounded-2xl transition-all duration-300 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white border border-blue-500 shadow-lg shadow-blue-600/20"
           >
             <MessageCircle className="h-4 w-4" />
             <span className="font-bold">DEBATE</span>
@@ -183,7 +178,7 @@ const PostCard = ({ post, onDelete }) => {
             variant="ghost"
             size="sm"
             onClick={handleShare}
-            className="h-11 w-11 p-0 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 text-zinc-400 dark:text-zinc-500 border border-zinc-100 dark:border-zinc-800/50 hover:bg-emerald-500/5 hover:text-emerald-500 hover:border-emerald-500/20 transition-all duration-300 ml-auto"
+            className="h-11 w-11 p-0 flex items-center justify-center rounded-2xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white border border-blue-500 shadow-lg shadow-blue-600/20 transition-all duration-300 ml-auto"
             title="Share post"
           >
             <Share2 className="h-4 w-4" />

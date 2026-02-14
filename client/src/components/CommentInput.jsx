@@ -54,9 +54,9 @@ export default function CommentInput({
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder={parentId ? 'Write your reply...' : 'Share your thoughts with the community...'}
-          className="w-full px-5 py-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-sm 
-          text-zinc-900 dark:text-zinc-100 placeholder-zinc-400
-          focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50 
+          className="w-full px-5 py-4 bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm 
+          text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500
+          focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 
           transition-all duration-300 shadow-sm resize-none"
         />
 

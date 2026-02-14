@@ -221,7 +221,7 @@ const Upload = () => {
           <Button
             type="submit"
             disabled={isUploading}
-            className="w-full h-14 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-extrabold text-sm uppercase tracking-widest transition-all duration-300 hover:bg-emerald-500 dark:hover:bg-emerald-400 border-none shadow-xl shadow-zinc-950/20 dark:shadow-emerald-500/10 disabled:opacity-50"
+            className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-extrabold text-sm uppercase tracking-widest transition-all duration-300 border-none shadow-xl shadow-blue-600/20 disabled:opacity-50"
           >
             {isUploading ? "TRANSMITTING DATA..." : "PUBLISH TO ARENA"}
           </Button>

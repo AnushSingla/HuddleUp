@@ -84,7 +84,7 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0 }) {
             </div>
           </div>
 
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed break-words overflow-wrap-anywhere">
             {comment.content}
           </p>
 
@@ -119,7 +119,7 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0 }) {
 
           {/* Reply Form Injection */}
           {showReplyForm && (
-            <div className="mt-6 p-4 bg-emerald-50/30 dark:bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
+            <div className="mt-6 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-emerald-500/20 dark:border-emerald-500/20">
               <CommentInput
                 parentId={comment._id}
                 contentId={comment.videoId || comment.postId}

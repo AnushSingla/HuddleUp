@@ -1,4 +1,4 @@
-import { useTheme } from "next-themes"
+import { useTheme } from "@/context/theme-context"
 import { Toaster as Sonner } from "sonner";
 
 const Toaster = ({

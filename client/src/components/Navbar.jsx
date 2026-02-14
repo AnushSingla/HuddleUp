@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
-import { Menu, X, Bell } from "lucide-react";
-import axios from "axios";
+import { API } from "@/api";
 
 export default function Navbar() {
   const location = useLocation();
@@ -22,29 +21,33 @@ export default function Navbar() {
   }, [location]);
 
   useEffect(() => {
-  if (!loggedIn) return;
+    if (!loggedIn) return;
 
-  const fetchNotifications = async () => {
-    try {
-      const token = localStorage.getItem("token");
+    const abortController = new AbortController();
 
-      const res = await axios.get(
-        "http://localhost:5000/api/notifications",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+    const fetchNotifications = async () => {
+      try {
+        const res = await API.get("/notifications", {
+          signal: abortController.signal
+        });
+        setNotifications(res.data);
+      } catch (err) {
+        // Ignore aborted requests and 404s (backend might not have notifications yet)
+        if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
+        if (err.response?.status === 404) return;
+        
+        // Only log other errors in development
+        if (import.meta.env.DEV) {
+          console.error("Failed to fetch notifications", err);
         }
-      );
+      }
+    };
 
-      setNotifications(res.data);
-    } catch (err) {
-      console.error("Failed to fetch notifications", err);
-    }
-  };
+    fetchNotifications();
 
-  fetchNotifications();
-}, [loggedIn]);
+    // Cleanup: abort request if component unmounts
+    return () => abortController.abort();
+  }, [loggedIn]);
 
 
   const handleLogout = () => {

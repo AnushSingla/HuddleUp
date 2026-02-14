@@ -32,6 +32,7 @@ const Friends = () => {
         url,
         method: options.method || "GET",
         data: options.body || {},
+        signal: options.signal,
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           ...(options.headers || {}),
@@ -39,12 +40,37 @@ const Friends = () => {
       });
       return response.data;
     } catch (error) {
+      // Rethrow aborted errors to be handled by caller
+      if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') throw error;
       throw new Error(error.response?.data?.message || "Something went wrong");
     }
   };
 
   useEffect(() => {
+    const abortController = new AbortController();
+    
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // Pass signal to apiCall wrapper
+        await Promise.all([
+          loadUsers(abortController.signal), 
+          loadFriends(abortController.signal), 
+          loadFriendRequests(abortController.signal), 
+          loadSentRequests(abortController.signal)
+        ]);
+      } catch (error) {
+        // Ignore aborted requests
+        if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') return;
+        toast.error(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
     loadData();
+    
+    return () => abortController.abort();
   }, []);
 
   const loadData = async () => {
@@ -58,27 +84,23 @@ const Friends = () => {
     }
   };
 
-  const loadUsers = async () => {
-    const users = await apiCall("users");
-    console.log("All users:", users);
+  const loadUsers = async (signal) => {
+    const users = await apiCall("users", { signal });
     setAllUsers(users);
   };
 
-  const loadFriends = async () => {
-    const friends = await apiCall("friends");
-    console.log("Friends data:", friends);
+  const loadFriends = async (signal) => {
+    const friends = await apiCall("friends", { signal });
     setFriends(friends);
   };
 
-  const loadFriendRequests = async () => {
-    const requests = await apiCall("friends/requests");
-    console.log("Friend requests data:", requests);
+  const loadFriendRequests = async (signal) => {
+    const requests = await apiCall("friends/requests", { signal });
     setFriendRequests(requests);
   };
 
-  const loadSentRequests = async () => {
-    const requests = await apiCall("friends/sent");
-    console.log("Sent requests data:", requests);
+  const loadSentRequests = async (signal) => {
+    const requests = await apiCall("friends/sent", { signal });
     setSentRequests(requests);
   };
 
@@ -128,26 +150,18 @@ const Friends = () => {
   };
 
   const getUserStatus = (user) => {
-    console.log(`Checking status for user: ${user.username} (${user._id})`);
-    console.log("Friends:", friends);
-    console.log("Friend requests:", friendRequests);
-    console.log("Sent requests:", sentRequests);
-    
     const isFriend = friends.some((f) => f._id === user._id);
-    console.log(`Is friend: ${isFriend}`);
     
     // Check if we have an incoming friend request from this user
     const hasIncomingRequest = friendRequests.some(r => 
       r.from === user._id || r._id === user._id || r.fromId === user._id || r.senderId === user._id
     );
-    console.log(`Has incoming request: ${hasIncomingRequest}`);
     
     // Check if we sent a request to this user - try multiple possible field names
     const hasSentRequest = sentRequests.some((s) => 
       s.to === user._id || s.recipient === user._id || s.recipientId === user._id || 
       s.toId === user._id || s._id === user._id || s.userId === user._id
     );
-    console.log(`Has sent request: ${hasSentRequest}`);
 
     if (isFriend) return "friend";
     if (hasIncomingRequest) return "incoming";

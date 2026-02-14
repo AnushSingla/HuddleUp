@@ -12,6 +12,7 @@ import EditVideo from './pages/EditVideo';
 import Friends from './pages/Friends';
 import Contact from './pages/Contact';
 import About from './pages/About';
+import NotFound from './pages/NotFound';
 
 
 // Components
@@ -32,6 +33,7 @@ function AppContent() {
         <Routes>
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     );
@@ -54,6 +56,7 @@ function AppContent() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/Feedback" element={<Feedback />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </main>

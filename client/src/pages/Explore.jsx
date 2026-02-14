@@ -19,9 +19,9 @@ const Explore = () => {
   const [videoCounts, setVideoCounts] = useState({});
   const [selectedVideo, setSelectedVideo] = useState(null);
 
-  const fetchVideos = async () => {
+  const fetchVideos = async (signal) => {
     try {
-      const res = await API.get("/videos");
+      const res = await API.get("/videos", { signal });
       const allVideos = Array.isArray(res.data) ? res.data : [];
       setVideos(allVideos);
       setFilteredVideos(allVideos);
@@ -41,12 +41,17 @@ const Explore = () => {
 
       setVideoCounts(counts);
     } catch (error) {
+      // Ignore aborted requests
+      if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') return;
       console.error("Error fetching videos:", error);
     }
   };
 
   useEffect(() => {
-    fetchVideos();
+    const abortController = new AbortController();
+    fetchVideos(abortController.signal);
+    
+    return () => abortController.abort();
   }, []);
 
   useEffect(() => {

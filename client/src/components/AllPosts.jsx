@@ -6,6 +6,7 @@ import PostCard from './PostCard';
 import { Link } from 'react-router-dom';
 import { PlusCircle, Search, MessageSquare, Filter } from 'lucide-react';
 import { API } from '@/api';
+import { motion } from 'framer-motion';
 
 const AllPosts = () => {
   const location = useLocation();
@@ -16,26 +17,37 @@ const AllPosts = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [categories, setCategories] = useState(['All']);
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (signal) => {
     try {
-      const res = await API.get('/posts');
+      const res = await API.get('/posts', { signal });
       const postsData = Array.isArray(res.data) ? res.data : [];
       setPosts(postsData);
       setFilteredPosts(postsData);
       const uniqueCategories = ['All', ...new Set(postsData.map(post => post?.category).filter(Boolean))];
       setCategories(uniqueCategories);
     } catch (err) {
+      // Ignore aborted requests (happens during cleanup)
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
       console.error('Failed to fetch posts:', err);
     }
   };
 
   useEffect(() => {
-    fetchPosts();
+    const abortController = new AbortController();
+    fetchPosts(abortController.signal);
+    
+    // Cleanup: abort request if component unmounts
+    return () => abortController.abort();
   }, []);
 
   // Refetch when we navigate back to this page (e.g. after edit) so list shows updated content
   useEffect(() => {
-    if (location.pathname === '/posts') fetchPosts();
+    if (location.pathname !== '/posts') return;
+    
+    const abortController = new AbortController();
+    fetchPosts(abortController.signal);
+    
+    return () => abortController.abort();
   }, [location.pathname]);
 
   // Scroll to post when opening a shared link (e.g. /posts?post=id)

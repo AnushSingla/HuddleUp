@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { FaInstagram, FaTwitter, FaGithub, FaLinkedin } from 'react-icons/fa';
 
 export default function Footer() {
@@ -38,22 +39,30 @@ export default function Footer() {
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-white mb-3">Quick Links</h3>
                 <ul className="space-y-2">
-                  {[
-                    { href: "https://www.linkedin.com/in/anush-singla-1b0899311/", label: "About" },
-                    { href: "https://wa.me/918860406089", label: "Contact" },
-                    { href: "/", label: "Home" }
-                  ].map((link) => (
-                    <li key={link.label}>
-                      <a
-                        href={link.href}
-                        target={link.href.startsWith('http') ? '_blank' : undefined}
-                        rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                        className="text-sm text-zinc-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200"
-                      >
-                        {link.label}
-                      </a>
-                    </li>
-                  ))}
+                  <li>
+                    <Link
+                      to="/about"
+                      className="text-sm text-zinc-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200"
+                    >
+                      About
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/contact"
+                      className="text-sm text-zinc-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200"
+                    >
+                      Contact
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/"
+                      className="text-sm text-zinc-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200"
+                    >
+                      Home
+                    </Link>
+                  </li>
                 </ul>
               </div>
             </div>

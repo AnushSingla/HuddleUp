@@ -169,7 +169,7 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
         <CardFooter className="px-6 pb-6 pt-0 flex gap-3">
           <Button
             onClick={() => onPlay(video)}
-            className="flex-[2] h-12 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-extrabold text-xs uppercase tracking-wider transition-all duration-300 hover:bg-emerald-500 dark:hover:bg-emerald-400 border-none shadow-lg shadow-zinc-950/20 dark:shadow-emerald-500/10"
+            className="flex-[2] h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-extrabold text-xs uppercase tracking-wider transition-all duration-300 border-none shadow-lg shadow-blue-600/20"
           >
             WATCH NOW
           </Button>
@@ -177,7 +177,7 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
             variant="outline"
             size="icon"
             onClick={handleShare}
-            className="h-12 w-12 rounded-2xl border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/5 transition-all"
+            className="h-12 w-12 rounded-2xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white border border-blue-500 shadow-lg shadow-blue-600/20 transition-all"
             title="Share video"
           >
             <Share2 className="h-4 w-4" />

@@ -20,25 +20,40 @@ const VideoPlayer = ({ video, onClose }) => {
   const videoUrl = getAssetUrl(video.videoUrl);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    
     const fetchStats = async () => {
       try {
-        const res = await API.get(`/videos/${videoId}`);
+        const res = await API.get(`/videos/${videoId}`, {
+          signal: abortController.signal
+        });
         setLikes(res.data.likes.length);
         setViews(res.data.views);
         // Optional: check if liked by current user
       } catch (err) {
+        // Ignore aborted requests
+        if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
         console.error('Failed to fetch video stats:', err);
       }
     };
+    
     if (videoId) fetchStats();
+    
+    return () => abortController.abort();
   }, [videoId]);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    
     const incrementView = async () => {
       try {
-        await API.post(`/videos/${videoId}/view`);
+        await API.post(`/videos/${videoId}/view`, {}, {
+          signal: abortController.signal
+        });
         setViews((prev) => prev + 1);
       } catch (err) {
+        // Ignore aborted requests
+        if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
         console.error('Failed to increment view:', err);
       }
     };
@@ -47,6 +62,8 @@ const VideoPlayer = ({ video, onClose }) => {
       incrementView();
       setHasViewed(true);
     }
+    
+    return () => abortController.abort();
   }, [isPlaying, hasViewed, videoId]);
 
   const handleLike = async () => {

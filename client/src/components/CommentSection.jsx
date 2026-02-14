@@ -9,6 +9,8 @@ export default function CommentSection({ contentId, contentType }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    
     const fetchComments = async () => {
       try {
         setIsLoading(true);
@@ -16,9 +18,13 @@ export default function CommentSection({ contentId, contentType }) {
           contentType === 'post'
             ? `/comments/post/${contentId}`
             : `/comments/${contentId}`;
-        const res = await API.get(endpoint);
+        const res = await API.get(endpoint, {
+          signal: abortController.signal
+        });
         setComments(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
+        // Ignore aborted requests
+        if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
         console.error('Error loading comments:', err);
         setComments([]);
       } finally {
@@ -27,6 +33,8 @@ export default function CommentSection({ contentId, contentType }) {
     };
 
     if (contentId && contentType) fetchComments();
+    
+    return () => abortController.abort();
   }, [contentId, contentType]);
 
   const addComment = (newComment) => {

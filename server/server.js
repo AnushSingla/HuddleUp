@@ -31,6 +31,9 @@ app.use("/api", commentRoutes)
 app.use("/api", postRoutes)
 app.use("/api", friendRoutes)
 app.use("/api/notifications", notificationRoutes);
+
+// Handle /uploads root request to prevent 403
+app.get('/uploads', (req, res) => res.status(200).json({ message: 'Uploads directory' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/favicon.ico", (req, res) => res.status(204));

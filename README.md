@@ -59,40 +59,66 @@ HuddleUp/
 
 ---
 
-## ⚙️ Local Development Setup (Frontend + Backend)
+## ⚙️ Local Development Setup
 
-Prerequisites:
+**Prerequisites:**
 - Node.js v18+
 - MongoDB (local or MongoDB Atlas)
-- npm
+- npm or yarn
 
 ---
 
-## 🚀 Run Project Locally
+## 🚀 Installation & Run
 
-Clone the repository:
+**1. Clone the repository:**
+```bash
+git clone https://github.com/AnushSingla/HuddleUp.git
+cd HuddleUp
+```
 
-- git clone https://github.com/AnushSingla/HuddleUp.git
+**2. Backend Setup:**
+```bash
+cd server
+npm install
+cp .env.example .env
+```
 
-- cd HuddleUp
+**Configure `.env` file:**
+```env
+MONGO_URL=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+PORT=5000
+```
 
-Backend setup:
+**Start backend server:**
+```bash
+npm start
+# Server runs on http://localhost:5000
+```
 
-- cd server
+**3. Frontend Setup:**
 
-- cp .env.example .env
+Open a new terminal:
+```bash
+cd client
+npm install
+cp .env.example .env
+```
 
-- npm install
+**Configure `client/.env` file:**
+```env
+VITE_API_URL=http://localhost:5000/api
+```
 
-- nodemon server.js
+**Start frontend:**
+```bash
+npm run dev
+# Client runs on http://localhost:5173 (or 5174)
+```
 
-Frontend setup:
-
-- cd ../client
-
-- npm install
-
-- npm run dev
+**4. Access the app:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:5000/api
 
 ---
 
