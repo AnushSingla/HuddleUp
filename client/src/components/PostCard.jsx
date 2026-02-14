@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -92,8 +93,10 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
   const categoryStyle = post.category ? getCategoryColor(post.category) : null;
 
   return (
-    <div 
-      className="group relative interactive-card"
+    <motion.div 
+      whileHover={{ scale: 1.01 }}
+      transition={{ duration: 0.2 }}
+      className="group relative interactive-card transition group-hover:opacity-50 hover:!opacity-100"
       style={{
         background: isPinned ? 'var(--bg-elevated)' : 'var(--bg-surface)',
         borderRadius: 'var(--r-md)',
@@ -290,7 +293,7 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

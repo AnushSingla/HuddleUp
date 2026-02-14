@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import PageWrapper from "@/components/ui/PageWrapper";
 import {
   Upload,
   Users,
@@ -37,73 +38,223 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <PageWrapper>
+      <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       
-      {/* LIVE MOMENT HERO - Edge to Edge */}
-      <section className="relative w-full h-[70vh] overflow-hidden">
-        {/* Background Video/Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
+      {/* HERO - PRODUCT NARRATIVE FIRST */}
+      <section className="relative w-full min-h-[85vh] flex items-center overflow-hidden">
+        {/* Ambient Background Pattern */}
+        <div className="absolute inset-0 opacity-10"
           style={{
-            backgroundImage: `url(${featuredMoment.thumbnail})`,
-            filter: 'blur(8px)',
-            transform: 'scale(1.1)'
+            backgroundImage: `radial-gradient(circle at 20% 50%, var(--accent) 0%, transparent 50%), 
+                             radial-gradient(circle at 80% 20%, var(--turf-green) 0%, transparent 40%)`,
           }}
         />
         
-        {/* Gradient Overlay - Bottom Fade */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+        {/* Grid Pattern Overlay */}
+        <div className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: 'linear-gradient(var(--border-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)',
+            backgroundSize: '80px 80px'
+          }}
+        />
         
-        {/* Content - Bottom Left */}
-        <motion.div 
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute bottom-0 left-0 p-8 md:p-12 max-w-3xl"
-        >
-          <p className="text-xs font-mono mb-4 tracking-wider" 
-            style={{ color: 'var(--ice-white)', opacity: 0.8 }}>
-            LIVE MOMENT · UPLOADED {featuredMoment.timeAgo.toUpperCase()} BY {featuredMoment.uploader.toUpperCase()}
-          </p>
-          
-          <h1 className="font-black mb-6"
-            style={{
-              fontSize: 'clamp(36px, 6vw, 72px)',
-              lineHeight: '1.1',
-              color: 'var(--ice-white)',
-              letterSpacing: '-0.02em'
-            }}>
-            {featuredMoment.title}
-          </h1>
+        {/* Content Container */}
+        <div className="relative z-10 w-full px-6 md:px-12 py-20">
+          <div className="max-w-6xl mx-auto">
+            
+            {/* Platform Identity */}
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-12 text-center"
+            >
+              <div className="inline-block mb-6 px-4 py-2 rounded-full border"
+                style={{
+                  background: 'var(--surface-info-bg)',
+                  border: 'var(--surface-info-border)',
+                  color: 'var(--accent)'
+                }}>
+                <span className="text-sm font-mono tracking-wide">THE SPORTS MOMENT PLATFORM</span>
+              </div>
+              
+              <h1 className="font-black mb-8"
+                style={{
+                  fontSize: 'clamp(40px, 8vw, 96px)',
+                  lineHeight: '1',
+                  color: 'var(--ice-white)',
+                  letterSpacing: '-0.03em',
+                  marginBottom: 'var(--space-6)'
+                }}>
+                Upload Moments.<br />
+                <span style={{ color: 'var(--turf-green)' }}>Debate the Game.</span><br />
+                <span style={{ color: 'var(--accent)' }}>Find Your Crowd.</span>
+              </h1>
 
-          <div className="flex flex-wrap gap-4">
-            <button
-              onClick={() => navigate("/explore")}
-              className="px-8 py-4 font-semibold flex items-center gap-2 hover-lift"
-              style={{
-                background: 'var(--accent)',
-                color: 'var(--bg-primary)',
-                borderRadius: 'var(--r-md)'
-              }}
+              <p className="text-xl max-w-2xl mx-auto mb-12"
+                style={{ 
+                  color: 'var(--text-sub)',
+                  lineHeight: '1.6'
+                }}>
+                For creators who live and breathe sports. For fans who need to debate. 
+                For communities built around moments that matter.
+              </p>
+
+              {/* CTA Trio */}
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <motion.button
+                  onClick={() => navigate("/upload")}
+                  whileTap={{ scale: 0.96 }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    boxShadow: "0px 0px 35px rgba(0, 229, 255, 0.5)"
+                  }}
+                  animate={{
+                    boxShadow: [
+                      "0px 0px 20px rgba(0, 229, 255, 0.2)",
+                      "0px 0px 35px rgba(0, 229, 255, 0.4)",
+                      "0px 0px 20px rgba(0, 229, 255, 0.2)"
+                    ]
+                  }}
+                  transition={{
+                    boxShadow: { repeat: Infinity, duration: 2.5 },
+                    scale: { type: "spring", stiffness: 300 }
+                  }}
+                  className="px-8 py-4 font-bold text-lg flex items-center gap-3 action-elevated"
+                  style={{
+                    background: 'var(--accent)',
+                    color: 'var(--bg-primary)',
+                    borderRadius: 'var(--r-md)'
+                  }}
+                >
+                  <Upload className="w-5 h-5" />
+                  Upload Your Moment
+                </motion.button>
+                <motion.button
+                  onClick={() => navigate("/explore")}
+                  whileTap={{ scale: 0.96 }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    boxShadow: "0px 0px 25px rgba(27, 232, 124, 0.35)"
+                  }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  className="px-8 py-4 font-semibold text-lg flex items-center gap-3"
+                  style={{
+                    background: 'transparent',
+                    color: 'var(--ice-white)',
+                    border: '2px solid var(--border-strong)',
+                    borderRadius: 'var(--r-md)'
+                  }}
+                >
+                  <Play className="w-5 h-5" />
+                  Explore
+                </motion.button>
+              </div>
+            </motion.div>
+
+            {/* Who This Is For - 3 Columns */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="grid md:grid-cols-3 gap-6 mt-20"
             >
-              <Play className="w-5 h-5" fill="currentColor" />
-              Watch Moment
-            </button>
-            <button
-              onClick={() => navigate("/posts")}
-              className="px-8 py-4 font-semibold flex items-center gap-2"
-              style={{
-                background: 'transparent',
-                color: 'var(--ice-white)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: 'var(--r-md)',
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              <MessageCircle className="w-5 h-5" />
-              Join Discussion
-            </button>
+              {[
+                { 
+                  icon: Upload, 
+                  title: "For Creators", 
+                  desc: "Upload game-changing moments. Build your sports creator identity." 
+                },
+                { 
+                  icon: MessageCircle, 
+                  title: "For Debaters", 
+                  desc: "Dissect plays. Argue calls. Defend your take in real threads." 
+                },
+                { 
+                  icon: Users, 
+                  title: "For Communities", 
+                  desc: "Find your fanbase. Join watch parties. Live the sport together." 
+                }
+              ].map((item, idx) => {
+                const Icon = item.icon;
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 + idx * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                    className="p-6 rounded-xl border transition-all content-elevated"
+                    style={{
+                      borderColor: 'var(--border-subtle)'
+                    }}
+                  >
+                    <div className="mb-4 w-12 h-12 rounded-lg flex items-center justify-center"
+                      style={{ background: 'var(--accent-glow)' }}>
+                      <Icon className="w-6 h-6" style={{ color: 'var(--accent)' }} />
+                    </div>
+                    <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--ice-white)' }}>
+                      {item.title}
+                    </h3>
+                    <p className="text-sm" style={{ color: 'var(--text-sub)' }}>
+                      {item.desc}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
           </div>
-        </motion.div>
+        </div>
+      </section>
+
+      {/* FEATURED MOMENT - Content AFTER Platform Explanation */}
+      <section className="relative px-6 md:px-12 py-16 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--text-main)' }}>
+              Trending Now
+            </h2>
+            <span className="text-sm font-mono" style={{ color: 'var(--accent)' }}>
+              LIVE
+            </span>
+          </div>
+          
+          <div 
+            className="relative rounded-2xl overflow-hidden cursor-pointer group"
+            onClick={() => navigate("/explore")}
+            style={{ height: '400px' }}
+          >
+            <div 
+              className="absolute inset-0 bg-cover bg-center transition-transform group-hover:scale-105"
+              style={{
+                backgroundImage: `url(${featuredMoment.thumbnail})`,
+              }}
+            />
+            <div style={{ background: 'var(--surface-hero-overlay)' }} className="absolute inset-0" />
+            
+            <div className="absolute bottom-0 left-0 p-8">
+              <p className="text-xs font-mono mb-3 tracking-wider" 
+                style={{ color: 'var(--ice-white)', opacity: 0.8 }}>
+                {featuredMoment.timeAgo.toUpperCase()} BY {featuredMoment.uploader.toUpperCase()}
+              </p>
+              <h3 className="text-4xl font-black mb-4" style={{ color: 'var(--ice-white)' }}>
+                {featuredMoment.title}
+              </h3>
+              <button
+                className="px-6 py-3 font-semibold flex items-center gap-2"
+                style={{
+                  background: 'var(--accent)',
+                  color: 'var(--bg-primary)',
+                  borderRadius: 'var(--r-md)'
+                }}
+              >
+                <Play className="w-4 h-4" fill="currentColor" />
+                Watch Now
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ACTION RAIL - Horizontal Scroll */}
@@ -191,5 +342,6 @@ export default function Home() {
       </section>
 
     </div>
+    </PageWrapper>
   );
 }

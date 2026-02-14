@@ -6,6 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { PenTool, Send } from 'lucide-react';
 import { API } from '@/api';
 import { getToken } from '@/utils/auth';
+import PageWrapper from '@/components/ui/PageWrapper';
 
 const CreatePost = () => {
   const location = useLocation();
@@ -70,6 +71,7 @@ const CreatePost = () => {
   };
 
   return (
+    <PageWrapper>
     <div className="min-h-screen py-8" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-8">
@@ -185,6 +187,7 @@ const CreatePost = () => {
           </div>
         </div>
       </div>
+    </PageWrapper>
   );
 };
 

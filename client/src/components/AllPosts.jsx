@@ -6,6 +6,7 @@ import PostCard from './PostCard';
 import { Link } from 'react-router-dom';
 import { PlusCircle, Search, MessageSquare, Filter } from 'lucide-react';
 import { API } from '@/api';
+import PageWrapper from '@/components/ui/PageWrapper';
 
 const AllPosts = () => {
   const location = useLocation();
@@ -66,6 +67,7 @@ const AllPosts = () => {
   }, [posts, searchTerm, selectedCategory]);
 
   return (
+    <PageWrapper>
     <div className="min-h-screen py-8" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-8">
@@ -173,6 +175,7 @@ const AllPosts = () => {
         </div>
       </div>
     </div>
+    </PageWrapper>
   );
 };
 

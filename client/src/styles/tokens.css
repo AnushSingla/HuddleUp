@@ -23,6 +23,48 @@
   --elev-4: 0 40px 100px rgba(0, 0, 0, 0.35);
 
   /* ═══════════════════════════════════════════════════ */
+  /* SURFACE TAXONOMY - Visual identity per zone type */
+  /* Each surface has distinct feel: helps users parse */
+  /* actionable vs informational vs creative zones */
+  /* ═══════════════════════════════════════════════════ */
+  
+  /* PANEL - Upload Studio, Settings, Creation Areas */
+  --surface-panel-bg: linear-gradient(135deg, #141824 0%, #1D2235 100%);
+  --surface-panel-border: 1px solid var(--border-medium);
+  --surface-panel-radius: var(--r-lg);
+  --surface-panel-shadow: var(--elev-3);
+  
+  /* RAIL - Discovery, Navigation, Filtering */
+  --surface-rail-bg: rgba(20, 24, 36, 0.6);
+  --surface-rail-border: 1px solid var(--border-subtle);
+  --surface-rail-radius: var(--r-md);
+  --surface-rail-shadow: var(--elev-1);
+  --surface-rail-backdrop: blur(20px);
+  
+  /* THREAD - Discussion, Comments, Debate */
+  --surface-thread-bg: transparent;
+  --surface-thread-border-left: 2px solid var(--border-medium);
+  --surface-thread-radius: var(--r-sm);
+  --surface-thread-indent: calc(var(--space-4) + var(--space-2));
+  --surface-thread-separator: 1px solid var(--border-subtle);
+  
+  /* HERO - Landing, Featured Content */
+  --surface-hero-overlay: linear-gradient(to top, rgba(11, 13, 26, 1) 0%, rgba(11, 13, 26, 0.8) 40%, rgba(11, 13, 26, 0) 100%);
+  --surface-hero-accent: var(--accent-glow);
+  
+  /* INFO BLOCK - About, Explainer Sections */
+  --surface-info-bg: rgba(0, 229, 255, 0.03);
+  --surface-info-border: 1px solid var(--border-subtle);
+  --surface-info-radius: var(--r-xl);
+  --surface-info-shadow: inset 0 1px 3px rgba(0, 229, 255, 0.1);
+  
+  /* SYSTEM BAR - Navbar, Status, Alerts */
+  --surface-bar-bg: rgba(11, 13, 26, 0.9);
+  --surface-bar-border: 1px solid var(--border-subtle);
+  --surface-bar-backdrop: blur(16px);
+  --surface-bar-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  /* ═══════════════════════════════════════════════════ */
   /* RADIUS SCALE - Mixed hierarchy for visual interest */
   /* ═══════════════════════════════════════════════════ */
   --r-xs: 4px;
@@ -100,6 +142,47 @@
   --text-2xl: 24px;
   --text-3xl: 32px;
   --text-4xl: 40px;
+  --text-5xl: 56px;
+
+  /* ═══════════════════════════════════════════════════ */
+  /* BRAND IDENTITY SIGNATURE - Visual Uniqueness */
+  /* Makes HuddleUp instantly recognizable */
+  /* ═══════════════════════════════════════════════════ */
+  
+  /* Diagonal Energy Lines - Stadium Light Pattern */
+  --brand-diagonal: linear-gradient(135deg, transparent 25%, var(--accent-glow) 25%, var(--accent-glow) 50%, transparent 50%, transparent 75%, var(--accent-glow) 75%);
+  --brand-diagonal-size: 40px 40px;
+  
+  /* Sports Court Grid - Tactical Layout */
+  --brand-grid: 
+    linear-gradient(var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+  --brand-grid-size: 60px 60px;
+  
+  /* Kinetic Motion Blur - Speed Effect */
+  --brand-motion-blur: drop-shadow(2px 0 4px var(--accent-glow)) drop-shadow(-2px 0 4px var(--accent-glow));
+  
+  /* Arena Spotlight - Radial Focus */
+  --brand-spotlight: radial-gradient(circle at center, var(--accent-glow) 0%, transparent 70%);
+  
+  /* Field Turf Texture - Grounding Pattern */
+  --brand-turf-pattern: repeating-linear-gradient(90deg, var(--turf-green-muted) 0px, transparent 2px, transparent 8px);
+
+  /* ═══════════════════════════════════════════════════ */
+  /* ANIMATION TIMING - Athletic Motion Curves */
+  /* ═══════════════════════════════════════════════════ */
+  --spring-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --fast-snap: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --smooth-glide: cubic-bezier(0.4, 0.0, 0.6, 1);
+  --elastic-stretch: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+  
+  --duration-instant: 150ms;
+  --duration-quick: 250ms;
+  --duration-base: 350ms;
+  --duration-smooth: 500ms;
+  --duration-epic: 800ms;
+  --text-3xl: 32px;
+  --text-4xl: 40px;
   --text-5xl: 48px;
   --text-6xl: 64px;
   --text-7xl: 80px;
@@ -144,7 +227,66 @@
   --z-overlay: 400;
   --z-modal: 500;
   --z-toast: 600;
+
+  /* ═══════════════════════════════════════════════════ */
+  /* Z-DIMENSION ELEVATION TIERS - Cinematic Depth */
+  /* Creates perceptual layers for different UI purposes */
+  /* ═══════════════════════════════════════════════════ */
+  
+  /* Tier 0 - Environment: Background space */
+  --tier-0-bg: radial-gradient(circle at 20% 30%, #0f172a, #020617);
+  
+  /* Tier 1 - Content: Information layer */
+  --tier-1-bg: #0B1220;
+  --tier-1-border: inset 0 0 0 1px rgba(255,255,255,0.03);
+  
+  /* Tier 2 - Interactive: Action layer */
+  --tier-2-bg: #111827;
+  --tier-2-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  
+  /* Tier 3 - Focused: Hover state */
+  --tier-3-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  --tier-3-lift: -3px;
 }
+
+/* ═══════════════════════════════════════════════════ */
+/* ELEVATION TIER CLASSES - 3D UI System */
+/* ═══════════════════════════════════════════════════ */
+
+/* Tier 1 - Content Layer: Discussion threads, explore cards, info blocks */
+.content-elevated {
+  background: var(--tier-1-bg);
+  box-shadow: var(--tier-1-border);
+}
+
+/* Tier 2 - Interactive Layer: Upload, create, filters, CTAs */
+.action-elevated {
+  background: var(--tier-2-bg);
+  box-shadow: var(--tier-2-shadow);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Tier 3 - Focused Interaction: Hover states */
+.focus-elevated:hover {
+  transform: translateY(var(--tier-3-lift));
+  box-shadow: var(--tier-3-shadow);
+  transition: 0.3s ease;
+}
+
+/* Combined utility for interactive content cards */
+.interactive-elevated {
+  background: var(--tier-1-bg);
+  box-shadow: var(--tier-1-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive-elevated:hover {
+  background: var(--tier-2-bg);
+  box-shadow: var(--tier-2-shadow);
+  transform: translateY(-2px);
+}
+
 
 /* ═══════════════════════════════════════════════════ */
 /* UTILITY CLASSES - Token-based */
@@ -230,7 +372,7 @@
 }
 
 /* ═══════════════════════════════════════════════════ */
-/* KINETIC SPORTS UTILITIES */
+/* KINETIC SPORTS UTILITIES - Brand Signature */
 /* ═══════════════════════════════════════════════════ */
 
 .stadium-glow {
@@ -271,6 +413,60 @@
 @keyframes trailPass {
   0% { left: -100%; }
   100% { left: 100%; }
+}
+
+/* Court Grid Background - Brand Identity */
+.court-grid-bg {
+  background-image: var(--brand-grid);
+  background-size: var(--brand-grid-size);
+  opacity: 0.4;
+}
+
+/* Energy Pulse - Live Indicator */
+.energy-pulse {
+  animation: energyPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes energyPulse {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+/* Impact Entry - Page Load Animation */
+.impact-entry {
+  animation: impactEntry 600ms var(--spring-bounce);
+}
+
+@keyframes impactEntry {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Debate Thread Connector - Visual Hierarchy */
+.thread-connector {
+  position: relative;
+}
+
+.thread-connector::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--accent-glow), transparent);
 }
 
 .impact-button {

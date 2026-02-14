@@ -55,28 +55,32 @@ export default function CommentSection({ contentId, contentType }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-100">
-        <div className="flex items-center justify-between mb-4">
+    <div className="space-y-8">
+      {/* Discussion Header */}
+      <div className="p-6 rounded-xl"
+        style={{
+          background: 'var(--surface-info-bg)',
+          border: 'var(--surface-info-border)'
+        }}
+      >
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-100 rounded-full p-3">
-              <MessageCircle className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center"
+              style={{ background: 'var(--accent-glow)' }}
+            >
+              <MessageCircle className="w-6 h-6" style={{ color: 'var(--accent)' }} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Discussion</h2>
-              <p className="text-gray-600 text-sm">
-                {comments.length} {comments.length === 1 ? 'comment' : 'comments'} • Join the conversation
+              <h2 className="text-xl font-bold" style={{ color: 'var(--ice-white)' }}>Discussion Thread</h2>
+              <p className="text-sm" style={{ color: 'var(--text-sub)' }}>
+                {comments.length} {comments.length === 1 ? 'comment' : 'comments'} • Join the debate
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-sm text-gray-500">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-1" style={{ color: 'var(--turf-green)' }}>
               <TrendingUp className="w-4 h-4" />
-              <span>Active</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Users className="w-4 h-4" />
-              <span>{Math.max(1, Math.floor(comments.length * 1.5))} participants</span>
+              <span className="font-medium">ACTIVE</span>
             </div>
           </div>
         </div>
@@ -84,15 +88,18 @@ export default function CommentSection({ contentId, contentType }) {
         <CommentInput contentId={contentId} contentType={contentType} onCommentPosted={addComment} />
       </div>
 
-      {isLoading ? (
-        <div className="text-center text-sm text-gray-500">Loading comments...</div>
-      ) : (
-        <CommentList
-          comments={comments}
-          onAddComment={addComment}
-          onDeleteComment={handleDeleteComment}
-        />
-      )}
+      {/* Thread List */}
+      <div>
+        {isLoading ? (
+          <div className="text-center py-8 text-sm" style={{ color: 'var(--text-sub)' }}>Loading comments...</div>
+        ) : (
+          <CommentList
+            comments={comments}
+            onAddComment={addComment}
+            onDeleteComment={handleDeleteComment}
+          />
+        )}
+      </div>
     </div>
   );
 }

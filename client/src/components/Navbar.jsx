@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { motion, useScroll } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout, isLoggedIn } from "../utils/auth";
@@ -8,9 +9,17 @@ import { toast } from "sonner";
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { scrollY } = useScroll();
 
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    return scrollY.onChange((y) => {
+      setScrolled(y > 40);
+    });
+  }, [scrollY]);
 
   useEffect(() => {
     setLoggedIn(isLoggedIn());
@@ -34,9 +43,19 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-xl bg-zinc-950/70 border-b border-white/10">
+    <motion.nav 
+      className={`sticky top-0 z-50 border-b transition-all duration-300
+        ${scrolled 
+          ? "backdrop-blur-xl bg-zinc-950/90 border-white/20" 
+          : "backdrop-blur-lg bg-zinc-950/70 border-white/10"
+        }`}
+      style={{
+        boxShadow: scrolled ? '0 4px 20px rgba(0,0,0,0.3)' : 'none'
+      }}
+    >
       <div className="max-w-7xl mx-auto px-6">
-        <div className="h-16 flex items-center justify-between">
+        <div className={`flex items-center justify-between transition-all duration-300
+          ${scrolled ? "h-14" : "h-16"}`}>
 
           {/* Logo */}
           <NavLink
@@ -56,10 +75,13 @@ export default function Navbar() {
                     ${isActive ? "text-white" : "text-zinc-400 hover:text-white"}`}
                   >
                     {label}
-                    <span
-                      className={`absolute left-0 -bottom-1 h-[2px] bg-gradient-to-r from-blue-500 to-purple-500 transition-all
-                      ${isActive ? "w-full" : "w-0 group-hover:w-full"}`}
-                    />
+                    {isActive && (
+                      <motion.span
+                        layoutId="navHighlight"
+                        className="absolute left-0 -bottom-1 h-[2px] w-full bg-gradient-to-r from-blue-500 to-purple-500 rounded"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
                   </span>
                 )}
               </NavLink>
@@ -147,6 +169,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-    </nav>
+    </motion.nav>
   );
 }

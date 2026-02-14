@@ -1,5 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import PageWrapper from "@/components/ui/PageWrapper";
 import { UploadCloud, X, Play } from "lucide-react";
 import { toast } from "sonner";
 import { API } from "../api";
@@ -91,66 +93,70 @@ const Upload = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8" 
-      style={{ background: 'var(--bg-primary)' }}>
+    <PageWrapper>
+      <div className="min-h-screen py-16 px-6" 
+        style={{ background: 'var(--bg-primary)' }}>
       
-      <div className="w-full max-w-2xl">
+      <div className="max-w-4xl mx-auto">
         
-        {/* Floating Upload Zone - Minimal Idle State */}
+        {/* Header */}
+        <div className="mb-16">
+          <h1 className="text-4xl md:text-6xl font-black mb-4">
+            Share Your{' '}
+            <span style={{
+              background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              Game Story
+            </span>
+          </h1>
+          <p className="text-lg" style={{ color: 'var(--text-sub)' }}>
+            Upload match analysis, unheard stories, or global sports moments.
+          </p>
+        </div>
+
         {!videoFile ? (
+          /* Upload Zone */
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className="relative cursor-pointer group"
+            className="relative cursor-pointer transition-all"
             style={{
-              minHeight: '400px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 'var(--r-lg)',
-              transition: 'all var(--transition-base)'
+              border: isDragging ? '2px dashed var(--accent)' : '2px dashed var(--border-medium)',
+              background: isDragging ? 'rgba(6, 182, 212, 0.05)' : 'transparent',
+              padding: '4rem 2rem',
+              borderRadius: '12px'
             }}
           >
-            {/* Dashed border appears only on hover/drag */}
-            <div 
-              className="absolute inset-0 rounded-lg transition-opacity"
-              style={{
-                opacity: isDragging ? 1 : 0,
-                border: '2px dashed var(--accent)',
-                background: 'rgba(0, 229, 255, 0.05)'
-              }}
-            />
-            <div 
-              className="absolute inset-0 rounded-lg transition-opacity"
-              style={{
-                opacity: !isDragging ? 0 : 0,
-                border: '2px dashed var(--border-subtle)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
-              onMouseLeave={(e) => e.currentTarget.style.opacity = 0}
-            />
-
-            {/* Content - Idle State */}
-            <div className="relative text-center z-10">
-              <div className="mb-6 transition-transform group-hover:scale-110"
-                style={{ transition: 'all var(--transition-base)' }}>
-                <UploadCloud className="w-16 h-16 mx-auto" 
-                  style={{ color: 'var(--accent)', opacity: isDragging ? 1 : 0.6 }} />
+            <div className="text-center">
+              <div className="mb-6 transition-transform"
+                style={{ 
+                  transform: isDragging ? 'scale(1.05)' : 'scale(1)',
+                  color: 'var(--turf-green)'
+                }}>
+                <UploadCloud className="w-16 h-16 mx-auto" strokeWidth={1.5} />
               </div>
               
               <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-main)' }}>
-                {isDragging ? "Drop it here" : "Drop a highlight here"}
+                {isDragging ? "Drop it here" : "Select Video File"}
               </h2>
               
               <p className="text-sm mb-6" style={{ color: 'var(--text-sub)' }}>
-                or tap to upload
+                Drag & drop your sports video here or click to browse
               </p>
 
-              <div className="text-xs" style={{ color: 'var(--text-sub)', opacity: 0.6 }}>
+              <p className="inline-block px-4 py-2 text-sm" 
+                style={{
+                  color: 'var(--text-muted)',
+                  background: 'var(--bg-surface)',
+                  borderRadius: '6px'
+                }}>
                 Max {MAX_FILE_SIZE_MB}MB · MP4, WebM, MOV
-              </div>
+              </p>
             </div>
 
             <input
@@ -160,167 +166,210 @@ const Upload = () => {
               onChange={(e) => handleFileSelect(e.target.files?.[0])}
               className="hidden"
             />
+        </div>
+      ) : (
+        /* FORM MODE - Publish Details */
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-6xl font-black mb-4" style={{ color: 'var(--ice-white)' }}>
+              Share Your{' '}
+              <span style={{
+                background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>
+                Game Story
+              </span>
+            </h1>
+            <p className="text-lg" style={{ color: 'var(--text-sub)' }}>
+              Upload match analysis, unheard stories, or global sports moments.
+            </p>
           </div>
-        ) : (
-          /* Video Selected - Metadata Form */
-          <form onSubmit={handleSubmit} className="space-y-6">
-            
+
+          {/* Upload Form Card */}
+          <motion.form
+            onSubmit={handleSubmit}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl p-8 md:p-12"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)'
+            }}
+          >
             {/* Video Preview */}
-            <div className="relative rounded-lg overflow-hidden" style={{
-              background: 'var(--bg-secondary)',
-              aspectRatio: '16/9'
-            }}>
-              <video
-                src={previewURL}
-                className="w-full h-full object-cover"
-                controls
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setVideoFile(null);
-                  setPreviewURL(null);
-                }}
-                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover-lift"
-                style={{
-                  background: 'rgba(0, 0, 0, 0.7)',
-                  color: 'var(--ice-white)'
-                }}
-              >
-                <X className="w-4 h-4" />
-              </button>
+            <div className="mb-8">
+              <div className="relative rounded-xl overflow-hidden mb-4" style={{
+                background: '#000',
+                aspectRatio: '16/9'
+              }}>
+                <video
+                  src={previewURL}
+                  className="w-full h-full"
+                  controls
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVideoFile(null);
+                    setPreviewURL(null);
+                  }}
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                  style={{
+                    background: 'rgba(0,0,0,0.8)',
+                    color: 'var(--clay-red)',
+                    border: '2px solid var(--clay-red)'
+                  }}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            {/* Metadata - Clean Form */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-main)' }}>
-                  Title
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                  placeholder="Name this moment"
-                  className="w-full px-4 py-3 rounded-lg"
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    border: '2px solid transparent',
-                    color: 'var(--text-main)',
-                    transition: 'all var(--transition-base)'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
-                  onBlur={(e) => e.target.style.borderColor = 'transparent'}
-                />
+            {/* Form Fields */}
+            <div className="space-y-6">
+              {/* Title and Category Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-3" 
+                    style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+                    Video Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    placeholder="Epic match comeback..."
+                    className="w-full px-4 py-3 rounded-lg outline-none transition-all"
+                    style={{
+                      background: 'var(--bg-primary)',
+                      border: '2px solid var(--border-subtle)',
+                      color: 'var(--text-main)',
+                      fontSize: 'var(--text-base)'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-3" 
+                    style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+                    Select Category *
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-lg outline-none transition-all appearance-none"
+                    style={{
+                      background: 'var(--bg-primary)',
+                      border: '2px solid var(--border-subtle)',
+                      color: category ? 'var(--text-main)' : 'var(--text-sub)',
+                      fontSize: 'var(--text-base)',
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+                      backgroundPosition: 'right 0.5rem center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: '1.5rem 1.5rem',
+                      paddingRight: '2.5rem'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                  >
+                    <option value="">Choose a category...</option>
+                    <option value="UNHEARD STORIES">Unheard Stories</option>
+                    <option value="MATCH ANALYSIS">Match Analysis</option>
+                    <option value="SPORTS AROUND THE GLOBE">Sports Around The Globe</option>
+                  </select>
+                </div>
               </div>
 
+              {/* Background Story */}
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-main)' }}>
-                  Category
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 rounded-lg"
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    border: '2px solid transparent',
-                    color: 'var(--text-main)',
-                    transition: 'all var(--transition-base)'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
-                  onBlur={(e) => e.target.style.borderColor = 'transparent'}
-                >
-                  <option value="">Select category</option>
-                  <option value="UNHEARD STORIES">Unheard Stories</option>
-                  <option value="MATCH ANALYSIS">Match Analysis</option>
-                  <option value="SPORTS AROUND THE GLOBE">Sports Around The Globe</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-main)' }}>
-                  Description (optional)
+                <label className="block text-xs font-bold uppercase tracking-wider mb-3" 
+                  style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+                  Background Story
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Add context..."
-                  rows={3}
-                  className="w-full px-4 py-3 rounded-lg resize-none"
+                  placeholder="Tell us more about this moment..."
+                  rows={5}
+                  className="w-full px-4 py-3 rounded-lg resize-none outline-none transition-all"
                   style={{
-                    background: 'var(--bg-secondary)',
-                    border: '2px solid transparent',
+                    background: 'var(--bg-primary)',
+                    border: '2px solid var(--border-subtle)',
                     color: 'var(--text-main)',
-                    lineHeight: 'var(--lh-relaxed)',
-                    transition: 'all var(--transition-base)'
+                    lineHeight: '1.6',
+                    fontSize: 'var(--text-base)'
                   }}
                   onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
-                  onBlur={(e) => e.target.style.borderColor = 'transparent'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
                 />
               </div>
-            </div>
 
-            {/* Upload Progress */}
-            {isUploading && (
-              <div>
-                <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
-                  <div 
-                    className="h-full transition-all"
-                    style={{
-                      width: `${uploadProgress}%`,
-                      background: 'var(--turf-green)'
-                    }}
-                  />
+              {/* Upload Progress */}
+              {isUploading && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-main)' }}>
+                      Publishing...
+                    </span>
+                    <span className="text-sm font-mono" style={{ color: 'var(--turf-green)' }}>
+                      {uploadProgress}%
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+                    <div 
+                      className="h-full transition-all"
+                      style={{
+                        width: `${uploadProgress}%`,
+                        background: 'var(--turf-green)'
+                      }}
+                    />
+                  </div>
                 </div>
-                <p className="text-xs mt-2 text-center" style={{ color: 'var(--text-sub)' }}>
-                  Uploading... {uploadProgress}%
-                </p>
-              </div>
-            )}
+              )}
 
-            {/* Submit */}
-            <div className="flex gap-4">
-              <button
+              {/* Publish Button */}
+              <motion.button
                 type="submit"
-                disabled={isUploading}
-                className="flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 hover-lift disabled:opacity-50"
+                disabled={isUploading || !title || !category}
+                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: isUploading || !title || !category ? 1 : 1.01 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                className="w-full px-6 py-4 font-bold text-base uppercase tracking-wider flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  background: 'var(--turf-green)',
-                  color: 'var(--bg-primary)',
-                  borderRadius: 'var(--r-md)'
+                  background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                  color: 'white',
+                  borderRadius: 'var(--r-md)',
+                  boxShadow: '0 8px 24px rgba(79, 70, 229, 0.3)',
+                  letterSpacing: '0.05em'
                 }}
               >
-                <UploadCloud className="w-5 h-5" />
-                {isUploading ? "Uploading..." : "Upload Moment"}
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => navigate("/explore")}
-                className="px-6 py-4 font-semibold hover-lift"
-                style={{
-                  background: 'transparent',
-                  color: 'var(--text-main)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 'var(--r-md)'
-                }}
-              >
-                Cancel
-              </button>
+                {isUploading ? "Publishing..." : "Publish to Arena"}
+              </motion.button>
             </div>
-          </form>
-        )}
+          </motion.form>
+        </div>
+      )}
 
-        {fileError && (
-          <p className="text-sm mt-4 text-center" style={{ color: 'var(--clay-red)' }}>
-            {fileError}
-          </p>
-        )}
+      {fileError && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg"
+          style={{
+            background: 'var(--clay-red)',
+            color: 'var(--ice-white)',
+            boxShadow: 'var(--elev-3)'
+          }}>
+          {fileError}
+        </div>
+      )}
       </div>
     </div>
+    </PageWrapper>
   );
 };
 
