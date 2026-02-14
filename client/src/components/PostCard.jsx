@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -12,13 +12,28 @@ import { motion } from 'framer-motion';
 
 const PostCard = ({ post, onDelete }) => {
   const navigate = useNavigate();
-  const [isLiked, setIsLiked] = useState(false);
+  const userId = getUserId();
+  const postId = post._id;
+  const postOwnerId = post.postedBy?._id || post.postedBy;
+  
+  // Check if current user has already liked this post
+  const checkIfLiked = () => {
+    if (!userId || !post.likes) return false;
+    return post.likes.some(like => {
+      const likeId = typeof like === 'object' ? like._id : like;
+      return likeId === userId;
+    });
+  };
+
+  const [isLiked, setIsLiked] = useState(checkIfLiked());
   const [likes, setLikes] = useState(post.likes?.length || 0);
   const [showComments, setShowComments] = useState(false);
 
-  const postId = post._id;
-  const userId = getUserId();
-  const postOwnerId = post.postedBy?._id || post.postedBy;
+  // Update isLiked when post changes
+  useEffect(() => {
+    setIsLiked(checkIfLiked());
+    setLikes(post.likes?.length || 0);
+  }, [post.likes, userId]);
 
   const handleEdit = () => {
     navigate('/create-post', { state: { editPost: post } });

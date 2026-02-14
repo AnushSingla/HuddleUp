@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { X, Eye, Heart, Share2 } from 'lucide-react';
 import CommentSection from './CommentSection';
 import { API } from '@/api';
-import { getToken } from '@/utils/auth';
+import { getToken, getUserId } from '@/utils/auth';
 import { getAssetUrl } from '@/utils/url';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
@@ -16,6 +16,7 @@ const VideoPlayer = ({ video, onClose }) => {
   const [views, setViews] = useState(0);
   const [hasViewed, setHasViewed] = useState(false);
   const videoId = video._id || video.id;
+  const userId = getUserId();
 
   const videoUrl = getAssetUrl(video.videoUrl);
 
@@ -29,7 +30,15 @@ const VideoPlayer = ({ video, onClose }) => {
         });
         setLikes(res.data.likes.length);
         setViews(res.data.views);
-        // Optional: check if liked by current user
+        
+        // Check if current user has liked this video
+        if (userId && res.data.likes) {
+          const userLiked = res.data.likes.some(like => {
+            const likeId = typeof like === 'object' ? like._id : like;
+            return likeId === userId;
+          });
+          setIsLiked(userLiked);
+        }
       } catch (err) {
         // Ignore aborted requests
         if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
@@ -40,7 +49,7 @@ const VideoPlayer = ({ video, onClose }) => {
     if (videoId) fetchStats();
     
     return () => abortController.abort();
-  }, [videoId]);
+  }, [videoId, userId]);
 
   useEffect(() => {
     const abortController = new AbortController();
