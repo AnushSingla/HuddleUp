@@ -23,7 +23,7 @@ export default function BackToTopButton() {
     visible && (
       <button
         onClick={scrollToTop}
-        className="fixed bottom-24 right-6 md:bottom-8 flex items-center gap-2 px-3 py-3 rounded-full 
+        className="fixed bottom-8 right-5 md:bottom-8 flex items-center gap-2 px-3 py-3 rounded-full 
                    bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-400 
                    text-white shadow-lg backdrop-blur-md 
                    transition-all duration-300 ease-in-out 
