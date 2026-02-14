@@ -26,7 +26,6 @@ const Explore = () => {
       isLoading(true) // set loading state while fetching videos and show skeletonCard
       const res = await API.get("/videos");
       if(res.data) isLoading(false); // set loading to false if data received
-     console.log(res.data)
       const allVideos = Array.isArray(res.data) ? res.data : [];
       setVideos(allVideos);
       setFilteredVideos(allVideos);
