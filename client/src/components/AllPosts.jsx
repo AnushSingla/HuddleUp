@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import PostCard from './PostCard';
 import { Link } from 'react-router-dom';
 import { PlusCircle, Search, MessageSquare, Filter } from 'lucide-react';
+// Enhanced hover effects: consider using lucide-react icons for consistency
 import { API } from '@/api';
 import { motion } from "framer-motion";
 
@@ -92,11 +93,11 @@ const AllPosts = () => {
             </div>
 
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.08, boxShadow: '0 0 32px 4px rgba(16,185,129,0.25)' }}
+              whileTap={{ scale: 0.97 }}
             >
               <Link to="/create-post">
-                <Button className="h-14 px-8 rounded-2xl bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-bold text-base shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-3">
+                <Button className="h-14 px-8 rounded-2xl bg-gradient-to-r from-emerald-500 to-indigo-500 hover:from-indigo-500 hover:to-emerald-500 dark:bg-gradient-to-r dark:from-emerald-600 dark:to-indigo-600 dark:hover:from-indigo-500 dark:hover:to-emerald-500 text-white font-bold text-base shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 hover:shadow-[0_0_32px_4px_rgba(16,185,129,0.25)] hover:scale-105">
                   <PlusCircle className="h-5 w-5" />
                   START A DEBATE
                 </Button>
@@ -105,22 +106,22 @@ const AllPosts = () => {
           </div>
 
           <div className="w-full bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 md:p-6 shadow-2xl shadow-indigo-500/5 flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative group">
+            <div className="flex-1 relative group transition-all duration-200">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-400 group-focus-within:text-emerald-500 h-5 w-5 transition-colors" />
               <Input
                 type="text"
                 placeholder="Search debates, athletes, or sports..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-12 pl-12 pr-4 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-emerald-500/20"
+                className="h-12 pl-12 pr-4 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-emerald-500/20 focus:bg-emerald-50/40 dark:focus:bg-emerald-900/30 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/20 transition-all duration-200"
               />
             </div>
-            <div className="flex items-center gap-3 bg-white dark:bg-zinc-950 px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl">
+            <div className="flex items-center gap-3 bg-white dark:bg-zinc-950 px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl transition-all duration-200 hover:shadow-[0_0_16px_2px_rgba(16,185,129,0.15)] hover:scale-105">
               <Filter className="h-4 w-4 text-emerald-500" />
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="bg-transparent text-sm font-bold text-zinc-600 dark:text-zinc-400 focus:outline-none cursor-pointer pr-4"
+                className="bg-transparent text-sm font-bold text-zinc-600 dark:text-zinc-400 focus:outline-none cursor-pointer pr-4 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
               >
                 {categories.map(category => (
                   <option key={category} value={category} className="dark:bg-zinc-900">
