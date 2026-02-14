@@ -5,7 +5,6 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import VideoCard from '@/components/VideoCard';
 import VideoPlayer from '@/components/VideoPlayer';
-import { SkeletonCard } from '@/utils/skeletonCard';
 import { API } from '@/api';
 import { getAssetUrl } from '@/utils/url';
 
@@ -17,16 +16,12 @@ const Explore = () => {
   const [filteredVideos, setFilteredVideos] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, isLoading] = useState(false)
   const [videoCounts, setVideoCounts] = useState({});
   const [selectedVideo, setSelectedVideo] = useState(null);
 
   const fetchVideos = async () => {
     try {
-      isLoading(true) // set loading state while fetching videos and show skeletonCard
       const res = await API.get("/videos");
-      if(res.data) isLoading(false); // set loading to false if data received
-     console.log(res.data)
       const allVideos = Array.isArray(res.data) ? res.data : [];
       setVideos(allVideos);
       setFilteredVideos(allVideos);
@@ -96,7 +91,6 @@ const Explore = () => {
   const handleClosePlayer = () => {
     setSelectedVideo(null);
   };
-
   return (
     <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors duration-500 overflow-hidden">
       {/* ======= BACKGROUND GLOW EFFECT ======= */}
@@ -196,18 +190,13 @@ const Explore = () => {
         </div>
 
         {/* ================= VIDEO GRID ================= */}
-        
-        { // if loading state is true, show skelton otherwise videos or nothing to show videos ( msg )
-         loading ?
-         <SkeletonCard/>
-         :
-         ( filteredVideos.length > 0 && !loading ? 
-           (  <motion.div
+        {filteredVideos.length > 0 ? (
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
           >
-            { filteredVideos.map((video) => (
+            {filteredVideos.map((video) => (
               <VideoCard
                 key={video._id}
                 video={{
@@ -220,9 +209,8 @@ const Explore = () => {
                 }
               />
             ))}
-          </motion.div>) 
-          :
-           (
+          </motion.div>
+        ) : (
           <div className="relative flex flex-col items-center justify-center py-24 text-center">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
@@ -246,8 +234,7 @@ const Explore = () => {
               Upload New Video
             </button>
           </div>
-        )
-        ) }
+        )}
 
         {selectedVideo && (
           <VideoPlayer video={selectedVideo} onClose={handleClosePlayer} />
