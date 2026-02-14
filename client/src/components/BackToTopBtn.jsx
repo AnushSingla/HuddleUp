@@ -23,13 +23,15 @@ export default function BackToTopButton() {
     visible && (
       <button
         onClick={scrollToTop}
-        className="fixed bottom-6 right-6 flex items-center gap-2 px-3 py-3 rounded-full 
+        className="fixed bottom-24 right-6 md:bottom-8 flex items-center gap-2 px-3 py-3 rounded-full 
                    bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-400 
                    text-white shadow-lg backdrop-blur-md 
                    transition-all duration-300 ease-in-out 
-                   hover:scale-105 hover:shadow-xl hover:from-blue-600 hover:to-purple-500"
+                   hover:scale-105 hover:shadow-xl hover:from-blue-600 hover:to-purple-500 
+                   z-40 cursor-pointer"
+        aria-label="Back to top"
       >
-        <ChevronUp className="w-7 h-7 hover:scale-110 hover:animate-pulse" />
+        <ChevronUp strokeWidth={3} absoluteStrokeWidth className="w-6 h-6 hover:scale-110 hover:animate-pulse"/>
       </button>
     )
   );
