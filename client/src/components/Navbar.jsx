@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+<<<<<<< HEAD
 import { Menu, X,Bell} from "lucide-react";
+=======
+>>>>>>> main
 import { Button } from "@/components/ui/button";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";

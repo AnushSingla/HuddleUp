@@ -20,6 +20,7 @@ import Footer from './components/Footer';
 import AllPosts from './components/AllPosts';
 import CreatePost from './components/CreatePost';
 import Feedback from './pages/Feedback';
+import BackToTopButton from './components/backToTopBtn';
 
 function AppContent() {
   const location = useLocation();
@@ -57,6 +58,7 @@ function AppContent() {
           </Routes>
         </div>
       </main>
+      <BackToTopButton />
       <Footer />
     </div>
   );
