@@ -20,7 +20,7 @@ import Footer from './components/Footer';
 import AllPosts from './components/AllPosts';
 import CreatePost from './components/CreatePost';
 import Feedback from './pages/Feedback';
-import BackToTopButton from './components/backToTopBtn';
+import BackToTopButton from './components/BackToTopBtn';
 
 function AppContent() {
   const location = useLocation();
