@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
-import { Menu, X, Bell } from "lucide-react";
 import axios from "axios";
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
@@ -22,29 +21,29 @@ export default function Navbar() {
   }, [location]);
 
   useEffect(() => {
-  if (!loggedIn) return;
+    if (!loggedIn) return;
 
-  const fetchNotifications = async () => {
-    try {
-      const token = localStorage.getItem("token");
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-      const res = await axios.get(
-        "http://localhost:5000/api/notifications",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        const res = await axios.get(
+          "http://localhost:5000/api/notifications",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      setNotifications(res.data);
-    } catch (err) {
-      console.error("Failed to fetch notifications", err);
-    }
-  };
+        setNotifications(res.data);
+      } catch (err) {
+        console.error("Failed to fetch notifications", err);
+      }
+    };
 
-  fetchNotifications();
-}, [loggedIn]);
+    fetchNotifications();
+  }, [loggedIn]);
 
 
   const handleLogout = () => {
@@ -100,50 +99,58 @@ export default function Navbar() {
           {/* Auth Buttons (Desktop) */}
           <div className="hidden md:flex items-center gap-3">
             {loggedIn && (
-  <div className="relative">
-    <button
-      onClick={() => setShowNotifications(!showNotifications)}
-      className="relative p-2 rounded-lg hover:bg-white/10"
-    >
-      <Bell className="text-white" />
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 rounded-lg hover:bg-white/10"
+                >
+                  <Bell className="text-white" />
 
-      {notifications.filter(n => !n.isRead).length > 0 && (
-        <span className="absolute -top-1 -right-1 bg-red-600 text-xs text-white px-2 rounded-full">
-          {notifications.filter(n => !n.isRead).length}
-        </span>
-      )}
-    </button>
+                  {notifications.filter(n => !n.isRead).length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-600 text-xs text-white px-2 rounded-full">
+                      {notifications.filter(n => !n.isRead).length}
+                    </span>
+                  )}
+                </button>
 
-    {showNotifications && (
-      <div className="absolute right-0 mt-3 w-80 bg-zinc-900 border border-white/10 rounded-xl shadow-xl p-4 space-y-3 max-h-96 overflow-y-auto">
-        {notifications.length === 0 ? (
-          <p className="text-sm text-zinc-400">No notifications</p>
-        ) : (
-          notifications.map((n) => (
-            <div
-              key={n._id}
-              className={`p-3 rounded-lg text-sm cursor-pointer ${
-                n.isRead ? "bg-zinc-800" : "bg-zinc-700"
-              }`}
-            >
-              <p>
-                <strong>{n.sender?.username}</strong> {n.type}
-              </p>
-            </div>
-          ))
-        )}
-      </div>
-    )}
-  </div>
-)}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-3 w-80 bg-zinc-900 border border-white/10 rounded-xl shadow-xl p-4 space-y-3 max-h-96 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <p className="text-sm text-zinc-400">No notifications</p>
+                    ) : (
+                      notifications.map((n) => (
+                        <div
+                          key={n._id}
+                          className={`p-3 rounded-lg text-sm cursor-pointer ${n.isRead ? "bg-zinc-800" : "bg-zinc-700"
+                            }`}
+                        >
+                          <p>
+                            <strong>{n.sender?.username}</strong> {n.type}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {loggedIn ? (
-              <Button
-                onClick={handleLogout}
-                className="rounded-xl px-5 bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20"
-              >
-                Logout
-              </Button>
+              <>
+                <Button
+                  onClick={() => navigate("/profile")}
+                  variant="outline"
+                  className="rounded-xl px-5 text-blue-400 border-blue-400 hover:bg-blue-500/10"
+                >
+                  Profile
+                </Button>
+                <Button
+                  onClick={handleLogout}
+                  className="rounded-xl px-5 bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20"
+                >
+                  Logout
+                </Button>
+              </>
             ) : (
               <>
                 <Button
@@ -189,12 +196,21 @@ export default function Navbar() {
 
             <div className="pt-4 border-t border-white/10 flex gap-3">
               {loggedIn ? (
-                <Button
-                  onClick={handleLogout}
-                  className="w-full bg-red-600 hover:bg-red-700"
-                >
-                  Logout
-                </Button>
+                <>
+                  <Button
+                    onClick={() => navigate("/profile")}
+                    variant="outline"
+                    className="w-full border-blue-400 text-blue-400"
+                  >
+                    Profile
+                  </Button>
+                  <Button
+                    onClick={handleLogout}
+                    className="w-full bg-red-600 hover:bg-red-700"
+                  >
+                    Logout
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button

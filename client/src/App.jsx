@@ -12,6 +12,7 @@ import EditVideo from './pages/EditVideo';
 import Friends from './pages/Friends';
 import Contact from './pages/Contact';
 import About from './pages/About';
+import Profile from './pages/Profile';
 
 
 // Components
@@ -49,6 +50,7 @@ function AppContent() {
             <Route path="/explore" element={<Explore />} />
             <Route path="/edit-video" element={<EditVideo />} />
             <Route path="/friends" element={<Friends />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/posts" element={<AllPosts />} />
             <Route path="/create-post" element={<CreatePost />} />
             <Route path="/contact" element={<Contact />} />
