@@ -14,6 +14,7 @@ import Friends from './pages/Friends';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import Feedback from './pages/Feedback';
+import NotFound from './pages/404';
 
 
 // Components
@@ -59,6 +60,7 @@ function AppContent() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/about" element={<About />} />
               <Route path="/feedback" element={<Feedback />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>
         </div>
