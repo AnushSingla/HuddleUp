@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { Toaster } from "@/components/ui/sonner";
 
 // Pages
@@ -20,7 +21,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AllPosts from './components/AllPosts';
 import CreatePost from './components/CreatePost';
-import Feedback from './pages/Feedback';
+import BackToTopBtn from './components/BackToTopBtn';
 
 function AppContent() {
   const location = useLocation();
@@ -30,10 +31,12 @@ function AppContent() {
   if (hideLayout) {
     return (
       <div className="min-h-screen bg-zinc-950">
-        <Routes>
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-        </Routes>
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </AnimatePresence>
       </div>
     );
   }
@@ -60,6 +63,7 @@ function AppContent() {
         </div>
       </main>
       <Footer />
+      <BackToTopBtn />
     </div>
   );
 }

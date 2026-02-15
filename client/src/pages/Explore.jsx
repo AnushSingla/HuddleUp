@@ -1,45 +1,25 @@
-// Explore.jsx
 import React, { useState, useEffect } from 'react';
-import { Search, Compass, Mic2, BarChart3, Globe, PlayCircle } from 'lucide-react';
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import VideoCard from '@/components/VideoCard';
+import { useNavigate,useLocation, useSearchParams } from "react-router-dom";
+import { motion } from 'framer-motion';
+import PageWrapper from '@/components/ui/PageWrapper';
+import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play, User } from 'lucide-react';
 import VideoPlayer from '@/components/VideoPlayer';
 import { API } from '@/api';
-import { getAssetUrl } from '@/utils/url';
 
 const Explore = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [videos, setVideos] = useState([]);
-  const [filteredVideos, setFilteredVideos] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("ALL");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [videoCounts, setVideoCounts] = useState({});
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilter, setActiveFilter] = useState('ALL');
 
   const fetchVideos = async () => {
     try {
       const res = await API.get("/videos");
       const allVideos = Array.isArray(res.data) ? res.data : [];
       setVideos(allVideos);
-      setFilteredVideos(allVideos);
-
-      const counts = {
-        ALL: allVideos.length,
-        "UNHEARD STORIES": allVideos.filter(
-          (v) => v?.category === "UNHEARD STORIES"
-        ).length,
-        "MATCH ANALYSIS": allVideos.filter(
-          (v) => v?.category === "MATCH ANALYSIS"
-        ).length,
-        "SPORTS AROUND THE GLOBE": allVideos.filter(
-          (v) => v?.category === "SPORTS AROUND THE GLOBE"
-        ).length,
-      };
-
-      setVideoCounts(counts);
     } catch (error) {
       console.error("Error fetching videos:", error);
     }
@@ -53,7 +33,7 @@ const Explore = () => {
     if (location.pathname === "/explore") fetchVideos();
   }, [location.pathname]);
 
-  // Open video when opening a shared link (e.g. /explore?video=id)
+  // Open video when sharing link
   const shareVideoId = searchParams.get('video');
   useEffect(() => {
     if (!shareVideoId || videos.length === 0) return;
@@ -61,186 +41,393 @@ const Explore = () => {
     if (video) setSelectedVideo(video);
   }, [shareVideoId, videos]);
 
-  useEffect(() => {
-    let filtered = [...videos];
+  // Editorial Grouping Logic
+  const getRecentVideos = () => videos.slice(0, 8);
+  const getTrendingVideos = () => videos.filter((v, idx) => idx % 3 === 0).slice(0, 6);
+  const getMatchAnalysis = () => videos.filter(v => v.category === "MATCH ANALYSIS");
+  const getGlobalStories = () => videos.filter(v => v.category === "SPORTS AROUND THE GLOBE");
+  const getUnheardStories = () => videos.filter(v => v.category === "UNHEARD STORIES");
 
-    if (selectedCategory !== "ALL") {
-      filtered = filtered.filter(
-        (video) => video.category === selectedCategory
-      );
-    }
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (video) =>
-          video?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          video?.description
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase())
-      );
-    }
-
-    setFilteredVideos(filtered);
-  }, [videos, selectedCategory, searchTerm]);
-
-  const handleVideoPlay = (video) => {
-    if (!video) return;
+  const handleVideoClick = (video) => {
     setSelectedVideo(video);
   };
 
   const handleClosePlayer = () => {
     setSelectedVideo(null);
   };
-  return (
-    <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors duration-500 overflow-hidden">
-      {/* ======= BACKGROUND GLOW EFFECT ======= */}
-      <div className="absolute -top-40 -left-20 w-[600px] h-[600px] bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute top-1/2 -right-20 w-[500px] h-[500px] bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-6 pt-32 pb-20">
-        {/* ================= HEADER ================= */}
-        <div className="text-center mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-medium mb-6"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            Discover Content
-          </motion.div>
+  // Category counts
+  const getCategoryCount = (category) => {
+    if (category === 'ALL') return videos.length;
+    return videos.filter(v => v.category === category).length;
+  };
 
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6"
-          >
-            Explore <span className="bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent">Sports Universe</span>
-          </motion.h1>
+  // Filtered videos based on search and category
+  const getFilteredVideos = () => {
+    let filtered = videos;
+    
+    // Apply category filter
+    if (activeFilter !== 'ALL') {
+      filtered = filtered.filter(v => v.category === activeFilter);
+    }
+    
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(v => 
+        v.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.uploadedBy?.username?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  };
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-zinc-500 dark:text-zinc-400 text-lg max-w-2xl mx-auto leading-relaxed"
-          >
-            Immerse yourself in world-class sports stories, expert analysis, and exclusive highlights from across the globe.
-          </motion.p>
-        </div>
+  const filteredVideos = getFilteredVideos();
 
-        {/* ================= SEARCH + FILTER ================= */}
-        <div className="w-full max-w-5xl mx-auto mb-16">
-          <div className="bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 md:p-8 shadow-2xl shadow-indigo-500/5">
-            {/* SEARCH */}
-            <div className="relative max-w-2xl mx-auto mb-8 group">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 group-focus-within:text-emerald-500 transition-colors" />
-              <input
-                type="text"
-                placeholder="Search by title, athlete, or sport..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-14 pr-6 py-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 
-                bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white placeholder-zinc-400
-                focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50
-                transition-all duration-300 shadow-sm group-hover:shadow-md"
-              />
+  // Editorial Section Component
+  const EditorialSection = ({ title, icon: Icon, videos, accent = 'var(--accent)' }) => {
+    if (!videos || videos.length === 0) return null;
+    
+    return (
+      <section className="mb-16">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+              style={{ background: `${accent}20` }}>
+              <Icon className="w-5 h-5" style={{ color: accent }} />
             </div>
-
-            {/* CATEGORIES */}
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {[
-                { name: "ALL", icon: <PlayCircle className="w-4 h-4" />, count: videoCounts.ALL },
-                { name: "UNHEARD STORIES", icon: <Mic2 className="w-4 h-4" />, count: videoCounts["UNHEARD STORIES"] },
-                { name: "MATCH ANALYSIS", icon: <BarChart3 className="w-4 h-4" />, count: videoCounts["MATCH ANALYSIS"] },
-                { name: "SPORTS AROUND THE GLOBE", icon: <Globe className="w-4 h-4" />, count: videoCounts["SPORTS AROUND THE GLOBE"] },
-              ].map((cat, idx) => (
-                <motion.button
-                  key={cat.name}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.1 + idx * 0.05 }}
-                  onClick={() => setSelectedCategory(cat.name)}
-                  className={`group relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl transition-all duration-300 
-                  border font-medium text-xs
-                  ${selectedCategory === cat.name
-                      ? "bg-emerald-500 text-white border-emerald-400 shadow-lg shadow-emerald-500/25"
-                      : "bg-white dark:bg-zinc-800/50 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50 hover:bg-emerald-500/5 dark:hover:bg-emerald-500/10"
-                    }`}
-                >
-                  <span className={`${selectedCategory === cat.name ? "text-white" : "text-emerald-500"}`}>
-                    {cat.icon}
-                  </span>
-                  <span>{cat.name}</span>
-                  <span
-                    className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold
-                    ${selectedCategory === cat.name
-                        ? "bg-white/20 text-white"
-                        : "bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400"
-                      }`}
-                  >
-                    {cat.count || 0}
-                  </span>
-                </motion.button>
-              ))}
-            </div>
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--text-main)' }}>
+              {title}
+            </h2>
           </div>
+          <button className="flex items-center gap-1 text-sm font-medium hover:gap-2 transition-all"
+            style={{ color: accent }}>
+            View All
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* ================= VIDEO GRID ================= */}
-        {filteredVideos.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
-          >
-            {filteredVideos.map((video) => (
-              <VideoCard
-                key={video._id}
-                video={{
-                  ...video,
-                  id: video._id,
-                }}
-                onPlay={handleVideoPlay}
-                onDelete={(id) =>
-                  setVideos((prev) => prev.filter((v) => v._id !== id))
-                }
-              />
-            ))}
-          </motion.div>
-        ) : (
-          <div className="relative flex flex-col items-center justify-center py-24 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {videos.slice(0, 4).map((video, index) => (
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="mb-8"
+              key={video._id || index}
+              initial={{ opacity: 0, y: 20, boxShadow: "0px 0px 0px rgba(0,0,0,0)" }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{
+                scale: 1.03,
+                y: -4,
+                boxShadow: "0px 10px 40px rgba(0, 229, 255, 0.15)",
+                transition: { duration: 0.25 }
+              }}
+              className="relative group cursor-pointer overflow-hidden content-elevated focus-elevated"
+              onClick={() => handleVideoClick(video)}
+              style={{
+                height: '280px',
+                borderRadius: 'var(--r-lg)'
+              }}
             >
-              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-emerald-400 to-indigo-600 flex items-center justify-center shadow-2xl">
-                <span className="text-4xl text-white">🎬</span>
+              {/* Thumbnail */}
+              <div className="absolute inset-0">
+                {video.thumbnailUrl ? (
+                  <img
+                    src={video.thumbnailUrl}
+                    alt={video.title}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center"
+                    style={{ background: 'var(--bg-surface)' }}>
+                    <span style={{ color: 'var(--text-sub)' }}>No Preview</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+
+              {/* Content */}
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <h3 className="font-bold text-white mb-2 line-clamp-2">
+                  {video.title}
+                </h3>
+                <div className="flex items-center gap-2 text-xs text-white/70">
+                  <span>by {video.uploadedBy?.username || 'Unknown'}</span>
+                  {video.views && (
+                    <>
+                      <span>·</span>
+                      <span>{video.views} views</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Play Icon - Center */}
+              <div className="absolute inset-0 flex items-center justify-center
+                opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{
+                    background: accent,
+                    color: 'var(--bg-primary)'
+                  }}>
+                  <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
               </div>
             </motion.div>
+          ))}
+        </div>
+      </section>
+    );
+  };
 
-            <h2 className="text-3xl font-bold mb-4">No content found</h2>
-            <p className="text-zinc-500 dark:text-zinc-400 max-w-sm mb-10">
-              We couldn't find any videos matching your search or category. Try something else!
-            </p>
-
+  return (
+    <PageWrapper>
+      <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      
+      {/* Hero Header */}
+      <motion.section 
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="px-6 md:px-12 pt-12 pb-8"
+      >
+        <div className="max-w-7xl mx-auto">
+          {/* Discover Content Button */}
+          <div className="flex justify-end mb-8">
             <button
-              onClick={() => navigate("/upload")}
-              className="px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition shadow-lg shadow-emerald-500/20"
+              className="px-4 py-2 rounded-full flex items-center gap-2 font-medium text-sm"
+              style={{
+                background: 'var(--turf-green)',
+                color: 'var(--bg-primary)',
+                border: '2px solid var(--turf-green)'
+              }}
             >
-              Upload New Video
+              <span>●</span> Discover Content
             </button>
           </div>
-        )}
 
-        {selectedVideo && (
-          <VideoPlayer video={selectedVideo} onClose={handleClosePlayer} />
-        )}
-      </div>
+          <h1 className="text-4xl md:text-6xl font-black mb-4" style={{ color: 'var(--ice-white)' }}>
+            Explore{' '}
+            <span style={{
+              background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              Sports Universe
+            </span>
+          </h1>
+          <p className="text-lg max-w-3xl mb-8" style={{ color: 'var(--text-sub)' }}>
+            Immerse yourself in world-class sports stories, expert analysis, and exclusive highlights from across the globe.
+          </p>
+
+          {/* Search and Filters Card */}
+          <div className="rounded-2xl p-6 md:p-8"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)'
+            }}
+          >
+            {/* Search Bar */}
+            <div className="mb-6">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" 
+                  style={{ color: 'var(--text-sub)' }} />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by title, athlete, or sport..."
+                  className="w-full pl-12 pr-4 py-3 rounded-lg outline-none transition-all"
+                  style={{
+                    background: 'var(--bg-primary)',
+                    border: '2px solid var(--border-subtle)',
+                    color: 'var(--text-main)',
+                    fontSize: 'var(--text-base)'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                />
+              </div>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex flex-wrap gap-3">
+              {[
+                { key: 'ALL', label: 'All', icon: '⚡' },
+                { key: 'UNHEARD STORIES', label: 'Unheard Stories', icon: '🎙️' },
+                { key: 'MATCH ANALYSIS', label: 'Match Analysis', icon: '📊' },
+                { key: 'SPORTS AROUND THE GLOBE', label: 'Sports Around The Globe', icon: '🌍' }
+              ].map((filter) => {
+                const count = getCategoryCount(filter.key);
+                const isActive = activeFilter === filter.key;
+                
+                return (
+                  <button
+                    key={filter.key}
+                    onClick={() => setActiveFilter(filter.key)}
+                    className="px-4 py-2 rounded-full font-medium text-sm flex items-center gap-2 transition-all"
+                    style={{
+                      background: isActive ? 'var(--turf-green)' : 'var(--bg-primary)',
+                      color: isActive ? 'var(--bg-primary)' : 'var(--text-sub)',
+                      border: `2px solid ${isActive ? 'var(--turf-green)' : 'var(--border-subtle)'}`,
+                      transform: isActive ? 'scale(1.05)' : 'scale(1)'
+                    }}
+                  >
+                    <span>{filter.icon}</span>
+                    <span>{filter.label}</span>
+                    <span className="px-1.5 py-0.5 rounded-full text-xs font-bold"
+                      style={{
+                        background: isActive ? 'rgba(0,0,0,0.2)' : 'var(--border-subtle)',
+                        color: isActive ? 'var(--bg-primary)' : 'var(--text-main)'
+                      }}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* Video Grid */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="px-6 md:px-12 pb-16"
+      >
+        <div className="max-w-7xl mx-auto">
+          {filteredVideos.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-lg" style={{ color: 'var(--text-sub)' }}>
+                No videos found matching your criteria
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredVideos.map((video, index) => (
+                <motion.div
+                  key={video._id || index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{
+                    scale: 1.03,
+                    y: -4,
+                    boxShadow: "0px 10px 40px rgba(0, 229, 255, 0.15)",
+                    transition: { duration: 0.25 }
+                  }}
+                  className="relative group cursor-pointer overflow-hidden rounded-xl"
+                  onClick={() => handleVideoClick(video)}
+                  style={{
+                    height: '320px',
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border-subtle)'
+                  }}
+                >
+                  {/* Thumbnail */}
+                  <div className="absolute inset-0">
+                    {video.thumbnailUrl ? (
+                      <img
+                        src={video.thumbnailUrl}
+                        alt={video.title}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"
+                        style={{ background: 'var(--bg-surface)' }}>
+                        <span style={{ color: 'var(--text-sub)' }}>No Preview</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+
+                  {/* Category Badge */}
+                  {video.category && (
+                    <div className="absolute top-3 left-3">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+                        style={{
+                          background: video.category === 'UNHEARD STORIES' ? 'var(--turf-green)' :
+                                     video.category === 'MATCH ANALYSIS' ? '#3b82f6' :
+                                     'var(--accent)',
+                          color: 'white'
+                        }}>
+                        {video.category === 'UNHEARD STORIES' ? '🎙️ Unheard Stories' :
+                         video.category === 'MATCH ANALYSIS' ? '📊 Match Analysis' :
+                         video.category === 'SPORTS AROUND THE GLOBE' ? '🌍 Sports Globe' :
+                         video.category}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Content */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <h3 className="font-bold text-white mb-2 line-clamp-2">
+                      {video.title}
+                    </h3>
+                    {video.description && (
+                      <p className="text-sm text-white/70 mb-2 line-clamp-1">
+                        {video.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-white/60 mb-3">
+                      <span className="flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        {video.uploadedBy?.username || 'Unknown'}
+                      </span>
+                      {video.createdAt && (
+                        <>
+                          <span>•</span>
+                          <span>{new Date(video.createdAt).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}</span>
+                        </>
+                      )}
+                      {video.views && (
+                        <>
+                          <span>•</span>
+                          <span>{video.views} views</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Play Button - Center */}
+                  <div className="absolute inset-0 flex items-center justify-center
+                    opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center"
+                      style={{
+                        background: 'var(--turf-green)',
+                        color: 'white'
+                      }}>
+                      <Play className="w-8 h-8 ml-1" fill="currentColor" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Video Player Modal */}
+      {selectedVideo && (
+        <VideoPlayer
+          video={selectedVideo}
+          onClose={handleClosePlayer}
+        />
+      )}
     </div>
+    </PageWrapper>
   );
 };
 
