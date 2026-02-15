@@ -35,15 +35,15 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
       toast.error('Please login to vote');
       return;
     }
-    
+
     // Optimistic update
     const newState = voteState === type ? null : type;
-    const scoreDelta = 
+    const scoreDelta =
       voteState === 'up' && type === 'down' ? -2 :
-      voteState === 'down' && type === 'up' ? 2 :
-      voteState === type ? (type === 'up' ? -1 : 1) :
-      type === 'up' ? 1 : -1;
-    
+        voteState === 'down' && type === 'up' ? 2 :
+          voteState === type ? (type === 'up' ? -1 : 1) :
+            type === 'up' ? 1 : -1;
+
     setVoteState(newState);
     setScore(score + scoreDelta);
   };
@@ -62,7 +62,7 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -89,7 +89,7 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
           >
             <ArrowBigUp className="w-5 h-5" fill={voteState === 'up' ? 'currentColor' : 'none'} />
           </button>
-          <span 
+          <span
             className="text-xs font-bold font-mono"
             style={{
               color: score > 0 ? 'var(--turf-green)' : score < 0 ? 'var(--clay-red)' : 'var(--text-sub)'
@@ -126,7 +126,7 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
                 {comment.author}
               </span>
             </div>
-            
+
             {isOP && (
               <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded"
                 style={{
@@ -137,7 +137,7 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
                 OP
               </span>
             )}
-            
+
             <span className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
               {formatTime(comment.createdAt || comment.timestamp)}
             </span>
@@ -166,7 +166,7 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
               <Reply className="w-3 h-3" />
               Reply
             </button>
-            
+
             {level < 5 && comment.replies?.length > 0 && (
               <button
                 onClick={() => setShowReplies(!showReplies)}
@@ -181,7 +181,7 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
           {/* Reply Form */}
           <AnimatePresence>
             {showReplyForm && (
-              <motion.div 
+              <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
@@ -189,17 +189,17 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
                 className="mt-3 overflow-hidden"
               >
                 <CommentInput
-                parentId={comment._id}
-                contentId={comment.videoId || comment.postId}
-                contentType={comment.videoId ? 'video' : 'post'}
-                onCommentPosted={(reply) => {
-                  onAddComment(reply);
-                  setShowReplyForm(false);
-                }}
-                onCancel={() => setShowReplyForm(false)}
-                placeholder="Write a reply..."
-                autoFocus
-              />
+                  parentId={comment._id}
+                  contentId={comment.videoId || comment.postId}
+                  contentType={comment.videoId ? 'video' : 'post'}
+                  onCommentPosted={(reply) => {
+                    onAddComment(reply);
+                    setShowReplyForm(false);
+                  }}
+                  onCancel={() => setShowReplyForm(false)}
+                  placeholder="Write a reply..."
+                  autoFocus
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -247,7 +247,7 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
       {/* Replies */}
       <AnimatePresence>
         {showReplies && comment.replies?.length > 0 && (
-          <motion.div 
+          <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -291,7 +291,7 @@ export default function CommentList({ comments, onAddComment, onDeleteComment, o
         </h3>
         <span className="text-xs font-mono" style={{ color: 'var(--text-sub)' }}>SORTED: TOP</span>
       </div>
-      
+
       <div>
         {comments.map((comment, index) => (
           <CommentItem

@@ -71,10 +71,14 @@ function AppContent() {
   );
 }
 
+import { NotificationProvider } from './context/NotificationContext';
+
 export default function App() {
   return (
     <Router>
-      <AppContent />
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
       <Toaster richColors position="top-center" />
     </Router>
   );

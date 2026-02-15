@@ -1,18 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, useScroll } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import NotificationDropdown from "./NotificationDropdown";
+import { useNotifications } from "@/context/NotificationContext";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
+import axios from "axios";
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { scrollY } = useScroll();
 
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [open, setOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const { friendRequests } = useNotifications();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -25,6 +31,32 @@ export default function Navbar() {
     setLoggedIn(isLoggedIn());
     setOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    if (!loggedIn) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await axios.get(
+          "http://localhost:5000/api/notifications",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setNotifications(res.data);
+      } catch (err) {
+        console.error("Failed to fetch notifications", err);
+      }
+    };
+
+    fetchNotifications();
+  }, [loggedIn]);
+
 
   const handleLogout = () => {
     logout();
@@ -44,10 +76,10 @@ export default function Navbar() {
   ];
 
   return (
-    <motion.nav 
+    <motion.nav
       className={`sticky top-0 z-50 border-b transition-all duration-300
-        ${scrolled 
-          ? "backdrop-blur-xl bg-zinc-950/90 border-white/20" 
+        ${scrolled
+          ? "backdrop-blur-xl bg-zinc-950/90 border-white/20"
           : "backdrop-blur-lg bg-zinc-950/70 border-white/10"
         }`}
       style={{
@@ -95,27 +127,51 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Auth Buttons (Desktop) */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Auth Buttons & Notifications (Desktop) */}
+          <div className="hidden md:flex items-center gap-6">
             {loggedIn ? (
-              <Button
-                onClick={handleLogout}
-                className="rounded-xl px-5 bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20"
-              >
-                Logout
-              </Button>
+              <>
+                {/* Notification Bell */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-emerald-400 transition-all duration-300 relative group"
+                  >
+                    <Bell className="w-5 h-5" />
+                    {friendRequests.length > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-zinc-950 shadow-lg shadow-emerald-500/20">
+                        {friendRequests.length}
+                      </span>
+                    )}
+
+                    <span className="absolute inset-0 rounded-xl bg-emerald-500/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity animate-pulse" />
+                  </button>
+
+                  <NotificationDropdown
+                    isOpen={showNotifications}
+                    onClose={() => setShowNotifications(false)}
+                  />
+                </div>
+
+                <Button
+                  onClick={handleLogout}
+                  className="rounded-xl px-5 bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20 font-bold uppercase tracking-wider text-xs"
+                >
+                  Logout
+                </Button>
+              </>
             ) : (
               <>
                 <Button
                   variant="ghost"
                   onClick={() => navigate("/login")}
-                  className="text-zinc-400 hover:text-white"
+                  className="text-zinc-400 hover:text-white font-bold uppercase tracking-wider text-xs"
                 >
                   Login
                 </Button>
                 <Button
                   onClick={() => navigate("/register")}
-                  className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg shadow-blue-600/30"
+                  className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg shadow-blue-600/30 font-bold uppercase tracking-wider text-xs h-10 px-6"
                 >
                   Register
                 </Button>
@@ -149,12 +205,21 @@ export default function Navbar() {
 
             <div className="pt-4 border-t border-white/10 flex gap-3">
               {loggedIn ? (
-                <Button
-                  onClick={handleLogout}
-                  className="w-full bg-red-600 hover:bg-red-700"
-                >
-                  Logout
-                </Button>
+                <>
+                  <Button
+                    onClick={() => navigate("/profile")}
+                    variant="outline"
+                    className="w-full border-blue-400 text-blue-400"
+                  >
+                    Profile
+                  </Button>
+                  <Button
+                    onClick={handleLogout}
+                    className="w-full bg-red-600 hover:bg-red-700"
+                  >
+                    Logout
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button

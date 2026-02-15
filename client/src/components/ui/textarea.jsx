@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Textarea = ({ value, onChange, placeholder, className = '', ...props }) => {
+export const Textarea = ({ value, onChange, placeholder, className = '', ...props }) => {
   return (
     <textarea
       value={value}
