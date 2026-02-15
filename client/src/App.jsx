@@ -13,7 +13,8 @@ import EditVideo from './pages/EditVideo';
 import Friends from './pages/Friends';
 import Contact from './pages/Contact';
 import About from './pages/About';
-import Profile from './pages/Profile';
+import Feedback from './pages/Feedback';
+import NotFound from './pages/404';
 
 
 // Components
@@ -47,19 +48,21 @@ function AppContent() {
       <Navbar />
       <main className="flex-grow">
         <div className="container mx-auto px-6 py-8">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/upload" element={<Upload />} />
-            <Route path="/explore" element={<Explore />} />
-            <Route path="/edit-video" element={<EditVideo />} />
-            <Route path="/friends" element={<Friends />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/posts" element={<AllPosts />} />
-            <Route path="/create-post" element={<CreatePost />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/Feedback" element={<Feedback />} />
-          </Routes>
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<Home />} />
+              <Route path="/upload" element={<Upload />} />
+              <Route path="/explore" element={<Explore />} />
+              <Route path="/edit-video" element={<EditVideo />} />
+              <Route path="/friends" element={<Friends />} />
+              <Route path="/posts" element={<AllPosts />} />
+              <Route path="/create-post" element={<CreatePost />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/feedback" element={<Feedback />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AnimatePresence>
         </div>
       </main>
       <Footer />
