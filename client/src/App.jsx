@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { Toaster } from "@/components/ui/sonner";
 
 // Pages
@@ -12,6 +13,7 @@ import EditVideo from './pages/EditVideo';
 import Friends from './pages/Friends';
 import Contact from './pages/Contact';
 import About from './pages/About';
+import Feedback from './pages/Feedback';
 
 
 // Components
@@ -19,6 +21,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AllPosts from './components/AllPosts';
 import CreatePost from './components/CreatePost';
+import BackToTopBtn from './components/BackToTopBtn';
 
 function AppContent() {
   const location = useLocation();
@@ -28,10 +31,12 @@ function AppContent() {
   if (hideLayout) {
     return (
       <div className="min-h-screen bg-zinc-950">
-        <Routes>
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-        </Routes>
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </AnimatePresence>
       </div>
     );
   }
@@ -42,20 +47,24 @@ function AppContent() {
       <Navbar />
       <main className="flex-grow">
         <div className="container mx-auto px-6 py-8">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/upload" element={<Upload />} />
-            <Route path="/explore" element={<Explore />} />
-            <Route path="/edit-video" element={<EditVideo />} />
-            <Route path="/friends" element={<Friends />} />
-            <Route path="/posts" element={<AllPosts />} />
-            <Route path="/create-post" element={<CreatePost />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/about" element={<About />} />
-          </Routes>
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<Home />} />
+              <Route path="/upload" element={<Upload />} />
+              <Route path="/explore" element={<Explore />} />
+              <Route path="/edit-video" element={<EditVideo />} />
+              <Route path="/friends" element={<Friends />} />
+              <Route path="/posts" element={<AllPosts />} />
+              <Route path="/create-post" element={<CreatePost />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/feedback" element={<Feedback />} />
+            </Routes>
+          </AnimatePresence>
         </div>
       </main>
       <Footer />
+      <BackToTopBtn />
     </div>
   );
 }

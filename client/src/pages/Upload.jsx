@@ -1,8 +1,8 @@
 import React, { useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import Textarea from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
-import { UploadCloud, FileVideo, AlertTriangle } from "lucide-react";
+import { motion } from "framer-motion";
+import PageWrapper from "@/components/ui/PageWrapper";
+import { UploadCloud, X, Play } from "lucide-react";
 import { toast } from "sonner";
 import { API } from "../api";
 
@@ -20,6 +20,7 @@ const Upload = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [fileError, setFileError] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleFileSelect = (file) => {
     if (!file || !file.type.startsWith("video/")) {
@@ -37,6 +38,23 @@ const Upload = () => {
     setFileError("");
     setVideoFile(file);
     setPreviewURL(URL.createObjectURL(file));
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    handleFileSelect(file);
   };
 
   const handleSubmit = async (e) => {
@@ -67,9 +85,7 @@ const Upload = () => {
       toast.success("Video Uploaded Successfully 🚀");
       navigate("/explore");
     } catch (err) {
-      console.error("Upload error:", err);
-      const errMsg = err.response?.data?.message || err.message || "Upload failed";
-      toast.error(`Upload failed: ${errMsg}`);
+      toast.error("Upload failed");
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -77,158 +93,258 @@ const Upload = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors duration-500 py-24 px-6 relative overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
-
-      <div className="max-w-4xl mx-auto relative z-10">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
-            Share Your <span className="bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent">Game Story</span>
+    <PageWrapper>
+      <div className="min-h-screen py-16 px-6" 
+        style={{ background: 'var(--bg-primary)' }}>
+      
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Header */}
+        <div className="mb-16">
+          <h1 className="text-4xl md:text-6xl font-black mb-4">
+            Share Your{' '}
+            <span style={{
+              background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              Game Story
+            </span>
           </h1>
-          <p className="text-zinc-500 dark:text-zinc-400 text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg" style={{ color: 'var(--text-sub)' }}>
             Upload match analysis, unheard stories, or global sports moments.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-[32px] p-8 md:p-12 shadow-2xl shadow-indigo-500/5 space-y-10">
-
-          {/* UPLOAD AREA */}
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className={`group relative border-2 border-dashed rounded-[24px] p-12 text-center cursor-pointer transition-all duration-300
-            ${videoFile
-                ? "border-emerald-500/50 bg-emerald-500/5"
-                : "border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50 hover:bg-emerald-500/5 dark:hover:bg-emerald-500/10"
-              }`}
+        {/* Upload Form - Always Visible */}
+        <div className="max-w-4xl mx-auto">
+          {/* Upload Form Card */}
+          <motion.form
+            onSubmit={handleSubmit}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl p-8 md:p-12"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)'
+            }}
           >
-            {previewURL ? (
-              <div className="relative">
-                <video
-                  src={previewURL}
-                  controls
-                  className="w-full max-h-[300px] rounded-2xl shadow-2xl mx-auto"
-                />
-                <div className="mt-4 flex items-center justify-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
-                  <FileVideo className="w-4 h-4" />
-                  <span>{(videoFile.size / (1024 * 1024)).toFixed(2)} MB Selected</span>
-                </div>
-              </div>
-            ) : (
-              <div className="py-6">
-                <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <UploadCloud className="h-8 w-8 text-emerald-500" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">Select Video File</h3>
-                <p className="text-zinc-500 dark:text-zinc-400 text-sm max-w-xs mx-auto">
-                  Drag & drop your sports video here or click to browse (Max {MAX_FILE_SIZE_MB}MB)
-                </p>
-              </div>
-            )}
-
-            <input
-              type="file"
-              accept="video/*"
-              ref={fileInputRef}
-              onChange={(e) => handleFileSelect(e.target.files[0])}
-              className="hidden"
-            />
-          </div>
-
-          {/* FILE ERROR */}
-          {fileError && (
-            <div className="flex items-center gap-3 text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 p-4 rounded-2xl">
-              <AlertTriangle className="w-5 h-5 shrink-0" />
-              <span className="font-medium">{fileError}</span>
-            </div>
-          )}
-
-          {/* UPLOAD PROGRESS */}
-          {isUploading && (
-            <div className="space-y-3">
-              <div className="flex justify-between text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
-                <span>Uploading to Arena...</span>
-                <span>{uploadProgress}%</span>
-              </div>
-              <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-2 overflow-hidden">
+            {/* Video Upload Area */}
+            <div className="mb-8">
+              <label className="block text-xs font-bold uppercase tracking-wider mb-3" 
+                style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+                Select Video File *
+              </label>
+              
+              {!videoFile ? (
                 <div
-                  className="bg-emerald-500 h-full rounded-full transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="relative cursor-pointer transition-all"
+                  style={{
+                    border: isDragging ? '2px dashed var(--accent)' : '2px dashed var(--border-medium)',
+                    background: isDragging ? 'rgba(6, 182, 212, 0.05)' : 'var(--bg-primary)',
+                    padding: '3rem 2rem',
+                    borderRadius: '12px'
+                  }}
+                >
+                  <div className="text-center">
+                    <div className="mb-4 transition-transform"
+                      style={{ 
+                        transform: isDragging ? 'scale(1.05)' : 'scale(1)',
+                        color: 'var(--turf-green)'
+                      }}>
+                      <UploadCloud className="w-12 h-12 mx-auto" strokeWidth={1.5} />
+                    </div>
+                    
+                    <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-main)' }}>
+                      {isDragging ? "Drop it here" : "Click to select or drag & drop"}
+                    </h3>
+                    
+                    <p className="text-sm mb-4" style={{ color: 'var(--text-sub)' }}>
+                      MP4, WebM, MOV (Max {MAX_FILE_SIZE_MB}MB)
+                    </p>
+                  </div>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => handleFileSelect(e.target.files?.[0])}
+                    className="hidden"
+                  />
+                </div>
+              ) : (
+                <div className="relative rounded-xl overflow-hidden" style={{
+                  background: '#000',
+                  aspectRatio: '16/9'
+                }}>
+                  <video
+                    src={previewURL}
+                    className="w-full h-full"
+                    controls
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVideoFile(null);
+                      setPreviewURL(null);
+                    }}
+                    className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                    style={{
+                      background: 'rgba(0,0,0,0.8)',
+                      color: 'var(--clay-red)',
+                      border: '2px solid var(--clay-red)'
+                    }}
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Form Fields */}
+            <div className="space-y-6">
+              {/* Title and Category Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-3" 
+                    style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+                    Video Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    placeholder="Epic match comeback..."
+                    className="w-full px-4 py-3 rounded-lg outline-none transition-all"
+                    style={{
+                      background: 'var(--bg-primary)',
+                      border: '2px solid var(--border-subtle)',
+                      color: 'var(--text-main)',
+                      fontSize: 'var(--text-base)'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-3" 
+                    style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+                    Select Category *
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-lg outline-none transition-all appearance-none"
+                    style={{
+                      background: 'var(--bg-primary)',
+                      border: '2px solid var(--border-subtle)',
+                      color: category ? 'var(--text-main)' : 'var(--text-sub)',
+                      fontSize: 'var(--text-base)',
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+                      backgroundPosition: 'right 0.5rem center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: '1.5rem 1.5rem',
+                      paddingRight: '2.5rem'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                  >
+                    <option value="">Choose a category...</option>
+                    <option value="UNHEARD STORIES">Unheard Stories</option>
+                    <option value="MATCH ANALYSIS">Match Analysis</option>
+                    <option value="SPORTS AROUND THE GLOBE">Sports Around The Globe</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Background Story */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider mb-3" 
+                  style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+                  Background Story
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Tell us more about this moment..."
+                  rows={5}
+                  className="w-full px-4 py-3 rounded-lg resize-none outline-none transition-all"
+                  style={{
+                    background: 'var(--bg-primary)',
+                    border: '2px solid var(--border-subtle)',
+                    color: 'var(--text-main)',
+                    lineHeight: '1.6',
+                    fontSize: 'var(--text-base)'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
                 />
               </div>
-            </div>
-          )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* TITLE */}
-            <div className="space-y-3">
-              <label className="text-sm font-bold text-zinc-500 dark:text-zinc-400 ml-1 uppercase tracking-wider">
-                Video Title *
-              </label>
-              <input
-                type="text"
-                placeholder="Epic match comeback..."
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-5 py-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 
-                bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white placeholder-zinc-400
-                focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50
-                transition-all duration-300 shadow-sm"
-                required
-              />
-            </div>
+              {/* Upload Progress */}
+              {isUploading && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-main)' }}>
+                      Publishing...
+                    </span>
+                    <span className="text-sm font-mono" style={{ color: 'var(--turf-green)' }}>
+                      {uploadProgress}%
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+                    <div 
+                      className="h-full transition-all"
+                      style={{
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
-            {/* CATEGORY */}
-            <div className="space-y-3">
-              <label className="text-sm font-bold text-zinc-500 dark:text-zinc-400 ml-1 uppercase tracking-wider">
-                Select Category *
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-5 py-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 
-                bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white
-                focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50
-                transition-all duration-300 shadow-sm appearance-none cursor-pointer"
-                required
+              {/* Publish Button */}
+              <motion.button
+                type="submit"
+                disabled={isUploading || !title || !category}
+                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: isUploading || !title || !category ? 1 : 1.01 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                className="w-full px-6 py-4 font-bold text-base uppercase tracking-wider flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: 'white',
+                  borderRadius: 'var(--r-md)',
+                  boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
+                  letterSpacing: '0.05em'
+                }}
               >
-                <option value="" disabled>Choose a category...</option>
-                <option value="UNHEARD STORIES">UNHEARD STORIES</option>
-                <option value="MATCH ANALYSIS">MATCH ANALYSIS</option>
-                <option value="SPORTS AROUND THE GLOBE">SPORTS AROUND THE GLOBE</option>
-              </select>
+                {isUploading ? "Publishing..." : "Publish to Arena"}
+              </motion.button>
             </div>
-          </div>
+          </motion.form>
+        </div>
 
-          {/* DESCRIPTION */}
-          <div className="space-y-3">
-            <label className="text-sm font-bold text-zinc-500 dark:text-zinc-400 ml-1 uppercase tracking-wider">
-              Background Story
-            </label>
-            <Textarea
-              placeholder="Tell us more about this moment..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-5 py-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 
-              bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white placeholder-zinc-400
-              focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50
-              transition-all duration-300 shadow-sm min-h-[120px]"
-            />
-          </div>
-
-          {/* SUBMIT BUTTON */}
-          <Button
-            type="submit"
-            disabled={isUploading}
-            className="w-full h-14 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-extrabold text-sm uppercase tracking-widest transition-all duration-300 hover:bg-emerald-500 dark:hover:bg-emerald-400 border-none shadow-xl shadow-zinc-950/20 dark:shadow-emerald-500/10 disabled:opacity-50"
-          >
-            {isUploading ? "TRANSMITTING DATA..." : "PUBLISH TO ARENA"}
-          </Button>
-
-        </form>
+      {fileError && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg"
+          style={{
+            background: 'var(--clay-red)',
+            color: 'var(--ice-white)',
+            boxShadow: 'var(--elev-3)'
+          }}>
+          {fileError}
+        </div>
+      )}
       </div>
     </div>
+    </PageWrapper>
   );
 };
 

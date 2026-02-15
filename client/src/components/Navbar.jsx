@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { motion, useScroll } from "framer-motion";
 import { Menu, X, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationDropdown from "./NotificationDropdown";
@@ -10,11 +11,19 @@ import { toast } from "sonner";
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { scrollY } = useScroll();
 
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [open, setOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { friendRequests } = useNotifications();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    return scrollY.onChange((y) => {
+      setScrolled(y > 40);
+    });
+  }, [scrollY]);
 
   useEffect(() => {
     setLoggedIn(isLoggedIn());
@@ -34,13 +43,24 @@ export default function Navbar() {
     { to: "/explore", label: "Explore" },
     { to: "/posts", label: "Discussion" },
     { to: "/contact", label: "Contact" },
-    { to: "/about", label: "About" }
+    { to: "/about", label: "About" },
+    { to: "/feedback", label: "Feedback" }
   ];
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-xl bg-zinc-950/70 border-b border-white/10">
+    <motion.nav
+      className={`sticky top-0 z-50 border-b transition-all duration-300
+        ${scrolled
+          ? "backdrop-blur-xl bg-zinc-950/90 border-white/20"
+          : "backdrop-blur-lg bg-zinc-950/70 border-white/10"
+        }`}
+      style={{
+        boxShadow: scrolled ? '0 4px 20px rgba(0,0,0,0.3)' : 'none'
+      }}
+    >
       <div className="max-w-7xl mx-auto px-6">
-        <div className="h-16 flex items-center justify-between">
+        <div className={`flex items-center justify-between transition-all duration-300
+          ${scrolled ? "h-14" : "h-16"}`}>
 
           {/* Logo */}
           <NavLink
@@ -57,13 +77,22 @@ export default function Navbar() {
                 {({ isActive }) => (
                   <span
                     className={`relative text-sm font-medium transition-colors
-                    ${isActive ? "text-white" : "text-zinc-400 hover:text-white"}`}
+                    ${isActive ? "" : "text-zinc-400 hover:text-white"}`}
+                    style={isActive ? {
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    } : {}}
                   >
                     {label}
-                    <span
-                      className={`absolute left-0 -bottom-1 h-[2px] bg-gradient-to-r from-blue-500 to-purple-500 transition-all
-                      ${isActive ? "w-full" : "w-0 group-hover:w-full"}`}
-                    />
+                    {isActive && (
+                      <motion.span
+                        layoutId="navHighlight"
+                        className="absolute left-0 -bottom-1 h-[2px] w-full bg-gradient-to-r from-emerald-500 to-green-500 rounded"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
                   </span>
                 )}
               </NavLink>
@@ -175,6 +204,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-    </nav>
+    </motion.nav>
   );
 }

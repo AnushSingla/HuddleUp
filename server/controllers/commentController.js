@@ -1,7 +1,7 @@
 const Comment = require("../models/Comment");
 const mongoose = require("mongoose");
 const Video = require("../models/Video");
-
+const Notification = require("../models/Notification");
 // Create a comment or reply
 exports.createComment = async (req, res) => {
   const { videoId, postId, text, parentId } = req.body;
@@ -233,20 +233,53 @@ exports.deleteComment = async (req, res) => {
 
 exports.toggleLikeComment = async (req, res) => {
   try {
-    const comment = await Comment.findById(req.params.id);
-    if (!comment) return res.status(404).json({ message: 'Comment not found' });
-
+    const commentId = req.params.id;
     const userId = req.user.id;
 
+    const comment = await Comment.findById(commentId);
+    if (!comment)
+      return res.status(404).json({ message: "Comment not found" });
+
     const isLiked = comment.likes.includes(userId);
-    const update = isLiked ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
 
-    const updatedComment = await Comment.findByIdAndUpdate(req.params.id, update, { new: true });
+    const update = isLiked
+      ? { $pull: { likes: userId } }
+      : { $addToSet: { likes: userId } };
 
-    res.status(200).json({ likes: updatedComment.likes.length, liked: !isLiked });
+    const updatedComment = await Comment.findByIdAndUpdate(
+      commentId,
+      update,
+      { new: true }
+    );
+
+    // ✅ CREATE NOTIFICATION ONLY WHEN LIKING
+    // ❌ Not when unliking
+    // ❌ Not when liking your own comment
+    if (
+      !isLiked &&
+      comment.userId.toString() !== userId.toString()
+    ) {
+      await Notification.create({
+        recipient: comment.userId, // comment owner
+        sender: userId,
+        type: "comment_like",
+        post: comment.postId || null,
+        video: comment.videoId || null,
+        comment: comment._id,
+      });
+    }
+
+    res.status(200).json({
+      likes: updatedComment.likes.length,
+      liked: !isLiked,
+    });
+
   } catch (err) {
-    console.error('Like error:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error("Like error:", err);
+    res.status(500).json({
+      message: "Server error",
+      error: err.message,
+    });
   }
 };
 
