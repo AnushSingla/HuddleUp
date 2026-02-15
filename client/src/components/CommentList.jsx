@@ -1,22 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Reply, Trash2, Heart, MessageCircle, MoreVertical } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Reply, Trash2, ArrowBigUp, ArrowBigDown, MessageCircle, MoreVertical, Award } from 'lucide-react';
 import { API } from '@/api';
 import { getToken, getUserId } from '@/utils/auth';
 import { toast } from 'sonner';
 import CommentInput from './CommentInput';
 
-function CommentItem({ comment, onAddComment, onDeleteComment, level = 0 }) {
+function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP = false }) {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(true);
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(comment.likes?.length || 0);
+  const [voteState, setVoteState] = useState(null); // 'up', 'down', or null
+  const [score, setScore] = useState((comment.upvotes || 0) - (comment.downvotes || 0));
   const [showOptions, setShowOptions] = useState(false);
-
-  useEffect(() => {
-    const userId = getUserId();
-    setIsLiked(comment.likes?.includes(userId));
-    setLikeCount(comment.likes?.length || 0);
-  }, [comment.likes]);
 
   const handleDelete = async () => {
     const token = getToken();
@@ -34,19 +29,23 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0 }) {
     }
   };
 
-  const handleLike = async () => {
+  const handleVote = async (type) => {
     const token = getToken();
     if (!token) {
-      toast.error('Please login to like comments');
+      toast.error('Please login to vote');
       return;
     }
-    try {
-      const res = await API.patch(`/comments/${comment._id}/like`);
-      setLikeCount(res.data.likes);
-      setIsLiked(res.data.liked);
-    } catch (error) {
-      toast.error('Failed to update like');
-    }
+    
+    // Optimistic update
+    const newState = voteState === type ? null : type;
+    const scoreDelta = 
+      voteState === 'up' && type === 'down' ? -2 :
+      voteState === 'down' && type === 'up' ? 2 :
+      voteState === type ? (type === 'up' ? -1 : 1) :
+      type === 'up' ? 1 : -1;
+    
+    setVoteState(newState);
+    setScore(score + scoreDelta);
   };
 
   const formatTime = (timestamp) => {
@@ -63,43 +62,94 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0 }) {
   };
 
   return (
-    <div className={`relative ${level > 0 ? 'ml-10 border-l border-zinc-200 dark:border-zinc-800/50 pl-6 my-4' : 'mb-6'}`}>
-      <div className="group/item relative flex items-start space-x-4 py-4 px-4 rounded-2xl transition-all duration-300 hover:bg-white dark:hover:bg-zinc-900 shadow-none hover:shadow-xl hover:shadow-emerald-500/5 border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800">
-        {/* Avatar */}
-        <div className="flex-shrink-0 pt-1">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-indigo-500 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-emerald-500/10">
-            {comment.author?.charAt(0).toUpperCase() || '?'}
-          </div>
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={`relative group`}
+      style={{
+        marginLeft: level > 0 ? 'var(--surface-thread-indent)' : 0,
+        paddingLeft: level > 0 ? 'var(--space-4)' : 0,
+        borderLeft: level > 0 ? 'var(--surface-thread-border-left)' : 'none',
+        marginTop: 'var(--space-3)',
+        paddingTop: 'var(--space-3)',
+        borderTop: level === 0 ? 'var(--surface-thread-separator)' : 'none'
+      }}
+    >
+      <div className="flex gap-3">
+        {/* VOTE RAIL - Left Side */}
+        <div className="flex flex-col items-center gap-1" style={{ width: '32px' }}>
+          <button
+            onClick={() => handleVote('up')}
+            className="transition-all hover:scale-110"
+            style={{
+              color: voteState === 'up' ? 'var(--turf-green)' : 'var(--text-muted)',
+              padding: '2px'
+            }}
+          >
+            <ArrowBigUp className="w-5 h-5" fill={voteState === 'up' ? 'currentColor' : 'none'} />
+          </button>
+          <span 
+            className="text-xs font-bold font-mono"
+            style={{
+              color: score > 0 ? 'var(--turf-green)' : score < 0 ? 'var(--clay-red)' : 'var(--text-sub)'
+            }}
+          >
+            {score > 0 ? '+' : ''}{score}
+          </span>
+          <button
+            onClick={() => handleVote('down')}
+            className="transition-all hover:scale-110"
+            style={{
+              color: voteState === 'down' ? 'var(--clay-red)' : 'var(--text-muted)',
+              padding: '2px'
+            }}
+          >
+            <ArrowBigDown className="w-5 h-5" fill={voteState === 'down' ? 'currentColor' : 'none'} />
+          </button>
         </div>
 
-        {/* Comment Content */}
+        {/* CONTENT */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-1">
-            <span className="text-sm font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight">{comment.author}</span>
+          {/* Author + Time + Badge */}
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <div className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-              <span className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-widest font-bold">
-                {formatTime(comment.createdAt || comment.timestamp)}
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
+                style={{
+                  background: isOP ? 'var(--accent)' : 'var(--text-muted)',
+                  color: 'var(--bg-primary)'
+                }}
+              >
+                {comment.author?.charAt(0).toUpperCase() || '?'}
+              </div>
+              <span className="text-sm font-bold" style={{ color: 'var(--text-main)' }}>
+                {comment.author}
               </span>
             </div>
+            
+            {isOP && (
+              <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded"
+                style={{
+                  background: 'var(--accent-glow)',
+                  color: 'var(--accent)'
+                }}
+              >
+                OP
+              </span>
+            )}
+            
+            <span className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
+              {formatTime(comment.createdAt || comment.timestamp)}
+            </span>
           </div>
 
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
+          {/* Comment Body */}
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-main)' }}>
             {comment.content}
           </p>
 
-          {/* Actions Block */}
-          <div className="flex items-center mt-3 gap-6">
-            <button
-              onClick={handleLike}
-              className={`flex items-center gap-1.5 transition-all duration-300 ${isLiked ? 'text-emerald-500' : 'text-zinc-400 hover:text-emerald-500 group/like'}`}
-            >
-              <div className={`p-1.5 rounded-lg transition-all ${isLiked ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-100 dark:bg-zinc-800 group-hover/like:bg-emerald-500/10'}`}>
-                <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current text-white' : ''}`} />
-              </div>
-              <span className="text-[11px] font-bold">{likeCount > 0 ? likeCount : 'Like'}</span>
-            </button>
-
+          {/* Actions */}
+          <div className="flex items-center gap-4 mt-2">
             <button
               onClick={() => {
                 if (!getToken()) {
@@ -108,19 +158,37 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0 }) {
                 }
                 setShowReplyForm(!showReplyForm);
               }}
-              className="flex items-center gap-1.5 text-zinc-400 hover:text-emerald-500 group/reply transition-colors"
+              className="flex items-center gap-1 text-xs font-medium transition-colors"
+              style={{
+                color: 'var(--text-sub)'
+              }}
             >
-              <div className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 group-hover/reply:bg-emerald-500/10 transition-all">
-                <Reply className="w-3.5 h-3.5" />
-              </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider">Reply</span>
+              <Reply className="w-3 h-3" />
+              Reply
             </button>
+            
+            {level < 5 && comment.replies?.length > 0 && (
+              <button
+                onClick={() => setShowReplies(!showReplies)}
+                className="text-xs font-medium transition-colors"
+                style={{ color: 'var(--accent)' }}
+              >
+                {showReplies ? 'Hide' : `Show ${comment.replies.length}`} {comment.replies.length === 1 ? 'reply' : 'replies'}
+              </button>
+            )}
           </div>
 
-          {/* Reply Form Injection */}
-          {showReplyForm && (
-            <div className="mt-6 p-4 bg-emerald-50/30 dark:bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
-              <CommentInput
+          {/* Reply Form */}
+          <AnimatePresence>
+            {showReplyForm && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mt-3 overflow-hidden"
+              >
+                <CommentInput
                 parentId={comment._id}
                 contentId={comment.videoId || comment.postId}
                 contentType={comment.videoId ? 'video' : 'post'}
@@ -129,90 +197,112 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0 }) {
                   setShowReplyForm(false);
                 }}
                 onCancel={() => setShowReplyForm(false)}
+                placeholder="Write a reply..."
                 autoFocus
               />
-            </div>
-          )}
-
-          {/* Nested Replies Toggle */}
-          {comment.replies?.length > 0 && (
-            <button
-              onClick={() => setShowReplies(!showReplies)}
-              className="flex items-center mt-4 group/toggle"
-            >
-              <div className="w-6 h-px bg-zinc-200 dark:bg-zinc-800 group-hover:bg-emerald-500 transition-colors" />
-              <span className="ml-3 text-[10px] font-extrabold text-zinc-400 dark:text-zinc-500 group-hover:text-emerald-500 uppercase tracking-widest transition-all">
-                {showReplies ? 'STOW' : 'SHOW'} {comment.replies.length} REACTION{comment.replies.length !== 1 ? 'S' : ''}
-              </span>
-            </button>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Floating Options Menu */}
-        <div className="relative opacity-0 group-hover/item:opacity-100 transition-opacity">
+        {/* Options Menu */}
+        <div className="relative">
           <button
             onClick={() => setShowOptions(!showOptions)}
-            className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-all"
+            className="p-1 rounded transition-opacity opacity-0 group-hover:opacity-100"
+            style={{ color: 'var(--text-muted)' }}
           >
             <MoreVertical className="w-4 h-4" />
           </button>
 
           {showOptions && (
-            <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl py-2 z-20 border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+            <div className="absolute right-0 mt-1 w-40 rounded-lg shadow-lg py-1 z-10"
+              style={{
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-medium)'
+              }}
+            >
               <button
                 onClick={handleDelete}
-                className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 transition-all"
+                className="block w-full text-left px-4 py-2 text-sm transition-colors"
+                style={{
+                  color: 'var(--text-main)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'var(--clay-red-muted)';
+                  e.target.style.color = 'var(--clay-red)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'transparent';
+                  e.target.style.color = 'var(--text-main)';
+                }}
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                DELETE COMMENT
+                Delete
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* REPLIES RENDER RECURSIVE */}
-      {showReplies && (
-        <div className="mt-2">
-          {comment.replies?.map((reply, index) => (
-            <CommentItem
-              key={reply._id || `reply-${index}`}
-              comment={reply}
-              onAddComment={onAddComment}
-              onDeleteComment={onDeleteComment}
-              level={level + 1}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+      {/* Replies */}
+      <AnimatePresence>
+        {showReplies && comment.replies?.length > 0 && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mt-2 overflow-hidden"
+          >
+            {comment.replies?.map((reply, index) => (
+              <CommentItem
+                key={reply._id || `reply-${index}`}
+                comment={reply}
+                onAddComment={onAddComment}
+                onDeleteComment={onDeleteComment}
+                isOP={isOP}
+                level={level + 1}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
-export default function CommentList({ comments, onAddComment, onDeleteComment }) {
+export default function CommentList({ comments, onAddComment, onDeleteComment, opAuthor }) {
 
   if (!comments || comments.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-6 text-center bg-zinc-50/50 dark:bg-zinc-900/30 rounded-[32px] border border-dashed border-zinc-200 dark:border-zinc-800">
-        <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-6 text-zinc-300 dark:text-zinc-600">
-          <MessageCircle className="w-8 h-8" />
-        </div>
-        <p className="text-lg font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight">Crickets so far...</p>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-[200px]">Be the first to ignite the debate in this arena!</p>
+      <div className="text-center py-12">
+        <MessageCircle className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+        <p className="text-lg font-medium" style={{ color: 'var(--text-main)' }}>No comments yet</p>
+        <p className="text-sm" style={{ color: 'var(--text-sub)' }}>Start the debate</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      {comments.map((comment, index) => (
-        <CommentItem
-          key={comment._id || `comment-${index}`}
-          comment={comment}
-          onAddComment={onAddComment}
-          onDeleteComment={onDeleteComment}
-        />
-      ))}
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold" style={{ color: 'var(--text-main)' }}>
+          {comments.length} {comments.length === 1 ? 'Comment' : 'Comments'}
+        </h3>
+        <span className="text-xs font-mono" style={{ color: 'var(--text-sub)' }}>SORTED: TOP</span>
+      </div>
+      
+      <div>
+        {comments.map((comment, index) => (
+          <CommentItem
+            key={comment._id || `comment-${index}`}
+            comment={comment}
+            onAddComment={onAddComment}
+            onDeleteComment={onDeleteComment}
+            isOP={opAuthor && comment.author === opAuthor}
+          />
+        ))}
+      </div>
     </div>
   );
 }

@@ -56,32 +56,31 @@ export default function CommentSection({ contentId, contentType }) {
 
   return (
     <div className="space-y-8">
-      {/* Header Container */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[28px] p-8 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-              <MessageCircle className="w-7 h-7 text-emerald-500" />
+      {/* Discussion Header */}
+      <div className="p-6 rounded-xl"
+        style={{
+          background: 'var(--surface-info-bg)',
+          border: 'var(--surface-info-border)'
+        }}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center"
+              style={{ background: 'var(--accent-glow)' }}
+            >
+              <MessageCircle className="w-6 h-6" style={{ color: 'var(--accent)' }} />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight">Debate Arena</h2>
-              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                <span>{comments.length} Thoughts</span>
-                <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                <span className="text-emerald-500">Global Stream</span>
-              </div>
+              <h2 className="text-xl font-bold" style={{ color: 'var(--ice-white)' }}>Discussion Thread</h2>
+              <p className="text-sm" style={{ color: 'var(--text-sub)' }}>
+                {comments.length} {comments.length === 1 ? 'comment' : 'comments'} • Join the debate
+              </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex -space-x-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-zinc-900 bg-zinc-200 dark:bg-zinc-800" />
-              ))}
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 text-[10px] font-bold text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/50">
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
-              <span>{Math.max(1, Math.floor(comments.length * 1.2))} PARTICIPANTS</span>
+          <div className="flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-1" style={{ color: 'var(--turf-green)' }}>
+              <TrendingUp className="w-4 h-4" />
+              <span className="font-medium">ACTIVE</span>
             </div>
           </div>
         </div>
@@ -89,14 +88,10 @@ export default function CommentSection({ contentId, contentType }) {
         <CommentInput contentId={contentId} contentType={contentType} onCommentPosted={addComment} />
       </div>
 
-      {/* Comments List */}
-      <div className="relative">
-        <div className="absolute left-7 top-0 bottom-0 w-px bg-zinc-100 dark:bg-zinc-800/50 -z-10" />
+      {/* Thread List */}
+      <div>
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-            <p className="text-sm font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Warming up the arena...</p>
-          </div>
+          <div className="text-center py-8 text-sm" style={{ color: 'var(--text-sub)' }}>Loading comments...</div>
         ) : (
           <CommentList
             comments={comments}

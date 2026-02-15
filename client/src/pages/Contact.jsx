@@ -1,304 +1,337 @@
 import React, { useState } from "react";
-import {
-  Mail,
-  Phone,
-  MapPin,
-  MessageCircle,
-  Users,
-  AlertCircle,
-  Star,
-  Settings,
-} from "lucide-react";
-
-const initialState = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  message: "",
-  services: [],
-};
-
-const servicesList = [
-  "Technical support",
-  "Account & login help",
-  "Community guidelines",
-  "Report a bug",
-  "Feature request",
-  "General feedback",
-];
+import { motion } from "framer-motion";
+import { MessageSquare, Phone, Send, Mail, MapPin, Clock } from "lucide-react";
+import PageWrapper from "@/components/ui/PageWrapper";
+import { toast } from "sonner";
 
 export default function Contact() {
-  const [form, setForm] = useState(initialState);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    if (type === "checkbox") {
-      setForm((prev) => ({
-        ...prev,
-        services: checked
-          ? [...prev.services, value]
-          : prev.services.filter((s) => s !== value),
-      }));
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
-    }
-  };
+  const [form, setForm] = useState({ 
+    firstName: "", 
+    lastName: "", 
+    email: "", 
+    phone: "",
+    message: ""
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("Message sent! 🚀 (Demo)");
-    setForm(initialState);
+    toast.success("Message sent! We'll get back to you soon.");
+    setForm({ 
+      firstName: "", 
+      lastName: "", 
+      email: "", 
+      phone: "",
+      message: ""
+    });
+  };
+
+  const handleChange = (e) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-12 max-w-6xl mx-auto py-20 px-4">
+    <PageWrapper>
+    <div className="min-h-screen py-16 px-6" 
+      style={{ background: 'var(--bg-primary)' }}>
       
-      {/* ================= FORM SECTION ================= */}
-      <form
-        onSubmit={handleSubmit}
-        className="flex-1 backdrop-blur-xl bg-white/70 dark:bg-zinc-900/70 
-        border border-zinc-200 dark:border-zinc-700 
-        rounded-3xl shadow-2xl p-10 space-y-6
-        transition-all duration-500 hover:shadow-blue-500/20"
-      >
-        <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight
-  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-  bg-clip-text text-transparent
-  transition-all duration-500 ease-out
-  hover:scale-105
-  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
-  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
-  cursor-default">
-          Contact HuddleUp Team
-        </h2>
-
-        <p className="text-zinc-600 dark:text-zinc-300">
-          Have questions about HuddleUp, need support, or want to give feedback? Our team is here to help you 24/7. Reach out and we’ll get back to you as soon as possible.
-        </p>
-
-        {/* INPUT ROW */}
-        <div className="flex gap-4">
-          {["firstName", "lastName"].map((field, i) => (
-            <div key={i} className="flex-1">
-              <label className="text-sm font-medium tracking-tight
-  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-  bg-clip-text text-transparent
-  transition-all duration-500 ease-out
-  hover:scale-105
-  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
-  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
-  cursor-default">
-                {field === "firstName" ? "First Name" : "Last Name"}
-              </label>
-              <input
-                type="text"
-                name={field}
-                required
-                value={form[field]}
-                onChange={handleChange}
-                placeholder={field === "firstName" ? "John" : "Doe"}
-                className="w-full mt-1 px-4 py-2 rounded-xl 
-                bg-white/80 dark:bg-zinc-800/80 
-                border border-zinc-300 dark:border-zinc-700
-                transition-all duration-300
-                hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/20
-                focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* EMAIL + PHONE */}
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="text-sm font-medium tracking-tight
-  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-  bg-clip-text text-transparent
-  transition-all duration-500 ease-out
-  hover:scale-105
-  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
-  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
-  cursor-default">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              required
-              value={form.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              className="w-full mt-1 px-4 py-2 rounded-xl 
-              bg-white/80 dark:bg-zinc-800/80 
-              border border-zinc-300 dark:border-zinc-700
-              transition-all duration-300
-              hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/20
-              focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-          </div>
-
-          <div className="flex-1">
-            <label className="text-sm font-medium tracking-tight
-  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-  bg-clip-text text-transparent
-  transition-all duration-500 ease-out
-  hover:scale-105
-  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
-  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
-  cursor-default">
-              Phone
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="+1 000 000 0000"
-              className="w-full mt-1 px-4 py-2 rounded-xl 
-              bg-white/80 dark:bg-zinc-800/80 
-              border border-zinc-300 dark:border-zinc-700
-              transition-all duration-300
-              hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/20
-              focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-          </div>
-        </div>
-
-        {/* MESSAGE */}
-        <div>
-          <label className="text-sm font-medium tracking-tight
-  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-  bg-clip-text text-transparent
-  transition-all duration-500 ease-out
-  hover:scale-105
-  hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600
-  hover:drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]
-  cursor-default">
-            Message
-          </label>
-          <textarea
-            name="message"
-            required
-            value={form.message}
-            onChange={handleChange}
-            placeholder="Write your message..."
-            className="w-full mt-1 px-4 py-3 min-h-[120px] rounded-xl 
-            bg-white/80 dark:bg-zinc-800/80 
-            border border-zinc-300 dark:border-zinc-700
-            transition-all duration-300
-            hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/20
-            focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-        </div>
-
-        {/* SERVICES */}
-        <div>
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-3 block">
-            What can we help you with?
-          </label>
-
-          <div className="grid grid-cols-2 gap-3">
-            {servicesList.map((service) => (
-              <label
-                key={service}
-                className="group flex items-center gap-2 
-                bg-zinc-100/80 dark:bg-zinc-800/80 
-                px-3 py-2 rounded-xl cursor-pointer
-                transition-all duration-300
-                hover:-translate-y-1 hover:shadow-lg
-                hover:shadow-blue-500/20 hover:border-blue-500
-                border border-transparent"
-              >
-                <input
-                  type="checkbox"
-                  name="services"
-                  value={service}
-                  checked={form.services.includes(service)}
-                  onChange={handleChange}
-                  className="accent-blue-500"
-                />
-
-                {service === "Technical support" && (
-                  <Settings className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
-                )}
-                {service === "Account & login help" && (
-                  <Users className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
-                )}
-                {service === "Community guidelines" && (
-                  <Star className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
-                )}
-                {service === "Report a bug" && (
-                  <AlertCircle className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
-                )}
-                {service === "Feature request" && (
-                  <MessageCircle className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
-                )}
-                {service === "General feedback" && (
-                  <Mail className="w-4 h-4 text-blue-400 group-hover:scale-125 transition" />
-                )}
-
-                <span className="text-sm">{service}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* SUBMIT BUTTON */}
-        <button
-          type="submit"
-          className="w-full py-3 rounded-2xl text-lg font-semibold text-white
-          bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-          transition-all duration-300
-          hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/40
-          hover:from-purple-600 hover:to-blue-600
-          active:scale-95"
+      <div className="max-w-6xl mx-auto">
+        
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
         >
-          Send Message 🚀
-        </button>
-      </form>
+          <h1 className="text-4xl md:text-6xl font-black mb-4">
+            Get in{' '}
+            <span style={{
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              Touch
+            </span>
+          </h1>
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-sub)' }}>
+            Have a question or feedback? We'd love to hear from you. Our team typically responds within 24 hours.
+          </p>
+        </motion.div>
 
-      {/* ================= CONTACT INFO ================= */}
-      <div className="flex-1 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Contact Info Cards */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="space-y-6"
+          >
+            {/* Email Card */}
+            <div className="p-6 rounded-xl transition-all hover:scale-105"
+              style={{
+                background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                boxShadow: '0 4px 20px rgba(59, 130, 246, 0.2)'
+              }}
+            >
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
+                style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <Mail className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Email Us</h3>
+              <p className="text-sm text-white/80 mb-3">Send us an email anytime</p>
+              <a href="mailto:support@huddleup.com" 
+                className="text-sm font-semibold text-white hover:underline">
+                support@huddleup.com
+              </a>
+            </div>
 
-        {/* CHAT CARD */}
-        <div className="group p-8 rounded-3xl bg-gradient-to-br from-blue-900/60 to-zinc-900/80 
-        border border-zinc-800 shadow-xl
-        transition-all duration-300 hover:-translate-y-2 hover:shadow-blue-500/30">
+            {/* Phone Card */}
+            <div className="p-6 rounded-xl transition-all hover:scale-105"
+              style={{
+                background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
+                boxShadow: '0 4px 20px rgba(168, 85, 247, 0.2)'
+              }}
+            >
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
+                style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <Phone className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Call Us</h3>
+              <p className="text-sm text-white/80 mb-3">Mon-Fri, 9am to 6pm EST</p>
+              <a href="tel:+18001234567" 
+                className="text-sm font-semibold text-white hover:underline">
+                +1 (800) 123-4567
+              </a>
+            </div>
 
-          <h3 className="flex items-center gap-2 text-xl font-semibold text-white">
-            <MessageCircle className="w-5 h-5 text-blue-400 group-hover:scale-110 transition" />
-            Chat with us
-          </h3>
+            {/* Live Chat Card */}
+            <div className="p-6 rounded-xl transition-all hover:scale-105"
+              style={{
+                background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                boxShadow: '0 4px 20px rgba(16, 185, 129, 0.2)'
+              }}
+            >
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
+                style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <MessageSquare className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Live Chat</h3>
+              <p className="text-sm text-white/80 mb-3">Available 24/7 for support</p>
+              <button 
+                className="text-sm font-semibold text-white hover:underline"
+                onClick={() => toast.info("Live chat coming soon!")}>
+                Start chatting →
+              </button>
+            </div>
+          </motion.div>
 
-          <div className="mt-4 space-y-2 text-blue-300">
-            <a href="#" className="block hover:text-fuchsia-400 transition">
-              Start live chat
-            </a>
-            <a href="mailto:support@huddleup.com" className="block hover:text-fuchsia-400 transition">
-              support@huddleup.com
-            </a>
+          {/* Contact Form */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="lg:col-span-2"
+          >
+            <div className="p-8 rounded-2xl"
+              style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-subtle)'
+              }}
+            >
+              <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-main)' }}>
+                Send us a message
+              </h2>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Name Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2" 
+                      style={{ color: 'var(--text-main)' }}>
+                      First Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      required
+                      value={form.firstName}
+                      onChange={handleChange}
+                      placeholder="John"
+                      className="w-full px-4 py-3 rounded-lg outline-none transition-all"
+                      style={{
+                        background: 'var(--bg-primary)',
+                        border: '2px solid var(--border-subtle)',
+                        color: 'var(--text-main)'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                      onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2" 
+                      style={{ color: 'var(--text-main)' }}>
+                      Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      required
+                      value={form.lastName}
+                      onChange={handleChange}
+                      placeholder="Doe"
+                      className="w-full px-4 py-3 rounded-lg outline-none transition-all"
+                      style={{
+                        background: 'var(--bg-primary)',
+                        border: '2px solid var(--border-subtle)',
+                        color: 'var(--text-main)'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                      onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                    />
+                  </div>
+                </div>
+
+                {/* Email & Phone */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2" 
+                      style={{ color: 'var(--text-main)' }}>
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      value={form.email}
+                      onChange={handleChange}
+                      placeholder="you@example.com"
+                      className="w-full px-4 py-3 rounded-lg outline-none transition-all"
+                      style={{
+                        background: 'var(--bg-primary)',
+                        border: '2px solid var(--border-subtle)',
+                        color: 'var(--text-main)'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                      onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2" 
+                      style={{ color: 'var(--text-main)' }}>
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={form.phone}
+                      onChange={handleChange}
+                      placeholder="+1 (000) 000-0000"
+                      className="w-full px-4 py-3 rounded-lg outline-none transition-all"
+                      style={{
+                        background: 'var(--bg-primary)',
+                        border: '2px solid var(--border-subtle)',
+                        color: 'var(--text-main)'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                      onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                    />
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label className="block text-sm font-medium mb-2" 
+                    style={{ color: 'var(--text-main)' }}>
+                    Your Message *
+                  </label>
+                  <textarea
+                    name="message"
+                    required
+                    value={form.message}
+                    onChange={handleChange}
+                    rows={6}
+                    placeholder="Tell us how we can help you..."
+                    className="w-full px-4 py-3 rounded-lg resize-none outline-none transition-all"
+                    style={{
+                      background: 'var(--bg-primary)',
+                      border: '2px solid var(--border-subtle)',
+                      color: 'var(--text-main)',
+                      lineHeight: '1.6'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <motion.button
+                  type="submit"
+                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.01 }}
+                  className="w-full px-6 py-4 font-bold text-base flex items-center justify-center gap-3"
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    color: 'white',
+                    borderRadius: 'var(--r-md)',
+                    boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)'
+                  }}
+                >
+                  <Send className="w-5 h-5" />
+                  Send Message
+                </motion.button>
+              </form>
+            </div>
+          </motion.div>
+
+        </div>
+
+        {/* Additional Info Bar */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
+          <div className="text-center p-6 rounded-xl" 
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+            <Clock className="w-8 h-8 mx-auto mb-3" style={{ color: 'var(--accent)' }} />
+            <h4 className="font-semibold mb-2" style={{ color: 'var(--text-main)' }}>
+              Quick Response
+            </h4>
+            <p className="text-sm" style={{ color: 'var(--text-sub)' }}>
+              We respond within 24 hours
+            </p>
           </div>
-        </div>
 
-        {/* CALL CARD */}
-        <div className="group p-8 rounded-3xl bg-gradient-to-br from-purple-900/60 to-zinc-900/80 
-        border border-zinc-800 shadow-xl
-        transition-all duration-300 hover:-translate-y-2 hover:shadow-purple-500/30">
+          <div className="text-center p-6 rounded-xl" 
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+            <MapPin className="w-8 h-8 mx-auto mb-3" style={{ color: 'var(--turf-green)' }} />
+            <h4 className="font-semibold mb-2" style={{ color: 'var(--text-main)' }}>
+              Global Reach
+            </h4>
+            <p className="text-sm" style={{ color: 'var(--text-sub)' }}>
+              Supporting sports fans worldwide
+            </p>
+          </div>
 
-          <h3 className="flex items-center gap-2 text-xl font-semibold text-white">
-            <Phone className="w-5 h-5 text-purple-400 group-hover:scale-110 transition" />
-            Call us
-          </h3>
-
-          <p className="text-zinc-400 mt-3">Call our team Mon-Fri from 8am to 5pm</p>
-          <a href="tel:+18001234567" className="text-purple-300 hover:text-fuchsia-400 transition">
-            +1 (800) 123-4567
-          </a>
-        </div>
+          <div className="text-center p-6 rounded-xl" 
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+            <MessageSquare className="w-8 h-8 mx-auto mb-3" style={{ color: '#8b5cf6' }} />
+            <h4 className="font-semibold mb-2" style={{ color: 'var(--text-main)' }}>
+              Community First
+            </h4>
+            <p className="text-sm" style={{ color: 'var(--text-sub)' }}>
+              Your feedback shapes HuddleUp
+            </p>
+          </div>
+        </motion.div>
 
       </div>
+
     </div>
+    </PageWrapper>
   );
 }

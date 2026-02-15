@@ -4,12 +4,10 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import Badge from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Play, Calendar, User, Eye, Trash2, Pencil, Share2, Mic2, BarChart3, Globe, PlayCircle } from 'lucide-react';
+import { Play, Calendar, User, Eye, Trash2, Pencil, Share2, Clock } from 'lucide-react';
 import { API } from '@/api';
 import { getUserId, getToken } from '@/utils/auth';
 import { getShareUrl, shareLink } from '@/utils/share';
-import { getAssetUrl } from '@/utils/url';
-import { motion } from 'framer-motion';
 
 const VideoCard = ({ video, onPlay, onDelete }) => {
   const navigate = useNavigate();
@@ -63,133 +61,262 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
 
   const getCategoryIcon = (category) => {
     switch (category?.trim()) {
-      case 'UNHEARD STORIES': return <Mic2 className="w-3 h-3" />;
-      case 'MATCH ANALYSIS': return <BarChart3 className="w-3 h-3" />;
-      case 'SPORTS AROUND THE GLOBE': return <Globe className="w-3 h-3" />;
-      default: return <PlayCircle className="w-3 h-3" />;
+      case 'UNHEARD STORIES': return '📢';
+      case 'MATCH ANALYSIS': return '📊';
+      case 'SPORTS AROUND THE GLOBE': return '🌍';
+      default: return '🎬';
     }
   };
 
-  const getCategoryColor = (category) => {
+  const getCategoryStyle = (category) => {
     switch (category?.trim()) {
-      case 'UNHEARD STORIES': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'MATCH ANALYSIS': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'SPORTS AROUND THE GLOBE': return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
-      default: return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
+      case 'UNHEARD STORIES': 
+        return { bg: 'rgba(0, 230, 118, 0.15)', color: 'var(--accent-success)', border: 'rgba(0, 230, 118, 0.3)' };
+      case 'MATCH ANALYSIS': 
+        return { bg: 'rgba(108, 92, 231, 0.15)', color: 'var(--accent)', border: 'rgba(108, 92, 231, 0.3)' };
+      case 'SPORTS AROUND THE GLOBE': 
+        return { bg: 'rgba(0, 212, 255, 0.15)', color: 'var(--accent-2)', border: 'rgba(0, 212, 255, 0.3)' };
+      default: 
+        return { bg: 'var(--bg-surface)', color: 'var(--text-sub)', border: 'var(--border-subtle)' };
     }
   };
 
+  const categoryStyle = getCategoryStyle(video.category);
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="group relative"
+    <div 
+      className="group cursor-pointer hover-lift"
+      onClick={() => onPlay(video)}
+      style={{
+        background: 'var(--bg-elevated)',
+        borderRadius: 'var(--r-lg)',
+        border: '1px solid var(--border-subtle)',
+        overflow: 'hidden',
+        transition: 'all var(--transition-base)'
+      }}
     >
-      {/* ===== Outer Glow ===== */}
-      <div className="absolute -inset-[2px] rounded-[32px] bg-gradient-to-tr from-emerald-500/20 via-indigo-500/20 to-emerald-500/20 blur-md opacity-0 group-hover:opacity-100 transition-all duration-700" />
+      {/* Owner Actions - Only show on hover */}
+      {videoOwnerId === userId && (
+        <div className="absolute top-3 right-3 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit();
+            }}
+            className="p-2 rounded-lg backdrop-blur-md transition-all"
+            style={{
+              background: 'rgba(17, 24, 39, 0.8)',
+              color: 'var(--text-sub)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(108, 92, 231, 0.2)';
+              e.currentTarget.style.color = 'var(--accent)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(17, 24, 39, 0.8)';
+              e.currentTarget.style.color = 'var(--text-sub)';
+            }}
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
 
-      <Card className="relative h-full flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[30px] overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 group-hover:-translate-y-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
+            className="p-2 rounded-lg backdrop-blur-md transition-all"
+            style={{
+              background: 'rgba(17, 24, 39, 0.8)',
+              color: 'var(--text-sub)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 61, 0, 0.2)';
+              e.currentTarget.style.color = 'var(--accent-danger)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(17, 24, 39, 0.8)';
+              e.currentTarget.style.color = 'var(--text-sub)';
+            }}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
-        {/* ===== THUMBNAIL AREA ===== */}
-        <div
-          className="relative aspect-video overflow-hidden cursor-pointer bg-zinc-100 dark:bg-zinc-800"
-          onClick={() => onPlay(video)}
-        >
-          {/* Subtle Overlay */}
-          <div className="absolute inset-0 bg-black/5 group-hover:bg-black/40 transition-all duration-500 z-10" />
+      {/* Thumbnail Area - Netflix Style */}
+      <div className="relative aspect-video overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+        {/* Placeholder gradient if no thumbnail */}
+        {!video.thumbnail && (
+          <div className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(135deg, rgba(108, 92, 231, 0.3) 0%, rgba(0, 212, 255, 0.2) 100%)'
+            }}
+          />
+        )}
 
-          {/* Main Play Icon (Center) */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 z-20">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/90 text-white flex items-center justify-center transform scale-75 group-hover:scale-100 transition-all shadow-xl">
-              <Play className="w-6 h-6 fill-current" />
-            </div>
+        {/* Dark overlay on hover */}
+        <div 
+          className="absolute inset-0 transition-opacity duration-300"
+          style={{
+            background: 'rgba(0, 0, 0, 0.3)',
+            opacity: 0
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
+        />
+
+        {/* Play Button - Center */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div 
+            className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+            style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(8px)',
+              border: '2px solid rgba(255, 255, 255, 0.3)'
+            }}
+          >
+            <Play className="w-6 h-6 text-white ml-1" fill="white" />
           </div>
-
-          {/* Category Badge (Top Left) */}
-          <div className="absolute top-4 left-4 z-20">
-            <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold border backdrop-blur-md shadow-sm ${getCategoryColor(video.category)}`}>
-              {getCategoryIcon(video.category)}
-              {video.category || 'SPORTS'}
-            </span>
-          </div>
-
-          {/* Owner Actions (Top Right) */}
-          {videoOwnerId === userId && (
-            <div className="absolute top-4 right-4 z-30 flex gap-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-              <button
-                onClick={(e) => { e.stopPropagation(); handleEdit(); }}
-                className="p-2.5 rounded-xl bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400 shadow-lg border border-white/50 dark:border-zinc-700/50 transition-all"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); handleDelete(); }}
-                className="p-2.5 rounded-xl bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md text-zinc-600 dark:text-zinc-400 hover:text-red-500 shadow-lg border border-white/50 dark:border-zinc-700/50 transition-all"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          {/* Video Placeholder Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-indigo-500/10 pointer-events-none" />
         </div>
 
-        {/* ===== CONTENT AREA ===== */}
-        <CardContent className="p-6 flex-1 flex flex-col">
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2 line-clamp-1 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors duration-300 tracking-tight">
-              {video.title}
-            </h3>
-            {video.description && (
-              <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-5 line-clamp-2 leading-relaxed">
-                {video.description}
-              </p>
-            )}
-          </div>
-
-          {/* Meta Info */}
-          <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                <User className="h-3 w-3 text-emerald-500" />
-              </div>
-              <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest">{video.postedBy?.username || "Athlete"}</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500">
-              <Calendar className="h-3 w-3" />
-              <span className="text-[10px] font-medium">{formatDate(video.createdAt)}</span>
-            </div>
-          </div>
-        </CardContent>
-
-        {/* ===== FOOTER ACTIONS ===== */}
-        <CardFooter className="px-6 pb-6 pt-0 flex gap-3">
-          <Button
-            onClick={() => onPlay(video)}
-            className="flex-[2] h-12 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-extrabold text-xs uppercase tracking-wider transition-all duration-300 hover:bg-emerald-500 dark:hover:bg-emerald-400 border-none shadow-lg shadow-zinc-950/20 dark:shadow-emerald-500/10"
+        {/* Category Badge - Top Left */}
+        <div className="absolute top-3 left-3">
+          <span 
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 backdrop-blur-md"
+            style={{
+              background: categoryStyle.bg,
+              color: categoryStyle.color,
+              border: `1px solid ${categoryStyle.border}`
+            }}
           >
-            WATCH NOW
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleShare}
-            className="h-12 w-12 rounded-2xl border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/5 transition-all"
+            <span>{getCategoryIcon(video.category)}</span>
+            <span>{video.category}</span>
+          </span>
+        </div>
+
+        {/* Watch Now overlay - Bottom, appears on hover */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 p-4 transition-all duration-300"
+          style={{
+            background: 'linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%)',
+            transform: 'translateY(100%)',
+            opacity: 0
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.opacity = '1';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(100%)';
+            e.currentTarget.style.opacity = '0';
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPlay(video);
+            }}
+            className="w-full py-2 px-4 rounded-lg font-semibold flex items-center justify-center gap-2"
+            style={{
+              background: 'white',
+              color: 'var(--bg-primary)',
+              fontSize: 'var(--text-sm)'
+            }}
+          >
+            <Play className="w-4 h-4" />
+            Watch Now
+          </button>
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="p-4">
+        {/* Title */}
+        <h3 
+          className="font-bold mb-2 line-clamp-2 group-hover:text-gradient-accent transition-all"
+          style={{
+            fontSize: 'var(--text-base)',
+            lineHeight: 'var(--lh-snug)',
+            color: 'var(--text-main)'
+          }}
+        >
+          {video.title}
+        </h3>
+
+        {/* Description */}
+        {video.description && (
+          <p 
+            className="mb-3 line-clamp-2"
+            style={{
+              fontSize: 'var(--text-sm)',
+              color: 'var(--text-sub)',
+              lineHeight: 'var(--lh-normal)'
+            }}
+          >
+            {video.description}
+          </p>
+        )}
+
+        {/* Meta Info */}
+        <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+            <User className="w-3.5 h-3.5" />
+            <span>{video.postedBy?.username || "Unknown"}</span>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+            <Calendar className="w-3.5 h-3.5" />
+            <span>{formatDate(video.createdAt)}</span>
+          </div>
+        </div>
+
+        {/* Action Bar */}
+        <div className="flex items-center gap-2 mt-4">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPlay(video);
+            }}
+            className="flex-1 py-2 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
+            style={{
+              background: 'var(--accent)',
+              color: 'white',
+              transition: 'all var(--transition-base)'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--accent-hover)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--accent)'}
+          >
+            <Eye className="w-4 h-4" />
+            Watch
+          </button>
+          
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleShare();
+            }}
+            className="p-2 rounded-lg transition-all"
+            style={{
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-sub)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent)';
+              e.currentTarget.style.color = 'var(--accent)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border-subtle)';
+              e.currentTarget.style.color = 'var(--text-sub)';
+            }}
             title="Share video"
           >
-            <Share2 className="h-4 w-4" />
-          </Button>
-        </CardFooter>
-
-      </Card>
-    </motion.div>
+            <Share2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
-
-
-
 };
 
 export default VideoCard;
