@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate,useLocation, useSearchParams } from "react-router-dom";
 import { motion } from 'framer-motion';
 import PageWrapper from '@/components/ui/PageWrapper';
-import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play } from 'lucide-react';
+import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play, User } from 'lucide-react';
 import VideoPlayer from '@/components/VideoPlayer';
 import { API } from '@/api';
 
@@ -377,18 +377,31 @@ const Explore = () => {
                         {video.description}
                       </p>
                     )}
-                    <div className="flex items-center gap-2 text-xs text-white/60">
-                      <span>by {video.uploadedBy?.username || 'Unknown'}</span>
+                    <div className="flex items-center gap-2 text-xs text-white/60 mb-3">
+                      <span className="flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        {video.uploadedBy?.username || 'Unknown'}
+                      </span>
+                      {video.createdAt && (
+                        <>
+                          <span>•</span>
+                          <span>{new Date(video.createdAt).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}</span>
+                        </>
+                      )}
                       {video.views && (
                         <>
-                          <span>·</span>
+                          <span>•</span>
                           <span>{video.views} views</span>
                         </>
                       )}
                     </div>
                   </div>
 
-                  {/* Play Icon - Center */}
+                  {/* Play Button - Center */}
                   <div className="absolute inset-0 flex items-center justify-center
                     opacity-0 group-hover:opacity-100 transition-opacity">
                     <div className="w-16 h-16 rounded-full flex items-center justify-center"

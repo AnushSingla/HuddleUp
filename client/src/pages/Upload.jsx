@@ -117,77 +117,8 @@ const Upload = () => {
           </p>
         </div>
 
-        {!videoFile ? (
-          /* Upload Zone */
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className="relative cursor-pointer transition-all"
-            style={{
-              border: isDragging ? '2px dashed var(--accent)' : '2px dashed var(--border-medium)',
-              background: isDragging ? 'rgba(6, 182, 212, 0.05)' : 'transparent',
-              padding: '4rem 2rem',
-              borderRadius: '12px'
-            }}
-          >
-            <div className="text-center">
-              <div className="mb-6 transition-transform"
-                style={{ 
-                  transform: isDragging ? 'scale(1.05)' : 'scale(1)',
-                  color: 'var(--turf-green)'
-                }}>
-                <UploadCloud className="w-16 h-16 mx-auto" strokeWidth={1.5} />
-              </div>
-              
-              <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-main)' }}>
-                {isDragging ? "Drop it here" : "Select Video File"}
-              </h2>
-              
-              <p className="text-sm mb-6" style={{ color: 'var(--text-sub)' }}>
-                Drag & drop your sports video here or click to browse
-              </p>
-
-              <p className="inline-block px-4 py-2 text-sm" 
-                style={{
-                  color: 'var(--text-muted)',
-                  background: 'var(--bg-surface)',
-                  borderRadius: '6px'
-                }}>
-                Max {MAX_FILE_SIZE_MB}MB · MP4, WebM, MOV
-              </p>
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="video/*"
-              onChange={(e) => handleFileSelect(e.target.files?.[0])}
-              className="hidden"
-            />
-        </div>
-      ) : (
-        /* FORM MODE - Publish Details */
+        {/* Upload Form - Always Visible */}
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-black mb-4" style={{ color: 'var(--ice-white)' }}>
-              Share Your{' '}
-              <span style={{
-                background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}>
-                Game Story
-              </span>
-            </h1>
-            <p className="text-lg" style={{ color: 'var(--text-sub)' }}>
-              Upload match analysis, unheard stories, or global sports moments.
-            </p>
-          </div>
-
           {/* Upload Form Card */}
           <motion.form
             onSubmit={handleSubmit}
@@ -199,33 +130,80 @@ const Upload = () => {
               border: '1px solid var(--border-subtle)'
             }}
           >
-            {/* Video Preview */}
+            {/* Video Upload Area */}
             <div className="mb-8">
-              <div className="relative rounded-xl overflow-hidden mb-4" style={{
-                background: '#000',
-                aspectRatio: '16/9'
-              }}>
-                <video
-                  src={previewURL}
-                  className="w-full h-full"
-                  controls
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setVideoFile(null);
-                    setPreviewURL(null);
-                  }}
-                  className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+              <label className="block text-xs font-bold uppercase tracking-wider mb-3" 
+                style={{ color: 'var(--text-sub)', letterSpacing: '0.1em' }}>
+                Select Video File *
+              </label>
+              
+              {!videoFile ? (
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="relative cursor-pointer transition-all"
                   style={{
-                    background: 'rgba(0,0,0,0.8)',
-                    color: 'var(--clay-red)',
-                    border: '2px solid var(--clay-red)'
+                    border: isDragging ? '2px dashed var(--accent)' : '2px dashed var(--border-medium)',
+                    background: isDragging ? 'rgba(6, 182, 212, 0.05)' : 'var(--bg-primary)',
+                    padding: '3rem 2rem',
+                    borderRadius: '12px'
                   }}
                 >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+                  <div className="text-center">
+                    <div className="mb-4 transition-transform"
+                      style={{ 
+                        transform: isDragging ? 'scale(1.05)' : 'scale(1)',
+                        color: 'var(--turf-green)'
+                      }}>
+                      <UploadCloud className="w-12 h-12 mx-auto" strokeWidth={1.5} />
+                    </div>
+                    
+                    <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-main)' }}>
+                      {isDragging ? "Drop it here" : "Click to select or drag & drop"}
+                    </h3>
+                    
+                    <p className="text-sm mb-4" style={{ color: 'var(--text-sub)' }}>
+                      MP4, WebM, MOV (Max {MAX_FILE_SIZE_MB}MB)
+                    </p>
+                  </div>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => handleFileSelect(e.target.files?.[0])}
+                    className="hidden"
+                  />
+                </div>
+              ) : (
+                <div className="relative rounded-xl overflow-hidden" style={{
+                  background: '#000',
+                  aspectRatio: '16/9'
+                }}>
+                  <video
+                    src={previewURL}
+                    className="w-full h-full"
+                    controls
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVideoFile(null);
+                      setPreviewURL(null);
+                    }}
+                    className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                    style={{
+                      background: 'rgba(0,0,0,0.8)',
+                      color: 'var(--clay-red)',
+                      border: '2px solid var(--clay-red)'
+                    }}
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Form Fields */}
@@ -326,8 +304,6 @@ const Upload = () => {
                     <div 
                       className="h-full transition-all"
                       style={{
-                        width: `${uploadProgress}%`,
-                        background: 'var(--turf-green)'
                       }}
                     />
                   </div>
@@ -343,10 +319,10 @@ const Upload = () => {
                 transition={{ type: "spring", stiffness: 300 }}
                 className="w-full px-6 py-4 font-bold text-base uppercase tracking-wider flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
                   color: 'white',
                   borderRadius: 'var(--r-md)',
-                  boxShadow: '0 8px 24px rgba(79, 70, 229, 0.3)',
+                  boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
                   letterSpacing: '0.05em'
                 }}
               >
@@ -355,7 +331,6 @@ const Upload = () => {
             </div>
           </motion.form>
         </div>
-      )}
 
       {fileError && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg"

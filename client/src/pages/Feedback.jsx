@@ -44,7 +44,7 @@ export default function Feedback() {
           >
             Share Your{' '}
             <span style={{
-              background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+              background: 'linear-gradient(135deg, #10b981, #059669)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
@@ -202,10 +202,10 @@ export default function Feedback() {
               whileHover={{ scale: 1.01 }}
               className="w-full px-6 py-4 font-bold text-base flex items-center justify-center gap-3"
               style={{
-                background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
                 color: 'white',
                 borderRadius: 'var(--r-md)',
-                boxShadow: '0 8px 24px rgba(139, 92, 246, 0.3)'
+                boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)'
               }}
             >
               Send Feedback <Send className="w-5 h-5" />

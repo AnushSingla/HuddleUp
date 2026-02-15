@@ -70,72 +70,80 @@ const AllPosts = () => {
     <PageWrapper>
     <div className="min-h-screen py-8" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-6xl mx-auto px-4">
+        
+        {/* Header Section */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold mb-2 flex items-center gap-3" style={{ color: 'var(--text-main)' }}>
-                <MessageSquare className="h-8 w-8" style={{ color: 'var(--turf-green)' }} />
-                Discussion Forum
+              <h1 className="text-4xl md:text-5xl font-black mb-2 flex items-center gap-3" 
+                style={{ color: 'var(--text-main)' }}>
+                <MessageSquare className="h-10 w-10" style={{ color: 'var(--turf-green)' }} />
+                Sports Discussion Arena
               </h1>
-              <p style={{ color: 'var(--text-sub)' }}>Join the sports community discussion</p>
+              <p className="text-lg" style={{ color: 'var(--text-sub)' }}>
+                Join the debate • Share your take • Connect with fans worldwide
+              </p>
             </div>
             <Link to="/create-post">
-              <button className="px-6 py-3 font-semibold flex items-center gap-2 hover-lift" style={{
-                background: 'var(--turf-green)',
-                color: 'var(--bg-primary)',
-                borderRadius: 'var(--r-md)',
-                transition: 'all var(--transition-base)'
-              }}>
+              <button className="px-6 py-3 font-bold flex items-center gap-2 transition-all hover:scale-105" 
+                style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: 'white',
+                  borderRadius: 'var(--r-md)',
+                  boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)'
+                }}>
                 <PlusCircle className="h-5 w-5" />
-                Create Post
+                Start a Debate
               </button>
             </Link>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 p-4 rounded-lg" style={{
-            background: 'var(--bg-secondary)',
+          {/* Search & Filter Bar */}
+          <div className="p-6 rounded-xl" style={{
+            background: 'var(--bg-surface)',
             border: '1px solid var(--border-subtle)'
           }}>
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: 'var(--text-sub)' }} />
-              <Input
-                type="text"
-                placeholder="Search posts..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-                style={{
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-main)'
-                }}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4" style={{ color: 'var(--text-sub)' }} />
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-3 py-2 rounded-md focus:outline-none focus:ring-2"
-                style={{
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-main)'
-                }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--turf-green)'}
-                onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
-              >
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5" 
+                  style={{ color: 'var(--text-sub)' }} />
+                <Input
+                  type="text"
+                  placeholder="Search discussions, topics, or users..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-12 py-3"
+                  style={{
+                    background: 'var(--bg-primary)',
+                    border: '2px solid var(--border-subtle)',
+                    color: 'var(--text-main)',
+                    fontSize: '16px'
+                  }}
+                />
+              </div>
+              <div className="flex items-center gap-3 px-4 py-2 rounded-lg" 
+                style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                <Filter className="h-5 w-5" style={{ color: 'var(--text-sub)' }} />
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="bg-transparent outline-none font-medium"
+                  style={{ color: 'var(--text-main)' }}
+                >
+                  {categories.map(category => (
+                    <option key={category} value={category} 
+                      style={{ background: 'var(--bg-surface)' }}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="space-y-6">
+        {/* Posts Grid */}
+        <div className="space-y-4">
           {filteredPosts.length > 0 ? (
             filteredPosts.map(post => (
               <div key={post._id} id={`post-${post._id}`}>
@@ -148,25 +156,31 @@ const AllPosts = () => {
               </div>
             ))
           ) : (
-            <div className="text-center py-12">
-              <MessageSquare className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--border-subtle)' }} />
-              <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-sub)' }}>
-                {posts.length === 0 ? 'No posts yet' : 'No posts found'}
+            <div className="text-center py-20 px-6 rounded-xl" 
+              style={{ 
+                background: 'var(--bg-surface)',
+                border: '2px dashed var(--border-medium)'
+              }}>
+              <MessageSquare className="h-20 w-20 mx-auto mb-6" 
+                style={{ color: 'var(--border-medium)' }} />
+              <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-main)' }}>
+                {posts.length === 0 ? 'No debates yet!' : 'No debates found'}
               </h3>
-              <p className="mb-6" style={{ color: 'var(--text-sub)' }}>
+              <p className="text-lg mb-8 max-w-md mx-auto" style={{ color: 'var(--text-sub)' }}>
                 {posts.length === 0
-                  ? 'Be the first to start a discussion!'
-                  : 'Try adjusting your search or filter criteria'}
+                  ? 'Be the first to spark a discussion in the sports arena!'
+                  : 'Try adjusting your search or filter to find more discussions'}
               </p>
               {posts.length === 0 && (
                 <Link to="/create-post">
-                  <button className="px-6 py-3 font-semibold hover-lift" style={{
-                    background: 'var(--turf-green)',
-                    color: 'var(--bg-primary)',
-                    borderRadius: 'var(--r-md)',
-                    transition: 'all var(--transition-base)'
-                  }}>
-                    Create First Post
+                  <button className="px-8 py-4 font-bold text-lg transition-all hover:scale-105" 
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      color: 'white',
+                      borderRadius: 'var(--r-md)',
+                      boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)'
+                    }}>
+                    Start First Debate
                   </button>
                 </Link>
               )}

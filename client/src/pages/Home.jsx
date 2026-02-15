@@ -271,19 +271,43 @@ export default function Home() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.1 }}
+                whileHover={{ 
+                  scale: 1.05,
+                  y: -4,
+                }}
                 onClick={() => navigate(action.path)}
-                className="flex items-center gap-3 whitespace-nowrap group"
+                className="relative flex items-center gap-3 whitespace-nowrap group px-6 py-4 rounded-xl transition-all"
                 style={{
                   color: 'var(--text-main)',
                   fontSize: 'var(--text-lg)',
-                  fontWeight: 500
+                  fontWeight: 500,
+                  background: 'transparent',
+                  border: '2px solid var(--border-subtle)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
+                  e.currentTarget.style.borderColor = 'var(--turf-green)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.2)';
+                  e.currentTarget.style.color = 'var(--turf-green)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.color = 'var(--text-main)';
                 }}
               >
-                <Icon className="w-5 h-5 transition-transform group-hover:scale-110" 
-                  style={{ color: 'var(--accent)' }} />
-                {action.label}
-                <ArrowRight className="w-4 h-4 opacity-0 -ml-2 transition-all group-hover:opacity-100 group-hover:ml-0" 
-                  style={{ color: 'var(--accent)' }} />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all group-hover:scale-110 group-hover:rotate-6"
+                  style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
+                  <Icon className="w-5 h-5" 
+                    style={{ color: 'var(--turf-green)' }} />
+                </div>
+                <span className="relative">
+                  {action.label}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 group-hover:w-full transition-all duration-300"></span>
+                </span>
+                <ArrowRight className="w-4 h-4 opacity-0 -ml-2 transition-all group-hover:opacity-100 group-hover:ml-0 group-hover:translate-x-1" 
+                  style={{ color: 'var(--turf-green)' }} />
               </motion.button>
             );
           })}

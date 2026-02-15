@@ -39,7 +39,8 @@ export default function Navbar() {
     { to: "/explore", label: "Explore" },
     { to: "/posts", label: "Discussion" },
     { to: "/contact", label: "Contact" },
-    { to: "/about", label: "About" }
+    { to: "/about", label: "About" },
+    { to: "/feedback", label: "Feedback" }
   ];
 
   return (
@@ -72,13 +73,19 @@ export default function Navbar() {
                 {({ isActive }) => (
                   <span
                     className={`relative text-sm font-medium transition-colors
-                    ${isActive ? "text-white" : "text-zinc-400 hover:text-white"}`}
+                    ${isActive ? "" : "text-zinc-400 hover:text-white"}`}
+                    style={isActive ? {
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    } : {}}
                   >
                     {label}
                     {isActive && (
                       <motion.span
                         layoutId="navHighlight"
-                        className="absolute left-0 -bottom-1 h-[2px] w-full bg-gradient-to-r from-blue-500 to-purple-500 rounded"
+                        className="absolute left-0 -bottom-1 h-[2px] w-full bg-gradient-to-r from-emerald-500 to-green-500 rounded"
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
                     )}
