@@ -86,6 +86,14 @@ const VideoPlayer = ({ video, onClose }) => {
     );
   };
 
+  const [videoError, setVideoError] = useState(false);
+
+  const onVideoError = () => {
+    console.error("Video failed to load at:", videoUrl);
+    setVideoError(true);
+    toast.error("Arena feed lost. Video failed to load.");
+  };
+
   return (
     <AnimatePresence>
       <motion.div
@@ -116,16 +124,35 @@ const VideoPlayer = ({ video, onClose }) => {
               </button>
             </div>
 
-            <div className="flex-1 flex items-center justify-center">
-              <video
-                ref={videoRef}
-                src={videoUrl}
-                controls
-                autoPlay
-                className="w-full h-full object-contain"
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-              />
+            <div className="flex-1 flex items-center justify-center relative">
+              {videoError ? (
+                <div className="flex flex-col items-center justify-center text-center p-8 space-y-4">
+                  <div className="w-20 h-20 rounded-3xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 mb-4 animate-pulse">
+                    <Eye className="w-10 h-10" />
+                  </div>
+                  <h3 className="text-xl font-black text-white uppercase tracking-tighter">Connection Lost</h3>
+                  <p className="text-zinc-500 text-sm max-w-[250px] font-bold uppercase tracking-widest leading-relaxed">
+                    The arena feed is currently unavailable.
+                  </p>
+                  <Button
+                    onClick={() => { setVideoError(false); if (videoRef.current) videoRef.current.load(); }}
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-black"
+                  >
+                    RETRY CONNECTION
+                  </Button>
+                </div>
+              ) : (
+                <video
+                  ref={videoRef}
+                  src={videoUrl}
+                  controls
+                  autoPlay
+                  className="w-full h-full object-contain"
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  onError={onVideoError}
+                />
+              )}
             </div>
 
             {/* Bottom Actions Overlay */}
@@ -134,8 +161,8 @@ const VideoPlayer = ({ video, onClose }) => {
                 <button
                   onClick={handleLike}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md border transition-all ${isLiked
-                      ? 'bg-emerald-500 border-emerald-400 text-white shadow-lg shadow-emerald-500/20'
-                      : 'bg-black/40 border-white/10 text-white hover:bg-white/10'
+                    ? 'bg-emerald-500 border-emerald-400 text-white shadow-lg shadow-emerald-500/20'
+                    : 'bg-black/40 border-white/10 text-white hover:bg-white/10'
                     }`}
                 >
                   <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
