@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
 import { Menu, X, Bell } from "lucide-react";
+import {motion} from "framer-motion";
 import axios from "axios";
 
 export default function Navbar() {
