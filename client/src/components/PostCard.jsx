@@ -93,7 +93,7 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
   const categoryStyle = post.category ? getCategoryColor(post.category) : null;
 
   return (
-    <motion.div 
+    <motion.div
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
       className="group relative interactive-card transition group-hover:opacity-50 hover:!opacity-100"
@@ -107,7 +107,7 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
       {/* Reddit-style Vote Rail */}
       <div className="flex gap-0">
         {/* Left Vote Column */}
-        <div className="flex flex-col items-center gap-1 px-3 py-4" style={{ 
+        <div className="flex flex-col items-center gap-1 px-3 py-4" style={{
           background: 'var(--bg-primary)',
           borderRight: '1px solid var(--border-subtle)',
           minWidth: '60px'
@@ -119,13 +119,13 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
           >
             <ArrowBigUp className={`w-6 h-6 ${voteState === 'up' ? 'fill-current' : ''}`} />
           </button>
-          
-          <span className="text-sm font-bold py-1" style={{ 
+
+          <span className="text-sm font-bold py-1" style={{
             color: voteState === 'up' ? 'var(--accent-success)' : voteState === 'down' ? 'var(--accent-danger)' : 'var(--text-main)'
           }}>
             {likes}
           </span>
-          
+
           <button
             onClick={() => setVoteState(voteState === 'down' ? null : 'down')}
             className="p-1 rounded hover:bg-white/10 transition-all"
@@ -149,7 +149,7 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3 flex-wrap">
               {/* Author Avatar */}
-              <div 
+              <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                 style={{
                   background: 'var(--accent)',
@@ -172,7 +172,7 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
 
               {/* Category Badge */}
               {post.category && categoryStyle && (
-                <span 
+                <span
                   className="px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1"
                   style={{
                     background: categoryStyle.bg,
@@ -209,7 +209,7 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
           </div>
 
           {/* Post Title - Large & Bold (Reddit Style) */}
-          <h3 
+          <h3
             className="font-bold mb-3 line-clamp-2 hover:underline cursor-pointer"
             style={{
               fontSize: 'var(--text-xl)',
@@ -222,7 +222,7 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
 
           {/* Post Content */}
           <div className="mb-4">
-            <p 
+            <p
               className="leading-relaxed whitespace-pre-wrap line-clamp-4"
               style={{
                 fontSize: 'var(--text-sm)',
@@ -279,7 +279,7 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
           {showComments && (
             <div className="mt-4 relative">
               {/* Visual thread line */}
-              <div 
+              <div
                 className="absolute left-0 top-0 bottom-0 w-0.5"
                 style={{ background: 'var(--accent)', opacity: 0.3 }}
               />
