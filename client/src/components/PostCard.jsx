@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -158,8 +159,8 @@ const PostCard = ({ post, onDelete }) => {
             size="sm"
             onClick={handleLike}
             className={`h-11 px-6 flex items-center gap-2.5 rounded-2xl transition-all duration-300 border ${isLiked
-                ? 'bg-red-50 dark:bg-red-500/10 text-red-500 border-red-100 dark:border-red-500/20'
-                : 'bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 border-zinc-100 dark:border-zinc-800/50 hover:bg-red-50 dark:hover:bg-red-500/5 hover:text-red-500 hover:border-red-100'
+              ? 'bg-red-50 dark:bg-red-500/10 text-red-500 border-red-100 dark:border-red-500/20'
+              : 'bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 border-zinc-100 dark:border-zinc-800/50 hover:bg-red-50 dark:hover:bg-red-500/5 hover:text-red-500 hover:border-red-100'
               }`}
           >
             <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
@@ -171,8 +172,8 @@ const PostCard = ({ post, onDelete }) => {
             size="sm"
             onClick={() => setShowComments(!showComments)}
             className={`h-11 px-6 flex items-center gap-2.5 rounded-2xl transition-all duration-300 border ${showComments
-                ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20'
-                : 'bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 border-zinc-100 dark:border-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/5 hover:text-emerald-600 hover:border-emerald-100'
+              ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20'
+              : 'bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 border-zinc-100 dark:border-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/5 hover:text-emerald-600 hover:border-emerald-100'
               }`}
           >
             <MessageCircle className="h-4 w-4" />

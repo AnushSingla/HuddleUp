@@ -89,15 +89,16 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0 }) {
           </p>
 
           {/* Actions Block */}
-          <div className="flex items-center mt-3 gap-6">
+          <div className="flex items-center mt-5 gap-4">
             <button
               onClick={handleLike}
-              className={`flex items-center gap-1.5 transition-all duration-300 ${isLiked ? 'text-emerald-500' : 'text-zinc-400 hover:text-emerald-500 group/like'}`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all duration-300 font-bold text-xs uppercase tracking-wider ${isLiked
+                  ? 'bg-emerald-500 border-emerald-400 text-white shadow-lg shadow-emerald-500/20'
+                  : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/30'
+                }`}
             >
-              <div className={`p-1.5 rounded-lg transition-all ${isLiked ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-100 dark:bg-zinc-800 group-hover/like:bg-emerald-500/10'}`}>
-                <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current text-white' : ''}`} />
-              </div>
-              <span className="text-[11px] font-bold">{likeCount > 0 ? likeCount : 'Like'}</span>
+              <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current' : ''}`} />
+              <span>{likeCount > 0 ? likeCount : 'Like'}</span>
             </button>
 
             <button
@@ -108,12 +109,13 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0 }) {
                 }
                 setShowReplyForm(!showReplyForm);
               }}
-              className="flex items-center gap-1.5 text-zinc-400 hover:text-emerald-500 group/reply transition-colors"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all duration-300 font-bold text-xs uppercase tracking-wider ${showReplyForm
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                  : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/30'
+                }`}
             >
-              <div className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 group-hover/reply:bg-emerald-500/10 transition-all">
-                <Reply className="w-3.5 h-3.5" />
-              </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider">Reply</span>
+              <Reply className="w-3.5 h-3.5" />
+              <span>Reply</span>
             </button>
           </div>
 
