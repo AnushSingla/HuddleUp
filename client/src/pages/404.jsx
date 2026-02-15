@@ -11,7 +11,7 @@ export default function NotFound() {
 
   return (
     <PageWrapper>
-      <div className="min-h-[80vh] sm:min-h-[85vh] flex flex-col items-center justify-center relative overflow-hidden px-4 sm:px-6">
+      <main className="min-h-[80vh] sm:min-h-[85vh] flex flex-col items-center justify-center relative overflow-hidden px-4 sm:px-6">
         {/* Background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-40 h-40 sm:w-56 sm:h-56 md:w-64 md:h-64 bg-purple-600/10 rounded-full blur-3xl animate-pulse" />
@@ -27,14 +27,14 @@ export default function NotFound() {
           >
             <div className="relative">
               <MotionDiv
-                animate={{ 
+                animate={{
                   y: [0, -15, 0],
-                  rotate: [0, 5, -5, 0]
+                  rotate: [0, 5, -5, 0],
                 }}
-                transition={{ 
-                  repeat: Infinity, 
+                transition={{
+                  repeat: Infinity,
                   duration: 4,
-                  ease: "easeInOut"
+                  ease: "easeInOut",
                 }}
                 className="relative z-10"
               >
@@ -43,15 +43,19 @@ export default function NotFound() {
               <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-4 bg-black/20 blur-xl rounded-full" />
             </div>
           </MotionDiv>
-          
+
           <MotionDiv
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            <h1 className="text-6xl sm:text-7xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-zinc-200 via-zinc-400 to-zinc-600 tracking-tighter drop-shadow-sm">
-              404
-            </h1>
+            <div className="relative inline-block">
+              <div className="absolute -top-1/4 -left-3/4 md:w-100 md:h-70 w-40 h-20 blur-3xl inset-0 -z-10 bg-gradient-to-r from-sky-400/60 via-blue-400/50 to-indigo-500/20 rounded-full" />
+              {/* Added fallback text color for accessibility */}
+              <h1 className="text-6xl sm:text-7xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-zinc-200 via-zinc-400 to-zinc-600 tracking-tighter drop-shadow-sm dark:text-zinc-300">
+                404
+              </h1>
+            </div>
           </MotionDiv>
 
           <MotionDiv
@@ -63,17 +67,18 @@ export default function NotFound() {
               Page Not Found
             </h2>
             <p className="mt-4 text-zinc-400 text-base sm:text-lg max-w-md mx-auto leading-relaxed">
-              Oops! It seems you've ventured into the void. The page you're looking for has vanished or never existed.
+              Oops! It seems you've ventured into the void. The page you're
+              looking for has vanished or never existed.
             </p>
           </MotionDiv>
 
-          <MotionDiv 
+          <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
             className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center w-full"
           >
-            <Button 
+            <Button
               onClick={() => navigate(-1)}
               className="w-full sm:w-auto sm:min-w-[160px] px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white flex items-center justify-center gap-2 group border border-zinc-700/50 rounded-xl transition-all"
             >
@@ -90,8 +95,7 @@ export default function NotFound() {
             </Button>
           </MotionDiv>
         </div>
-      </div>
+      </main>
     </PageWrapper>
   );
 }
-
