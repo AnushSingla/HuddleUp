@@ -69,6 +69,7 @@ function AppContent() {
 }
 
 import { NotificationProvider } from './context/NotificationContext';
+import Feedback from './pages/Feedback';
 
 export default function App() {
   return (
