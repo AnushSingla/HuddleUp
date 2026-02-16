@@ -375,7 +375,7 @@ export default function Home() {
                 <button
                   className="px-6 py-3 font-semibold flex items-center gap-2"
                   style={{
-                    background: 'var(--accent)',
+                    background: 'white',
                     color: 'var(--bg-primary)',
                     borderRadius: 'var(--r-md)'
                   }}
@@ -454,7 +454,7 @@ export default function Home() {
             <button
               onClick={() => navigate("/posts")}
               className="text-sm font-medium flex items-center gap-1 hover-lift"
-              style={{ color: 'var(--accent)' }}
+              style={{ color: 'white' }}
             >
               View All
               <ArrowRight className="w-4 h-4" />
