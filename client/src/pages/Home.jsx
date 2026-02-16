@@ -101,54 +101,73 @@ export default function Home() {
                 For communities built around moments that matter.
               </p>
 
-              {/* CTA Trio */}
+              {/* CTA Duo */}
               <div className="flex flex-wrap items-center justify-center gap-4">
+                {/* Primary CTA - Upload */}
                 <motion.button
                   onClick={() => navigate("/upload")}
                   whileTap={{ scale: 0.96 }}
-                  whileHover={{ 
-                    scale: 1.02,
-                    boxShadow: "0px 0px 35px rgba(0, 229, 255, 0.5)"
-                  }}
-                  animate={{
-                    boxShadow: [
-                      "0px 0px 20px rgba(0, 229, 255, 0.2)",
-                      "0px 0px 35px rgba(0, 229, 255, 0.4)",
-                      "0px 0px 20px rgba(0, 229, 255, 0.2)"
-                    ]
+                  whileHover={{
+                    scale: 1.03,
+                    y: -2,
                   }}
                   transition={{
-                    boxShadow: { repeat: Infinity, duration: 2.5 },
-                    scale: { type: "spring", stiffness: 300 }
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 18,
                   }}
-                  className="px-8 py-4 font-bold text-lg flex items-center gap-3 action-elevated"
+                  className="relative inline-flex items-center gap-3 px-9 py-4 rounded-full font-semibold text-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                   style={{
-                    background: 'var(--accent)',
-                    color: 'var(--bg-primary)',
-                    borderRadius: 'var(--r-md)'
+                    background:
+                      "linear-gradient(135deg, #22c55e, #06b6d4)",
+                    boxShadow:
+                      "0 18px 45px rgba(16, 185, 129, 0.45)",
+                    color: "var(--bg-primary)",
                   }}
                 >
-                  <Upload className="w-5 h-5" />
-                  Upload Your Moment
+                  {/* Glow ring */}
+                  <span
+                    className="pointer-events-none absolute inset-0 rounded-full opacity-60 blur-xl"
+                    style={{
+                      background:
+                        "radial-gradient(circle at 0% 0%, rgba(45, 212, 191, 0.7), transparent 55%)",
+                    }}
+                  />
+                  <span className="relative flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/15">
+                      <Upload className="w-5 h-5" />
+                    </span>
+                    <span>Upload Your Moment</span>
+                  </span>
                 </motion.button>
+
+                {/* Secondary CTA - Explore */}
                 <motion.button
                   onClick={() => navigate("/explore")}
                   whileTap={{ scale: 0.96 }}
-                  whileHover={{ 
-                    scale: 1.02,
-                    boxShadow: "0px 0px 25px rgba(27, 232, 124, 0.35)"
+                  whileHover={{
+                    scale: 1.03,
+                    y: -2,
                   }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                  className="px-8 py-4 font-semibold text-lg flex items-center gap-3"
+                  transition={{
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 18,
+                  }}
+                  className="relative inline-flex items-center gap-3 px-9 py-4 rounded-full font-semibold text-lg border focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                   style={{
-                    background: 'transparent',
-                    color: 'var(--ice-white)',
-                    border: '2px solid var(--border-strong)',
-                    borderRadius: 'var(--r-md)'
+                    background:
+                      "linear-gradient(135deg, rgba(15,23,42,0.9), rgba(15,23,42,0.3))",
+                    borderColor: "rgba(56,189,248,0.6)",
+                    boxShadow:
+                      "0 12px 35px rgba(15, 23, 42, 0.85)",
+                    color: "var(--ice-white)",
                   }}
                 >
-                  <Play className="w-5 h-5" />
-                  Explore
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500/10 border border-cyan-400/60">
+                    <Play className="w-5 h-5 text-cyan-300" />
+                  </span>
+                  <span>Explore</span>
                 </motion.button>
               </div>
             </motion.div>
