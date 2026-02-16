@@ -12,12 +12,12 @@ import axios from "axios";
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { scrollY } = useScroll();
 
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [open, setOpen] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
   const { friendRequests } = useNotifications();
   const [scrolled, setScrolled] = useState(false);
 
