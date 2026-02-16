@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { motion, useScroll } from "framer-motion";
+import { motion, useScroll , useMotionValueEvent } from "framer-motion";
 import { Menu, X, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationDropdown from "./NotificationDropdown";
 import { useNotifications } from "@/context/NotificationContext";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
+
 import axios from "axios";
 
 export default function Navbar() {
@@ -19,13 +20,15 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { friendRequests } = useNotifications();
+  const { scrollY } = useScroll();
+
   const [scrolled, setScrolled] = useState(false);
 
-  useEffect(() => {
-    return scrollY.onChange((y) => {
-      setScrolled(y > 40);
-    });
-  }, [scrollY]);
+ useMotionValueEvent(scrollY, "change", (latest) => {
+  setScrolled(latest > 40);
+});
+
+ 
 
   useEffect(() => {
     setLoggedIn(isLoggedIn());
