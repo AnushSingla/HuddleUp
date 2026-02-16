@@ -42,14 +42,16 @@ export default function Navbar() {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await axios.get(
-          "http://localhost:5000/api/notifications",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+       const API = import.meta.env.VITE_API_URL;
+
+     const res = await axios.get( `${API}/notifications`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
+
 
         setNotifications(res.data);
       } catch (err) {
