@@ -12,8 +12,10 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-export const getNotifications = async () => {
-  const res = await API.get("/api/notifications");
-  return res.data;
+export const getNotifications = async (token) => {
+  return fetch("/api/notifications", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }).then((res) => res.json());
 };
-

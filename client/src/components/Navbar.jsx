@@ -7,8 +7,6 @@ import NotificationDropdown from "./NotificationDropdown";
 import { useNotifications } from "@/context/NotificationContext";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
-import { getNotifications } from "@/path/to/your/api";
-
 
 import axios from "axios";
 
@@ -37,21 +35,32 @@ export default function Navbar() {
     setOpen(false);
   }, [location]);
 
- useEffect(() => {
-  if (!loggedIn) return;
+  useEffect(() => {
+    if (!loggedIn) return;
 
-  const fetchNotifications = async () => {
-    try {
-      const data = await getNotifications();
-      setNotifications(data);
-    } catch (err) {
-      console.error("Failed to fetch notifications", err);
-    }
-  };
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-  fetchNotifications();
-}, [loggedIn]);
+       const API = import.meta.env.VITE_API_URL;
 
+     const res = await axios.get( `${API}/notifications`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
+
+
+        setNotifications(res.data);
+      } catch (err) {
+        console.error("Failed to fetch notifications", err);
+      }
+    };
+
+    fetchNotifications();
+  }, [loggedIn]);
 
 
   const handleLogout = () => {
