@@ -14,7 +14,7 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] = useState(false);
+ 
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [open, setOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
