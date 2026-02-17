@@ -12,6 +12,33 @@ export function getShareUrl(type, id) {
 }
 
 /**
+ * Copy URL to clipboard and show success/error via callbacks.
+ * @param {string} url - full URL to copy
+ * @param {(msg: string) => void} onSuccess - e.g. toast.success('Link copied!')
+ * @param {(msg: string) => void} onError - e.g. toast.error
+ */
+export async function copyLinkToClipboard(url, onSuccess, onError) {
+  try {
+    await navigator.clipboard.writeText(url);
+    onSuccess?.('Link copied!');
+  } catch (err) {
+    const textarea = document.createElement('textarea');
+    textarea.value = url;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      onSuccess?.('Link copied!');
+    } catch (e) {
+      onError?.('Could not copy link');
+    }
+    document.body.removeChild(textarea);
+  }
+}
+
+/**
  * Share content: use Web Share API if available, else copy link to clipboard.
  * @param {string} url - full URL to share
  * @param {string} title - title for share dialog
