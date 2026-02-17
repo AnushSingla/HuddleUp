@@ -14,6 +14,7 @@ import Friends from './pages/Friends';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import Profile from './pages/Profile';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 
 // Components
@@ -58,6 +59,7 @@ function AppContent() {
             <Route path="/create-post" element={<CreatePost />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/Feedback" element={<Feedback />} />
           </Routes>
         </div>
