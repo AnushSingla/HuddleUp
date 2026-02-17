@@ -77,6 +77,7 @@ export default function Navbar() {
     { to: "/posts", label: "Discussion" },
     { to: "/contact", label: "Contact" },
     { to: "/about", label: "About" },
+    { to: "/contributors", label: "Contributors" },
     { to: "/feedback", label: "Feedback" }
   ];
 

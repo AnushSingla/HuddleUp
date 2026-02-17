@@ -14,6 +14,7 @@ import Friends from './pages/Friends';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import Profile from './pages/Profile';
+import Contributor from './pages/Contributor';
 import TermsOfService from './pages/TermsOfService';
 
 
@@ -59,6 +60,7 @@ function AppContent() {
             <Route path="/create-post" element={<CreatePost />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
+            <Route path="/contributors" element={<Contributor />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/Feedback" element={<Feedback />} />
           </Routes>
