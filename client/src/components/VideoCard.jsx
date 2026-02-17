@@ -4,10 +4,10 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import Badge from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Play, Calendar, User, Eye, Trash2, Pencil, Share2, Clock } from 'lucide-react';
+import { Play, Calendar, User, Eye, Trash2, Pencil, Share2, Link2, Clock } from 'lucide-react';
 import { API } from '@/api';
 import { getUserId, getToken } from '@/utils/auth';
-import { getShareUrl, shareLink } from '@/utils/share';
+import { getShareUrl, shareLink, copyLinkToClipboard } from '@/utils/share';
 
 const VideoCard = ({ video, onPlay, onDelete }) => {
   const navigate = useNavigate();
@@ -26,6 +26,17 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
       url,
       video.title || 'Video on HuddleUp',
       video.description?.slice(0, 100) || '',
+      (msg) => toast.success(msg),
+      (msg) => toast.error(msg)
+    );
+  };
+
+  const handleCopyLink = (e) => {
+    e.stopPropagation();
+    if (!videoId) return;
+    const url = getShareUrl('video', videoId);
+    copyLinkToClipboard(
+      url,
       (msg) => toast.success(msg),
       (msg) => toast.error(msg)
     );
@@ -291,6 +302,26 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
             Watch
           </button>
           
+          <button
+            onClick={handleCopyLink}
+            className="p-2 rounded-lg transition-all"
+            style={{
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-sub)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent)';
+              e.currentTarget.style.color = 'var(--accent)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border-subtle)';
+              e.currentTarget.style.color = 'var(--text-sub)';
+            }}
+            title="Copy link"
+          >
+            <Link2 className="w-4 h-4" />
+          </button>
+
           <button
             onClick={(e) => {
               e.stopPropagation();
