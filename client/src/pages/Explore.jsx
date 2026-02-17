@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { motion } from 'framer-motion';
 import PageWrapper from '@/components/ui/PageWrapper';
-import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play, User, Link2 } from 'lucide-react';
+import EmptyState from '@/components/ui/EmptyState';
+import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play, User, Link2, Video } from 'lucide-react';
 import VideoPlayer from '@/components/VideoPlayer';
 import { API } from '@/api';
 import { toast } from 'sonner';
@@ -317,11 +318,19 @@ const Explore = () => {
       >
         <div className="max-w-7xl mx-auto">
           {filteredVideos.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-lg" style={{ color: 'var(--text-sub)' }}>
-                No videos found matching your criteria
-              </p>
-            </div>
+            <EmptyState
+              icon={Video}
+              title={videos.length === 0 ? 'No videos yet' : 'No results found'}
+              description={
+                videos.length === 0
+                  ? 'Upload your first video to get started and share it with the community.'
+                  : searchTerm
+                    ? `No videos match "${searchTerm}". Try different keywords or clear the search.`
+                    : 'No videos in this category. Try another filter or clear filters to see all.'
+              }
+              actionLabel={videos.length === 0 ? 'Upload your first video' : undefined}
+              actionHref={videos.length === 0 ? '/upload' : undefined}
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredVideos.map((video, index) => (
