@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate,useLocation, useSearchParams } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { motion } from 'framer-motion';
 import PageWrapper from '@/components/ui/PageWrapper';
-import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play, User } from 'lucide-react';
+import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play, User, Link2 } from 'lucide-react';
 import VideoPlayer from '@/components/VideoPlayer';
 import { API } from '@/api';
+import { toast } from 'sonner';
+import { getShareUrl, copyLinkToClipboard } from '@/utils/share';
 
 const Explore = () => {
   const navigate = useNavigate();
@@ -54,6 +56,18 @@ const Explore = () => {
 
   const handleClosePlayer = () => {
     setSelectedVideo(null);
+  };
+
+  const handleCopyLink = (e, video) => {
+    e.stopPropagation();
+    const videoId = video._id || video.id;
+    if (!videoId) return;
+    const url = getShareUrl('video', videoId);
+    copyLinkToClipboard(
+      url,
+      (msg) => toast.success(msg),
+      (msg) => toast.error(msg)
+    );
   };
 
   // Category counts
@@ -366,6 +380,20 @@ const Explore = () => {
                       </span>
                     </div>
                   )}
+
+                  {/* Copy link - top right */}
+                  <button
+                    onClick={(e) => handleCopyLink(e, video)}
+                    className="absolute top-3 right-3 z-10 p-2 rounded-lg transition-opacity hover:opacity-100 opacity-90"
+                    style={{
+                      background: 'rgba(0,0,0,0.6)',
+                      color: 'white',
+                      border: '1px solid rgba(255,255,255,0.2)'
+                    }}
+                    title="Copy link"
+                  >
+                    <Link2 className="w-4 h-4" />
+                  </button>
 
                   {/* Content */}
                   <div className="absolute bottom-0 left-0 right-0 p-4">
