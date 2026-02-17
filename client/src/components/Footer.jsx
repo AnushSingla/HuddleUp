@@ -62,6 +62,8 @@ export default function Footer() {
                 { href: "/feedback", label: "Feedback" },
                 { href: "/privacy-policy", label: "Privacy Policy" },
                 { href: "#", label: "Terms of Service" },
+                { href: "#", label: "Privacy Policy" },
+                { href: "/terms", label: "Terms of Service" },
                 { href: "#", label: "Community Guidelines" }
               ].map((link) => (
                 <li key={link.label} className="group">

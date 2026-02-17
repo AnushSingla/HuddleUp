@@ -3,11 +3,11 @@ import { motion } from 'framer-motion';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Heart, MessageCircle, Calendar, Tag, User, Trash2, Pencil, Share2, ArrowBigUp, ArrowBigDown, Pin, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Calendar, Tag, User, Trash2, Pencil, Share2, Link2, ArrowBigUp, ArrowBigDown, Pin, MoreHorizontal } from 'lucide-react';
 import CommentSection from './CommentSection';
 import { API } from '@/api';
 import { getToken, getUserId } from '@/utils/auth';
-import { getShareUrl, shareLink } from '@/utils/share';
+import { getShareUrl, shareLink, copyLinkToClipboard } from '@/utils/share';
 import { toast } from 'sonner';
 
 const PostCard = ({ post, onDelete, isPinned = false }) => {
@@ -31,6 +31,16 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
       url,
       post.title || 'Post on HuddleUp',
       post.content?.slice(0, 100) || '',
+      (msg) => toast.success(msg),
+      (msg) => toast.error(msg)
+    );
+  };
+
+  const handleCopyLink = (e) => {
+    e?.stopPropagation?.();
+    const url = getShareUrl('post', postId);
+    copyLinkToClipboard(
+      url,
       (msg) => toast.success(msg),
       (msg) => toast.error(msg)
     );
@@ -260,6 +270,18 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
             >
               <MessageCircle className="w-4 h-4" />
               <span>Comments</span>
+            </button>
+
+            <button
+              onClick={handleCopyLink}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm font-medium"
+              style={{ color: 'var(--text-sub)' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-elevated)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              title="Copy link"
+            >
+              <Link2 className="w-4 h-4" />
+              <span>Copy link</span>
             </button>
 
             <button
