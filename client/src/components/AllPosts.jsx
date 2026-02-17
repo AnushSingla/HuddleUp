@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { PlusCircle, Search, MessageSquare, Filter } from 'lucide-react';
 import { API } from '@/api';
 import PageWrapper from '@/components/ui/PageWrapper';
+import EmptyState from '@/components/ui/EmptyState';
 
 const AllPosts = () => {
   const location = useLocation();
@@ -157,35 +158,17 @@ const AllPosts = () => {
               </div>
             ))
           ) : (
-            <div className="text-center py-20 px-6 rounded-xl" 
-              style={{ 
-                background: 'var(--bg-surface)',
-                border: '2px dashed var(--border-medium)'
-              }}>
-              <MessageSquare className="h-20 w-20 mx-auto mb-6" 
-                style={{ color: 'var(--border-medium)' }} />
-              <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-main)' }}>
-                {posts.length === 0 ? 'No debates yet!' : 'No debates found'}
-              </h3>
-              <p className="text-lg mb-8 max-w-md mx-auto" style={{ color: 'var(--text-sub)' }}>
-                {posts.length === 0
+            <EmptyState
+              icon={MessageSquare}
+              title={posts.length === 0 ? 'No posts yet' : 'No posts found'}
+              description={
+                posts.length === 0
                   ? 'Be the first to spark a discussion in the sports arena!'
-                  : 'Try adjusting your search or filter to find more discussions'}
-              </p>
-              {posts.length === 0 && (
-                <Link to="/create-post">
-                  <button className="px-8 py-4 font-bold text-lg transition-all hover:scale-105" 
-                    style={{
-                      background: 'linear-gradient(135deg, #10b981, #059669)',
-                      color: 'white',
-                      borderRadius: 'var(--r-md)',
-                      boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)'
-                    }}>
-                    Start First Debate
-                  </button>
-                </Link>
-              )}
-            </div>
+                  : 'Try adjusting your search or filter to find more discussions.'
+              }
+              actionLabel={posts.length === 0 ? 'Start first debate' : undefined}
+              actionHref={posts.length === 0 ? '/create-post' : undefined}
+            />
           )}
         </div>
       </div>
