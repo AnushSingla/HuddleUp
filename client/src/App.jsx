@@ -14,7 +14,7 @@ import Friends from './pages/Friends';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import Profile from './pages/Profile';
-
+import Feedback from './pages/Feedback';
 
 // Components
 import Navbar from './components/Navbar';
