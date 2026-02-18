@@ -8,17 +8,16 @@ import { useNotifications } from "@/context/NotificationContext";
 import { useNotificationFeed } from "@/hooks/useNotificationFeed";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
-import axios from "axios";
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { scrollY } = useScroll();
 
-  const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [open, setOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { friendRequests } = useNotifications();
   const {
     notifications: activityNotifications,
@@ -27,7 +26,6 @@ export default function Navbar() {
     markAllAsRead,
     refetch: refetchActivity,
   } = useNotificationFeed({ limit: 15 });
-  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     return scrollY.onChange((y) => {
@@ -39,32 +37,6 @@ export default function Navbar() {
     setLoggedIn(isLoggedIn());
     setOpen(false);
   }, [location]);
-
-  useEffect(() => {
-    if (!loggedIn) return;
-
-    const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem("token");
-
-        const res = await axios.get(
-          "http://localhost:5000/api/notifications",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        setNotifications(res.data);
-      } catch (err) {
-        console.error("Failed to fetch notifications", err);
-      }
-    };
-
-    fetchNotifications();
-  }, [loggedIn]);
-
 
   const handleLogout = () => {
     logout();
