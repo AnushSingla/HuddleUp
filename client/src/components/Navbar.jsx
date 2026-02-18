@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { motion, useScroll } from "framer-motion";
+import { motion, useScroll , useMotionValueEvent } from "framer-motion";
 import { Menu, X, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationDropdown from "./NotificationDropdown";
@@ -27,11 +27,9 @@ export default function Navbar() {
     refetch: refetchActivity,
   } = useNotificationFeed({ limit: 15 });
 
-  useEffect(() => {
-    return scrollY.onChange((y) => {
-      setScrolled(y > 40);
-    });
-  }, [scrollY]);
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setScrolled(latest > 40);
+  });
 
   useEffect(() => {
     setLoggedIn(isLoggedIn());
@@ -52,6 +50,7 @@ export default function Navbar() {
     { to: "/posts", label: "Discussion" },
     { to: "/contact", label: "Contact" },
     { to: "/about", label: "About" },
+    { to: "/contributors", label: "Contributors" },
     { to: "/feedback", label: "Feedback" }
   ];
 
