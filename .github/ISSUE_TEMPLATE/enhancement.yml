@@ -1,0 +1,30 @@
+name: Enhancement
+description: Suggest an improvement to an existing feature or flow.
+title: "[Enhancement]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: current_behavior
+    attributes:
+      label: Current Behavior
+      description: What exists today?
+      placeholder: Describe current behavior or limitation.
+    validations:
+      required: true
+  - type: textarea
+    id: improvement
+    attributes:
+      label: Suggested Improvement
+      description: What should be improved?
+      placeholder: Describe the improvement and expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why This Matters
+      description: Explain the benefit of this improvement.
+      placeholder: Performance, UX, maintainability, reliability, etc.
+    validations:
+      required: false
