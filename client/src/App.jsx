@@ -14,10 +14,10 @@ import Friends from './pages/Friends';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import Profile from './pages/Profile';
+import Feedback from './pages/Feedback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contributor from './pages/Contributor';
 import TermsOfService from './pages/TermsOfService';
-
 
 // Components
 import Navbar from './components/Navbar';
@@ -75,7 +75,6 @@ function AppContent() {
 }
 
 import { NotificationProvider } from './context/NotificationContext';
-import Feedback from './pages/Feedback';
 
 export default function App() {
   return (
