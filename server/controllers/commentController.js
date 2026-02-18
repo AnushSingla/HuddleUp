@@ -1,7 +1,27 @@
 const Comment = require("../models/Comment");
 const mongoose = require("mongoose");
 const Video = require("../models/Video");
+const Post = require("../models/Post");
+const User = require("../models/User");
 const Notification = require("../models/Notification");
+
+// Helper: create notification (avoid self-notify and duplicates in same second)
+async function createCommentNotification({ recipientId, senderId, type, resource, message }) {
+  if (!recipientId || recipientId.toString() === senderId.toString()) return;
+  try {
+    await Notification.create({
+      recipient: recipientId,
+      sender: senderId,
+      type,
+      resource,
+      message,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    });
+  } catch (e) {
+    console.error("Notification create error:", e);
+  }
+}
+
 // Create a comment or reply
 exports.createComment = async (req, res) => {
   const { videoId, postId, text, parentId } = req.body;
@@ -43,6 +63,55 @@ exports.createComment = async (req, res) => {
     console.log("✅ Saved Comment:", saved);
 
     await saved.populate("userId", "username");
+
+    // --- Notifications ---
+    const senderUser = await User.findById(userId).select("username").lean();
+    const senderName = senderUser?.username || "Someone";
+
+    if (parentId) {
+      const parentComment = await Comment.findById(parentId).select("userId").lean();
+      if (parentComment && parentComment.userId) {
+        await createCommentNotification({
+          recipientId: parentComment.userId,
+          senderId: userId,
+          type: "comment_reply",
+          resource: {
+            resourceType: "comment",
+            resourceId: saved._id,
+            parentId: parentId,
+          },
+          message: `${senderName} replied to your comment`,
+        });
+      }
+    } else {
+      if (videoId) {
+        const video = await Video.findById(videoId).select("postedBy").lean();
+        if (video && video.postedBy) {
+          await createCommentNotification({
+            recipientId: video.postedBy,
+            senderId: userId,
+            type: "video_comment",
+            resource: { resourceType: "video", resourceId: videoId },
+            message: `${senderName} commented on your video`,
+          });
+        }
+      }
+      if (postId) {
+        const post = await Post.findById(postId).select("postedBy").lean();
+        if (post && post.postedBy) {
+          const recipientId = post.postedBy._id || post.postedBy;
+          if (recipientId.toString() !== userId.toString()) {
+            await createCommentNotification({
+              recipientId,
+              senderId: userId,
+              type: "post_comment",
+              resource: { resourceType: "post", resourceId: postId },
+              message: `${senderName} commented on your post`,
+            });
+          }
+        }
+      }
+    }
 
     res.status(201).json({
       _id: saved._id,
@@ -252,20 +321,21 @@ exports.toggleLikeComment = async (req, res) => {
       { new: true }
     );
 
-    // ✅ CREATE NOTIFICATION ONLY WHEN LIKING
-    // ❌ Not when unliking
-    // ❌ Not when liking your own comment
     if (
       !isLiked &&
       comment.userId.toString() !== userId.toString()
     ) {
       await Notification.create({
-        recipient: comment.userId, // comment owner
+        recipient: comment.userId,
         sender: userId,
-        type: "comment_like",
-        post: comment.postId || null,
-        video: comment.videoId || null,
-        comment: comment._id,
+        type: "reaction",
+        resource: {
+          resourceType: "comment",
+          resourceId: comment._id,
+          parentId: comment.parentId || undefined,
+        },
+        message: "Someone reacted to your comment",
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       });
     }
 

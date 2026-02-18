@@ -1,4 +1,5 @@
-const Post = require("../models/Post")
+const Post = require("../models/Post");
+const User = require("../models/User");
 const Notification = require("../models/Notification");
 
 exports.createPost = async (req, res) => {
@@ -51,13 +52,16 @@ exports.likePost = async (req, res) => {
       { new: true }
     );
 
-    // ✅ CREATE NOTIFICATION ONLY WHEN LIKING (not unliking)
     if (!isLiked && post.postedBy.toString() !== userId.toString()) {
+      const senderUser = await User.findById(userId).select("username").lean();
+      const senderName = senderUser?.username || "Someone";
       await Notification.create({
         recipient: post.postedBy,
         sender: userId,
-        type: "like",
-        post: post._id,
+        type: "reaction",
+        resource: { resourceType: "post", resourceId: post._id },
+        message: `${senderName} liked your post`,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       });
     }
 

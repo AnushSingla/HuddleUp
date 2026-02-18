@@ -5,6 +5,7 @@ import { Menu, X, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationDropdown from "./NotificationDropdown";
 import { useNotifications } from "@/context/NotificationContext";
+import { useNotificationFeed } from "@/hooks/useNotificationFeed";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
 import axios from "axios";
@@ -19,6 +20,13 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { friendRequests } = useNotifications();
+  const {
+    notifications: activityNotifications,
+    unreadCount: activityUnreadCount,
+    markAsRead,
+    markAllAsRead,
+    refetch: refetchActivity,
+  } = useNotificationFeed({ limit: 15 });
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -134,13 +142,16 @@ export default function Navbar() {
                 {/* Notification Bell */}
                 <div className="relative">
                   <button
-                    onClick={() => setShowNotifications(!showNotifications)}
+                    onClick={() => {
+                      setShowNotifications(!showNotifications);
+                      if (!showNotifications) refetchActivity();
+                    }}
                     className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-emerald-400 transition-all duration-300 relative group"
                   >
                     <Bell className="w-5 h-5" />
-                    {friendRequests.length > 0 && (
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-zinc-950 shadow-lg shadow-emerald-500/20">
-                        {friendRequests.length}
+                    {(friendRequests.length > 0 || activityUnreadCount > 0) && (
+                      <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-emerald-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-zinc-950 shadow-lg shadow-emerald-500/20">
+                        {friendRequests.length + activityUnreadCount}
                       </span>
                     )}
 
@@ -150,6 +161,10 @@ export default function Navbar() {
                   <NotificationDropdown
                     isOpen={showNotifications}
                     onClose={() => setShowNotifications(false)}
+                    activityNotifications={activityNotifications}
+                    activityUnreadCount={activityUnreadCount}
+                    onMarkAsRead={markAsRead}
+                    onMarkAllAsRead={markAllAsRead}
                   />
                 </div>
 
