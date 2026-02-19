@@ -5,6 +5,7 @@ import { API } from '@/api';
 import { getToken, getUserId } from '@/utils/auth';
 import { toast } from 'sonner';
 import CommentInput from './CommentInput';
+import EmptyState from '@/components/ui/EmptyState';
 
 function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP = false }) {
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -275,11 +276,11 @@ export default function CommentList({ comments, onAddComment, onDeleteComment, o
 
   if (!comments || comments.length === 0) {
     return (
-      <div className="text-center py-12">
-        <MessageCircle className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-        <p className="text-lg font-medium" style={{ color: 'var(--text-main)' }}>No comments yet</p>
-        <p className="text-sm" style={{ color: 'var(--text-sub)' }}>Start the debate</p>
-      </div>
+      <EmptyState
+        icon={MessageCircle}
+        title="No comments yet"
+        description="Be the first to comment."
+      />
     );
   }
 

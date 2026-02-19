@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { PlusCircle, Search, MessageSquare, Filter } from 'lucide-react';
 import { API } from '@/api';
 import PageWrapper from '@/components/ui/PageWrapper';
+import EmptyState from '@/components/ui/EmptyState';
 
 const AllPosts = () => {
   const location = useLocation();

@@ -33,6 +33,9 @@ app.use("/api", friendRoutes)
 app.use("/api/notifications", notificationRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+app.get("/api", (req, res) => {
+  res.json({ message: "HuddleUp API", status: "ok", version: "1.0" });
+});
 app.get("/favicon.ico", (req, res) => res.status(204));
 
 const connectDB = async () => {
