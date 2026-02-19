@@ -18,6 +18,7 @@ import Feedback from './pages/Feedback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contributor from './pages/Contributor';
 import TermsOfService from './pages/TermsOfService';
+import LiveMatchRooms from './pages/LiveMatchRooms';
 
 // Components
 import Navbar from './components/Navbar';
@@ -65,6 +66,7 @@ function AppContent() {
             <Route path="/contributors" element={<Contributor />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/Feedback" element={<Feedback />} />
+            <Route path="/live-match" element={<LiveMatchRooms />} />
           </Routes>
         </div>
       </main>

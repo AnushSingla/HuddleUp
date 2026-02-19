@@ -45,6 +45,7 @@ export default function Navbar() {
 
   const links = [
     { to: "/", label: "Home" },
+    { to: "/live-match", label: "Live Match Room" },
     { to: "/upload", label: "Upload" },
     { to: "/explore", label: "Explore" },
     { to: "/posts", label: "Discussion" },
