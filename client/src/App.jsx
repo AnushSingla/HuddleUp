@@ -18,6 +18,7 @@ import Feedback from './pages/Feedback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contributor from './pages/Contributor';
 import TermsOfService from './pages/TermsOfService';
+import CommunityGuidelines from './pages/CommunityGuidelines';
 
 // Components
 import Navbar from './components/Navbar';
@@ -64,6 +65,7 @@ function AppContent() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/contributors" element={<Contributor />} />
             <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/community-guidelines" element={<CommunityGuidelines />} />
             <Route path="/Feedback" element={<Feedback />} />
           </Routes>
         </div>

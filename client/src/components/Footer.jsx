@@ -62,9 +62,9 @@ export default function Footer() {
                 { href: "/feedback", label: "Feedback", id: "feedback" },
                 { href: "/privacy-policy", label: "Privacy Policy", id: "privacy-main" },
                 { href: "/terms", label: "Terms of Service", id: "terms-main" },
-                { href: "#", label: "Privacy Policy", id: "privacy-secondary" },
-                { href: "#", label: "Terms of Service", id: "terms-secondary" },
-                { href: "#", label: "Community Guidelines", id: "community-guidelines" }
+                // { href: "#", label: "Privacy Policy", id: "privacy-secondary" },
+                // { href: "#", label: "Terms of Service", id: "terms-secondary" },
+              { href: "/community-guidelines", label: "Community Guidelines", id: "community-guidelines" }
               ].map((link) => (
                 <li key={link.id} className="group">
                   <a
