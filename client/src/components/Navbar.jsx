@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, useScroll , useMotionValueEvent } from "framer-motion";
-import { Menu, X, Bell } from "lucide-react";
+import { Menu, X, Bell, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationDropdown from "./NotificationDropdown";
 import { useNotifications } from "@/context/NotificationContext";
 import { useNotificationFeed } from "@/hooks/useNotificationFeed";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function Navbar() {
   const location = useLocation();
@@ -18,6 +21,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { friendRequests } = useNotifications();
   const {
     notifications: activityNotifications,
@@ -31,9 +35,27 @@ export default function Navbar() {
     setScrolled(latest > 40);
   });
 
+  const checkAdminStatus = async () => {
+    if (!isLoggedIn()) {
+      setIsAdmin(false);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/admin/check-admin`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setIsAdmin(response.data.isAdmin || false);
+    } catch (error) {
+      setIsAdmin(false);
+    }
+  };
+
   useEffect(() => {
     setLoggedIn(isLoggedIn());
     setOpen(false);
+    checkAdminStatus();
   }, [location]);
 
   const handleLogout = () => {
@@ -139,6 +161,17 @@ export default function Navbar() {
                   />
                 </div>
 
+                {/* Admin Button */}
+                {isAdmin && (
+                  <Button
+                    onClick={() => navigate("/admin")}
+                    className="rounded-xl px-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg shadow-purple-600/20 font-bold uppercase tracking-wider text-xs"
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin
+                  </Button>
+                )}
+
                 <Button
                   onClick={handleLogout}
                   className="rounded-xl px-5 bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20 font-bold uppercase tracking-wider text-xs"
@@ -199,6 +232,15 @@ export default function Navbar() {
                   >
                     Profile
                   </Button>
+                  {isAdmin && (
+                    <Button
+                      onClick={() => navigate("/admin")}
+                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600"
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin
+                    </Button>
+                  )}
                   <Button
                     onClick={handleLogout}
                     className="w-full bg-red-600 hover:bg-red-700"

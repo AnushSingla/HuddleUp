@@ -9,6 +9,7 @@ const commentRoutes = require("./routes/comment")
 const notificationRoutes = require("./routes/notification");
 const postRoutes = require("./routes/post")
 const friendRoutes = require("./routes/friend")
+const adminRoutes = require("./routes/admin")
 
 dotenv.config();
 const app = express();
@@ -31,6 +32,7 @@ app.use("/api", commentRoutes)
 app.use("/api", postRoutes)
 app.use("/api", friendRoutes)
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/admin", adminRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/api", (req, res) => {

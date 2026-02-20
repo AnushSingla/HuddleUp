@@ -18,7 +18,18 @@ const postSchema = new mongoose.Schema({
         required: true
     },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-
+    flagged: {
+        type: Boolean,
+        default: false
+    },
+    flaggedBy: [{ 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "User" 
+    }],
+    flagReason: {
+        type: String,
+        default: ""
+    },
     createdAt: {
         type: Date,
         default: Date.now,
