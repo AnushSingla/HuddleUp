@@ -8,6 +8,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 import { API } from '@/api';
 import { toast } from 'sonner';
 import { getShareUrl, copyLinkToClipboard } from '@/utils/share';
+import { getAssetUrl } from '@/utils/url';
 
 const Explore = () => {
   const navigate = useNavigate();
@@ -100,6 +101,39 @@ const Explore = () => {
 
   const filteredVideos = getFilteredVideos();
 
+  // Reusable thumbnail renderer so Explore cards always
+  // show a playable-looking preview using the actual video file.
+  const VideoThumbnail = ({ video, compact = false }) => {
+    const hasVideo = !!video.videoUrl;
+    if (!hasVideo) {
+      return (
+        <div className="w-full h-full flex items-center justify-center"
+          style={{ background: 'var(--bg-surface)' }}>
+          <span style={{ color: 'var(--text-sub)' }}>No Preview</span>
+        </div>
+      );
+    }
+
+    const src = getAssetUrl(video.videoUrl);
+
+    // We intentionally do not mutate the DOM here; if the video
+    // fails to load, the browser will show its default error UI
+    // and the console log will help us debug.
+    return (
+      <video
+        src={src}
+        muted
+        playsInline
+        preload="metadata"
+        className="w-full h-full object-cover"
+        style={compact ? { borderRadius: 'var(--r-lg)' } : undefined}
+        onError={() => {
+          console.error('Failed to load video thumbnail from', src);
+        }}
+      />
+    );
+  };
+
   // Editorial Section Component
   const EditorialSection = ({ title, icon: Icon, videos, accent = 'var(--accent)' }) => {
     if (!videos || videos.length === 0) return null;
@@ -145,18 +179,7 @@ const Explore = () => {
             >
               {/* Thumbnail */}
               <div className="absolute inset-0">
-                {video.thumbnailUrl ? (
-                  <img
-                    src={video.thumbnailUrl}
-                    alt={video.title}
-                    className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center"
-                    style={{ background: 'var(--bg-surface)' }}>
-                    <span style={{ color: 'var(--text-sub)' }}>No Preview</span>
-                  </div>
-                )}
+                <VideoThumbnail video={video} compact />
               </div>
 
               {/* Gradient Overlay */}
@@ -168,7 +191,7 @@ const Explore = () => {
                   {video.title}
                 </h3>
                 <div className="flex items-center gap-2 text-xs text-white/70">
-                  <span>by {video.uploadedBy?.username || 'Unknown'}</span>
+                  <span>by {video.uploadedBy?.username || video.postedBy?.username || 'Unknown'}</span>
                   {video.views && (
                     <>
                       <span>·</span>
@@ -355,18 +378,7 @@ const Explore = () => {
                 >
                   {/* Thumbnail */}
                   <div className="absolute inset-0">
-                    {video.thumbnailUrl ? (
-                      <img
-                        src={video.thumbnailUrl}
-                        alt={video.title}
-                        className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center"
-                        style={{ background: 'var(--bg-surface)' }}>
-                        <span style={{ color: 'var(--text-sub)' }}>No Preview</span>
-                      </div>
-                    )}
+                    <VideoThumbnail video={video} />
                   </div>
 
                   {/* Gradient Overlay */}
