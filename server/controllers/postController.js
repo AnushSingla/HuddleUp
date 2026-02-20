@@ -22,13 +22,15 @@ exports.createPost = async (req, res) => {
 
 exports.getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find()
-      .populate("postedBy", "username")
+    const filter = {};
+    if (req.query.postedBy) filter.postedBy = req.query.postedBy;
+    const posts = await Post.find(filter)
+      .populate("postedBy", "username _id")
       .sort({ createdAt: -1 })
-      .limit(50); // Limit to reduce lag
-    res.json(posts)
+      .limit(50);
+    res.json(posts);
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch Post", error: err.message })
+    res.status(500).json({ message: "Failed to fetch Post", error: err.message });
   }
 }
 
