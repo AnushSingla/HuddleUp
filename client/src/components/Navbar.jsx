@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, useScroll , useMotionValueEvent } from "framer-motion";
-import { Menu, X, Bell } from "lucide-react";
+import { Menu, X, Bell, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationDropdown from "./NotificationDropdown";
 import { useNotifications } from "@/context/NotificationContext";
 import { useNotificationFeed } from "@/hooks/useNotificationFeed";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
+import { useTheme } from "@/context/theme-context.jsx";
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { scrollY } = useScroll();
+  const { theme, toggleTheme } = useTheme();
 
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [open, setOpen] = useState(false);
@@ -106,8 +108,21 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Auth Buttons & Notifications (Desktop) */}
+          {/* Auth Buttons, Theme Toggle & Notifications (Desktop) */}
           <div className="hidden md:flex items-center gap-6">
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-emerald-400 transition-all duration-300 relative group"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
+              <span className="absolute inset-0 rounded-xl bg-emerald-500/10 opacity-0 group-hover:opacity-100 blur-lg transition-opacity" />
+            </button>
+
             {loggedIn ? (
               <>
                 {/* Notification Bell */}
@@ -192,6 +207,26 @@ export default function Navbar() {
           />
           <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl relative z-50">
           <div className="px-6 py-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-zinc-400">Theme</span>
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-zinc-300"
+              >
+                {theme === "dark" ? (
+                  <>
+                    <Sun className="w-4 h-4" />
+                    <span>Light</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon className="w-4 h-4" />
+                    <span>Dark</span>
+                  </>
+                )}
+              </button>
+            </div>
+
             {links.map(({ to, label }) => (
               <NavLink
                 key={to}
