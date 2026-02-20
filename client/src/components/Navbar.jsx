@@ -10,7 +10,7 @@ import { useNotifications } from "@/context/NotificationContext.jsx";
 import { useNotificationFeed } from "@/hooks/useNotificationFeed";
 import { useTheme } from "@/context/theme-context.jsx";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL ;
 
 
 
@@ -67,21 +67,15 @@ export default function Navbar() {
     if (!loggedIn) return;
 
     const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "http://localhost:5000/api/notifications",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setNotifications(res.data);
-      } catch (err) {
-        console.error("Failed to fetch notifications", err);
-      }
-    };
+  try {
+    const res = await API.get("/notifications");
+    setNotifications(res.data);
+  } catch (err) {
+    console.error("Failed to fetch notifications", err);
+  }
+};
 
-    fetchNotifications();
+fetchNotifications();
   }, [loggedIn]);
 
   const handleLogout = () => {

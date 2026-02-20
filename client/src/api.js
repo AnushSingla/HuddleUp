@@ -13,6 +13,6 @@ API.interceptors.request.use((config) => {
 });
 
 export const getNotifications = async () => {
-  const res = await API.get("/api/notifications");
+  const res = await API.get("/notifications");
   return res.data;
 };
