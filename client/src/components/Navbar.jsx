@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { motion, useScroll , useMotionValueEvent } from "framer-motion";
-import { Menu, X, Bell, Moon, Sun } from "lucide-react";
+import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
+import { Menu, X, Bell, Moon, Sun, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
 import axios from "axios";
+import { useNotifications } from "@/context/notifications-context";
+import { useNotificationFeed } from "@/hooks/useNotificationFeed";
+import { useTheme } from "@/context/theme-context.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 
-import { AnimatePresence } from "framer-motion";
-import axios from "axios";
-import { useTheme } from "@/context/theme-context.jsx";
+
 
 export default function Navbar() {
   const location = useLocation();
@@ -24,7 +25,6 @@ export default function Navbar() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [open, setOpen] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const { friendRequests } = useNotifications();
@@ -173,89 +173,67 @@ export default function Navbar() {
 
             {loggedIn ? (
               <>
-                {/* Notification Bell */}
-                <div className="relative">
-                  {showNotifications && (
-                    <div
-                      className="fixed inset-0 z-[99]"
-                      aria-hidden
-                      onClick={() => setShowNotifications(false)}
-                    />
-                  )}
-                  <button
-                    onClick={() => {
-                      setShowNotifications(!showNotifications);
-                      if (!showNotifications) refetchActivity();
-                    }}
-                    className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-emerald-400 transition-all duration-300 relative group"
+            {/* Notification Bell */}
+            <div className="relative">
+              {showNotifications && (
+                <div
+                  className="fixed inset-0 z-[99]"
+                  aria-hidden
+                  onClick={() => setShowNotifications(false)}
+                />
+              )}
+              <button
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  if (!showNotifications) refetchActivity();
+                }}
+                className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-emerald-400 transition-all duration-300 relative group"
+              >
+                <Bell className="w-5 h-5" />
+                {(friendRequests.length > 0 || activityUnreadCount > 0) && (
+                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-emerald-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-zinc-950 shadow-lg shadow-emerald-500/20">
+                    {friendRequests.length + activityUnreadCount}
+                  </span>
+                )}
+
+                <span className="absolute inset-0 rounded-xl bg-emerald-500/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity animate-pulse" />
+              </button>
+
+              <AnimatePresence>
+                {showNotifications && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute right-0 mt-4 w-80 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4 space-y-3 max-h-96 overflow-y-auto"
                   >
-                    <Bell className="w-5 h-5" />
-                    {(friendRequests.length > 0 || activityUnreadCount > 0) && (
-                      <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-emerald-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-zinc-950 shadow-lg shadow-emerald-500/20">
-                        {friendRequests.length + activityUnreadCount}
-                      </span>
+                    {notifications.length === 0 ? (
+                      <p className="text-sm text-zinc-400">
+                        No notifications
+                      </p>
+                    ) : (
+                      notifications.map((n) => (
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          key={n._id}
+                          className={`p-3 rounded-xl text-sm transition cursor-pointer ${
+                            n.isRead
+                              ? "bg-zinc-800"
+                              : "bg-gradient-to-r from-indigo-600/30 to-purple-600/30"
+                          }`}
+                        >
+                          <strong className="text-white">
+                            {n.sender?.username}
+                          </strong>{" "}
+                          <span className="text-zinc-300">{n.type}</span>
+                        </motion.div>
+                      ))
                     )}
-
-                    <span className="absolute inset-0 rounded-xl bg-emerald-500/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity animate-pulse" />
-                  </button>
-
-            {loggedIn && (
-              <div className="relative">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative p-2 rounded-xl bg-white/5 hover:bg-white/10 transition"
-                >
-                  <Bell className="text-white" />
-
-                  {notifications.filter(n => !n.isRead).length > 0 && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-red-500 text-xs text-white px-2 rounded-full shadow-lg"
-                    >
-                      {notifications.filter(n => !n.isRead).length}
-                    </motion.span>
-                  )}
-                </motion.button>
-
-                <AnimatePresence>
-                  {showNotifications && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -15 }}
-                      transition={{ duration: 0.3 }}
-                      className="absolute right-0 mt-4 w-80 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4 space-y-3 max-h-96 overflow-y-auto"
-                    >
-                      {notifications.length === 0 ? (
-                        <p className="text-sm text-zinc-400">
-                          No notifications
-                        </p>
-                      ) : (
-                        notifications.map((n) => (
-                          <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            key={n._id}
-                            className={`p-3 rounded-xl text-sm transition cursor-pointer ${
-                              n.isRead
-                                ? "bg-zinc-800"
-                                : "bg-gradient-to-r from-indigo-600/30 to-purple-600/30"
-                            }`}
-                          >
-                            <strong className="text-white">
-                              {n.sender?.username}
-                            </strong>{" "}
-                            <span className="text-zinc-300">{n.type}</span>
-                          </motion.div>
-                        ))
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
                 {/* Admin Button */}
                 {isAdmin && (
@@ -276,7 +254,7 @@ export default function Navbar() {
                 >
                   LOGOUT
                 </Button>
-              </motion.div>
+              </>
             ) : (
               <>
                 <Button
@@ -309,93 +287,94 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {open && (
-        <>
-          <div
-            className="fixed inset-0 z-40 md:hidden"
-            aria-hidden
-            onClick={() => setOpen(false)}
-          />
-          <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl relative z-50">
-          <div className="px-6 py-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-400">Theme</span>
-              <button
-                onClick={toggleTheme}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-zinc-300"
-              >
-                {theme === "dark" ? (
-                  <>
-                    <Sun className="w-4 h-4" />
-                    <span>Light</span>
-                  </>
-                ) : (
-                  <>
-                    <Moon className="w-4 h-4" />
-                    <span>Dark</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {links.map(({ to, label }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className="block text-zinc-300 hover:text-white transition"
-              >
-                {label}
-              </NavLink>
-            ))}
-
-            <div className="pt-4 border-t border-white/10 flex gap-3">
-              {loggedIn ? (
-                <>
-                  <Button
-                    onClick={() => navigate("/profile")}
-                    variant="outline"
-                    className="w-full border-blue-400 text-blue-400"
-                  >
-                    Profile
-                  </Button>
-                  {isAdmin && (
-                    <Button
-                      onClick={() => navigate("/admin")}
-                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600"
+          {/* Mobile Menu */}
+          {open && (
+            <>
+              <div
+                className="fixed inset-0 z-40 md:hidden"
+                aria-hidden
+                onClick={() => setOpen(false)}
+              />
+              <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl relative z-50">
+                <div className="px-6 py-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-zinc-400">Theme</span>
+                    <button
+                      onClick={toggleTheme}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-zinc-300"
                     >
-                      <Shield className="w-4 h-4 mr-2" />
-                      Admin
-                    </Button>
-                  )}
-                  <Button
-                    onClick={handleLogout}
-                    className="w-full bg-red-600 hover:bg-red-700"
-                  >
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate("/login")}
-                    className="w-full border-zinc-700"
-                  >
-                    Login
-                  </Button>
-                  <Button
-                    onClick={() => navigate("/register")}
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600"
-                  >
-                    Register
-                  </Button>
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                      {theme === "dark" ? (
+                        <>
+                          <Sun className="w-4 h-4" />
+                          <span>Light</span>
+                        </>
+                      ) : (
+                        <>
+                          <Moon className="w-4 h-4" />
+                          <span>Dark</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+    
+                  {links.map(({ to, label }) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      className="block text-zinc-300 hover:text-white transition"
+                    >
+                      {label}
+                    </NavLink>
+                  ))}
+    
+                  <div className="pt-4 border-t border-white/10 flex gap-3">
+                    {loggedIn ? (
+                      <>
+                        <Button
+                          onClick={() => navigate("/profile")}
+                          variant="outline"
+                          className="w-full border-blue-400 text-blue-400"
+                        >
+                          Profile
+                        </Button>
+                        {isAdmin && (
+                          <Button
+                            onClick={() => navigate("/admin")}
+                            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600"
+                          >
+                            <Shield className="w-4 h-4 mr-2" />
+                            Admin
+                          </Button>
+                        )}
+                        <Button
+                          onClick={handleLogout}
+                          className="w-full bg-red-600 hover:bg-red-700"
+                        >
+                          Logout
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="outline"
+                          onClick={() => navigate("/login")}
+                          className="w-full border-zinc-700"
+                        >
+                          Login
+                        </Button>
+                        <Button
+                          onClick={() => navigate("/register")}
+                          className="w-full bg-gradient-to-r from-blue-500 to-indigo-600"
+                        >
+                          Register
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+      )}
     </motion.nav>
   );
 }
