@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
 import axios from "axios";
-import { useNotifications } from "@/context/notifications-context";
+import { useNotifications } from "@/context/NotificationContext.jsx";
 import { useNotificationFeed } from "@/hooks/useNotificationFeed";
 import { useTheme } from "@/context/theme-context.jsx";
 
