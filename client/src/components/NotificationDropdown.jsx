@@ -58,11 +58,21 @@ export default function NotificationDropdown({
           <h3 className="text-sm font-extrabold text-zinc-900 dark:text-zinc-100 uppercase tracking-widest">
             Inbox
           </h3>
-          {totalNew > 0 && (
-            <span className="px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-black uppercase">
-              {totalNew} New
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {totalNew > 0 && (
+              <span className="px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-black uppercase">
+                {totalNew} New
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
