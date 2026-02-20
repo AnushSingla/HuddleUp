@@ -158,21 +158,30 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
           {/* Header Row - Author + Meta */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3 flex-wrap">
-              {/* Author Avatar */}
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                style={{
-                  background: 'var(--accent)',
-                  color: 'white'
+              {/* Author Avatar + Name (link to public profile) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const slug = post.postedBy?.username || postOwnerId;
+                  if (slug) navigate(`/user/${encodeURIComponent(slug)}`);
                 }}
+                className="flex items-center gap-3 rounded-lg hover:opacity-90 transition-opacity"
               >
-                {post.postedBy?.username?.charAt(0).toUpperCase() || 'A'}
-              </div>
-
-              {/* Author Name */}
-              <span className="font-semibold text-sm" style={{ color: 'var(--text-main)' }}>
-                {post.postedBy?.username || 'Anonymous'}
-              </span>
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                  style={{
+                    background: 'var(--accent)',
+                    color: 'white'
+                  }}
+                >
+                  {post.postedBy?.username?.charAt(0).toUpperCase() || 'A'}
+                </div>
+                <span className="font-semibold text-sm" style={{ color: 'var(--text-main)' }}>
+                  {post.postedBy?.username || 'Anonymous'}
+                </span>
+              </button>
 
               {/* Time */}
               <span className="text-xs flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>

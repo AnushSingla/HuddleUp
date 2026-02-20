@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Reply, Trash2, ArrowBigUp, ArrowBigDown, MessageCircle, MoreVertical, Award } from 'lucide-react';
 import { API } from '@/api';
@@ -8,11 +9,22 @@ import CommentInput from './CommentInput';
 import EmptyState from '@/components/ui/EmptyState';
 
 function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP = false }) {
+  const navigate = useNavigate();
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(true);
   const [voteState, setVoteState] = useState(null); // 'up', 'down', or null
   const [score, setScore] = useState((comment.upvotes || 0) - (comment.downvotes || 0));
   const [showOptions, setShowOptions] = useState(false);
+  const optionsRef = useRef(null);
+
+  useEffect(() => {
+    if (!showOptions) return;
+    const handleClickOutside = (e) => {
+      if (optionsRef.current && !optionsRef.current.contains(e.target)) setShowOptions(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showOptions]);
 
   const handleDelete = async () => {
     const token = getToken();
@@ -115,17 +127,23 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
           {/* Author + Time + Badge */}
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
-                style={{
-                  background: isOP ? 'var(--accent)' : 'var(--text-muted)',
-                  color: 'var(--bg-primary)'
-                }}
+              <button
+                type="button"
+                onClick={() => comment.authorId && navigate(`/user/${comment.authorId}`)}
+                className={`flex items-center gap-2 rounded-md transition-opacity ${comment.authorId ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
               >
-                {comment.author?.charAt(0).toUpperCase() || '?'}
-              </div>
-              <span className="text-sm font-bold" style={{ color: 'var(--text-main)' }}>
-                {comment.author}
-              </span>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
+                  style={{
+                    background: isOP ? 'var(--accent)' : 'var(--text-muted)',
+                    color: 'var(--bg-primary)'
+                  }}
+                >
+                  {comment.author?.charAt(0).toUpperCase() || '?'}
+                </div>
+                <span className="text-sm font-bold" style={{ color: 'var(--text-main)' }}>
+                  {comment.author}
+                </span>
+              </button>
             </div>
 
             {isOP && (
@@ -207,7 +225,7 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
         </div>
 
         {/* Options Menu */}
-        <div className="relative">
+        <div className="relative" ref={optionsRef}>
           <button
             onClick={() => setShowOptions(!showOptions)}
             className="p-1 rounded transition-opacity opacity-0 group-hover:opacity-100"

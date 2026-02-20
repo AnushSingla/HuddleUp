@@ -271,7 +271,15 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
 
         {/* Meta Info */}
         <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+          <div
+            className="flex items-center gap-2 text-xs cursor-pointer hover:underline"
+            style={{ color: 'var(--text-muted)' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              const slug = video.postedBy?.username || videoOwnerId;
+              if (slug) navigate(`/user/${encodeURIComponent(slug)}`);
+            }}
+          >
             <User className="w-3.5 h-3.5" />
             <span>{video.postedBy?.username || "Unknown"}</span>
           </div>

@@ -144,7 +144,7 @@ exports.getAllComments = async (req, res) => {
     }
 
     const comments = await Comment.find({ videoId: new mongoose.Types.ObjectId(videoId) })
-      .populate('userId', 'username')
+      .populate('userId', 'username _id')
       .sort({ createdAt: -1 })
       .lean();
     console.log("Returning comments:", comments);
@@ -152,6 +152,7 @@ exports.getAllComments = async (req, res) => {
     const formatted = comments.map(comment => ({
       _id: comment._id,
       author: comment.userId?.username || 'Anonymous',
+      authorId: comment.userId?._id?.toString() || null,
       content: comment.text,
       createdAt: comment.createdAt,
       parentId: comment.parentId?.toString() || null,
@@ -191,13 +192,14 @@ exports.getAllPostComments = async (req, res) => {
     }
 
     const comments = await Comment.find({ postId })
-      .populate('userId', 'username')
+      .populate('userId', 'username _id')
       .sort({ createdAt: -1 })
       .lean();
 
     const formatted = comments.map(comment => ({
       _id: comment._id,
       author: comment.userId?.username || 'Anonymous',
+      authorId: comment.userId?._id?.toString() || null,
       content: comment.text,
       createdAt: comment.createdAt,
       parentId: comment.parentId?.toString() || null,

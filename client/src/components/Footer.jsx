@@ -58,15 +58,15 @@ export default function Footer() {
             <h3 className="text-lg font-semibold text-white mb-4">Resources</h3>
             <ul className="space-y-2">
               {[
-                { href: "/contact", label: "Contact" },
-                { href: "/feedback", label: "Feedback" },
-                { href: "/privacy-policy", label: "Privacy Policy" },
-                { href: "#", label: "Terms of Service" },
-                { href: "#", label: "Privacy Policy" },
-                { href: "/terms", label: "Terms of Service" },
-                { href: "#", label: "Community Guidelines" }
+                { href: "/contact", label: "Contact", id: "contact" },
+                { href: "/feedback", label: "Feedback", id: "feedback" },
+                { href: "/privacy-policy", label: "Privacy Policy", id: "privacy-main" },
+                { href: "/terms", label: "Terms of Service", id: "terms-main" },
+                // { href: "#", label: "Privacy Policy", id: "privacy-secondary" },
+                // { href: "#", label: "Terms of Service", id: "terms-secondary" },
+              { href: "/community-guidelines", label: "Community Guidelines", id: "community-guidelines" }
               ].map((link) => (
-                <li key={link.label} className="group">
+                <li key={link.id} className="group">
                   <a
                     href={link.href}
                     className="text-sm text-zinc-400 hover:text-emerald-400 inline-flex items-center gap-2 transition-all duration-200"

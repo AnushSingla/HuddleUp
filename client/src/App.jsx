@@ -19,6 +19,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contributor from './pages/Contributor';
 import TermsOfService from './pages/TermsOfService';
 import Admin from './pages/Admin';
+import LiveMatchRooms from './pages/LiveMatchRooms';
+import CommunityGuidelines from './pages/CommunityGuidelines';
 
 // Components
 import Navbar from './components/Navbar';
@@ -58,6 +60,7 @@ function AppContent() {
             <Route path="/edit-video" element={<EditVideo />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/user/:userId" element={<PublicProfile />} />
             <Route path="/posts" element={<AllPosts />} />
             <Route path="/create-post" element={<CreatePost />} />
             <Route path="/contact" element={<Contact />} />
@@ -65,8 +68,10 @@ function AppContent() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/contributors" element={<Contributor />} />
             <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/community-guidelines" element={<CommunityGuidelines />} />
             <Route path="/Feedback" element={<Feedback />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/live-match" element={<LiveMatchRooms />} />
           </Routes>
         </div>
       </main>
@@ -84,7 +89,7 @@ export default function App() {
       <NotificationProvider>
         <AppContent />
       </NotificationProvider>
-      <Toaster richColors position="top-center" />
+      <Toaster richColors position="top-center" closeButton />
     </Router>
   );
 }
