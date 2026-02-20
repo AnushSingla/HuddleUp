@@ -35,9 +35,42 @@ router.post("/flag/video", verifyToken, adminController.flagVideo);
 router.post("/flag/comment", verifyToken, adminController.flagComment);
 
 // Delete content (admin only)
-router.delete("/posts/:id", verifyToken, isAdmin, adminController.deletePost);
-router.delete("/videos/:id", verifyToken, isAdmin, adminController.deleteVideo);
-router.delete("/comments/:id", verifyToken, isAdmin, adminController.deleteComment);
+router.delete(
+    "/posts/:postId",
+    verifyToken,
+    isAdmin,
+    (req, res, next) => {
+        // Maintain backward compatibility: ensure req.params.id is set
+        if (!req.params.id && req.params.postId) {
+            req.params.id = req.params.postId;
+        }
+        return adminController.deletePost(req, res, next);
+    }
+);
+router.delete(
+    "/videos/:videoId",
+    verifyToken,
+    isAdmin,
+    (req, res, next) => {
+        // Maintain backward compatibility: ensure req.params.id is set
+        if (!req.params.id && req.params.videoId) {
+            req.params.id = req.params.videoId;
+        }
+        return adminController.deleteVideo(req, res, next);
+    }
+);
+router.delete(
+    "/comments/:commentId",
+    verifyToken,
+    isAdmin,
+    (req, res, next) => {
+        // Maintain backward compatibility: ensure req.params.id is set
+        if (!req.params.id && req.params.commentId) {
+            req.params.id = req.params.commentId;
+        }
+        return adminController.deleteComment(req, res, next);
+    }
+);
 
 // Dismiss flag (admin only)
 router.post("/dismiss-flag", verifyToken, isAdmin, adminController.dismissFlag);
