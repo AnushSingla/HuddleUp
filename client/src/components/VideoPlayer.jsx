@@ -101,12 +101,14 @@ const VideoPlayer = ({ video, onClose }) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/90 backdrop-blur-sm p-4 md:p-10"
+        onClick={(e) => e.target === e.currentTarget && onClose()}
       >
         <motion.div
           initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9, y: 20 }}
           className="relative w-full max-w-6xl h-full max-h-[90vh] bg-white dark:bg-zinc-900 rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden border border-zinc-200 dark:border-zinc-800"
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Left Side: Video Content */}
           <div className="flex-[1.5] flex flex-col bg-black relative">

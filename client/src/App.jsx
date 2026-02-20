@@ -84,7 +84,7 @@ export default function App() {
       <NotificationProvider>
         <AppContent />
       </NotificationProvider>
-      <Toaster richColors position="top-center" />
+      <Toaster richColors position="top-center" closeButton />
     </Router>
   );
 }
