@@ -18,6 +18,7 @@ import Feedback from './pages/Feedback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contributor from './pages/Contributor';
 import TermsOfService from './pages/TermsOfService';
+import PublicProfile from './pages/PublicProfile';
 
 // Components
 import Navbar from './components/Navbar';
@@ -57,6 +58,7 @@ function AppContent() {
             <Route path="/edit-video" element={<EditVideo />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/user/:userId" element={<PublicProfile />} />
             <Route path="/posts" element={<AllPosts />} />
             <Route path="/create-post" element={<CreatePost />} />
             <Route path="/contact" element={<Contact />} />

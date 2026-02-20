@@ -33,17 +33,19 @@ exports.createVideo = async(req,res)=>{
   
 }
 
-exports.getAllVideos = async(req,res)=>{
-    try{
-        const videos = await Video.find().populate("postedBy","username _id").sort({createdAt:-1})
-        res.status(200).json(videos);
-
-    }
-    catch(err){
-        console.error(err);
-        res.status(500).json({ message: "Error fetching videos" });
-    }
-}
+exports.getAllVideos = async (req, res) => {
+  try {
+    const filter = {};
+    if (req.query.postedBy) filter.postedBy = req.query.postedBy;
+    const videos = await Video.find(filter)
+      .populate("postedBy", "username _id")
+      .sort({ createdAt: -1 });
+    res.status(200).json(videos);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching videos" });
+  }
+};
 
 exports.deleteVideo = async (req, res) => {
   try {

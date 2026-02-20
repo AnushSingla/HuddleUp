@@ -415,9 +415,16 @@ const Explore = () => {
                       </p>
                     )}
                     <div className="flex items-center gap-2 text-xs text-white/60 mb-3">
-                      <span className="flex items-center gap-1">
+                      <span
+                        className="flex items-center gap-1 cursor-pointer hover:text-white transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const slug = video.postedBy?.username || video.uploadedBy?.username || video.postedBy?._id || video.postedBy;
+                          if (slug) navigate(`/user/${encodeURIComponent(slug)}`);
+                        }}
+                      >
                         <User className="w-3 h-3" />
-                        {video.uploadedBy?.username || 'Unknown'}
+                        {video.postedBy?.username || video.uploadedBy?.username || 'Unknown'}
                       </span>
                       {video.createdAt && (
                         <>
