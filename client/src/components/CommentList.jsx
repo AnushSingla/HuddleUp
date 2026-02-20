@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Reply, Trash2, ArrowBigUp, ArrowBigDown, MessageCircle, MoreVertical, Award } from 'lucide-react';
 import { API } from '@/api';
@@ -13,6 +13,16 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
   const [voteState, setVoteState] = useState(null); // 'up', 'down', or null
   const [score, setScore] = useState((comment.upvotes || 0) - (comment.downvotes || 0));
   const [showOptions, setShowOptions] = useState(false);
+  const optionsRef = useRef(null);
+
+  useEffect(() => {
+    if (!showOptions) return;
+    const handleClickOutside = (e) => {
+      if (optionsRef.current && !optionsRef.current.contains(e.target)) setShowOptions(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showOptions]);
 
   const handleDelete = async () => {
     const token = getToken();
@@ -207,7 +217,7 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
         </div>
 
         {/* Options Menu */}
-        <div className="relative">
+        <div className="relative" ref={optionsRef}>
           <button
             onClick={() => setShowOptions(!showOptions)}
             className="p-1 rounded transition-opacity opacity-0 group-hover:opacity-100"

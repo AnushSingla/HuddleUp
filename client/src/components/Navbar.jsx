@@ -112,6 +112,13 @@ export default function Navbar() {
               <>
                 {/* Notification Bell */}
                 <div className="relative">
+                  {showNotifications && (
+                    <div
+                      className="fixed inset-0 z-[99]"
+                      aria-hidden
+                      onClick={() => setShowNotifications(false)}
+                    />
+                  )}
                   <button
                     onClick={() => {
                       setShowNotifications(!showNotifications);
@@ -177,7 +184,13 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {open && (
-        <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl">
+        <>
+          <div
+            className="fixed inset-0 z-40 md:hidden"
+            aria-hidden
+            onClick={() => setOpen(false)}
+          />
+          <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl relative z-50">
           <div className="px-6 py-4 space-y-4">
             {links.map(({ to, label }) => (
               <NavLink
@@ -226,6 +239,7 @@ export default function Navbar() {
             </div>
           </div>
         </div>
+        </>
       )}
     </motion.nav>
   );
