@@ -121,36 +121,52 @@ export default function Admin() {
         }
     };
 
-    const handleDeletePost = async (id) => {
-        if (!confirm('Are you sure you want to delete this post?')) return;
-
-        try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`${API_URL}/admin/posts/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            toast.success('Post deleted successfully');
-            fetchFlaggedPosts();
-            fetchStats();
-        } catch (error) {
-            toast.error('Error deleting post');
-        }
+    const handleDeletePost = (id) => {
+        toast('Are you sure you want to delete this post?', {
+            action: {
+                label: 'Delete',
+                onClick: async () => {
+                    try {
+                        const token = localStorage.getItem('token');
+                        await axios.delete(`${API_URL}/admin/posts/${id}`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        toast.success('Post deleted successfully');
+                        fetchFlaggedPosts();
+                        fetchStats();
+                    } catch (error) {
+                        toast.error('Error deleting post');
+                    }
+                },
+            },
+            cancel: {
+                label: 'Cancel',
+            },
+        });
     };
 
-    const handleDeleteVideo = async (id) => {
-        if (!confirm('Are you sure you want to delete this video?')) return;
-
-        try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`${API_URL}/admin/videos/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            toast.success('Video deleted successfully');
-            fetchFlaggedVideos();
-            fetchStats();
-        } catch (error) {
-            toast.error('Error deleting video');
-        }
+    const handleDeleteVideo = (id) => {
+        toast('Are you sure you want to delete this video?', {
+            action: {
+                label: 'Delete',
+                onClick: async () => {
+                    try {
+                        const token = localStorage.getItem('token');
+                        await axios.delete(`${API_URL}/admin/videos/${id}`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        toast.success('Video deleted successfully');
+                        fetchFlaggedVideos();
+                        fetchStats();
+                    } catch (error) {
+                        toast.error('Error deleting video');
+                    }
+                },
+            },
+            cancel: {
+                label: 'Cancel',
+            },
+        });
     };
 
     const handleDeleteComment = async (id) => {
