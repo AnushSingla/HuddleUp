@@ -21,6 +21,7 @@ import TermsOfService from './pages/TermsOfService';
 import Admin from './pages/Admin';
 import LiveMatchRooms from './pages/LiveMatchRooms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
+import PublicProfile from './pages/PublicProfile'
 
 // Components
 import Navbar from './components/Navbar';
