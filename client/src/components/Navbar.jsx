@@ -3,11 +3,12 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, useScroll , useMotionValueEvent } from "framer-motion";
 import { Menu, X, Bell, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import NotificationDropdown from "./NotificationDropdown";
-import { useNotifications } from "@/context/NotificationContext";
-import { useNotificationFeed } from "@/hooks/useNotificationFeed";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
+
+
+import { AnimatePresence } from "framer-motion";
+import axios from "axios";
 import { useTheme } from "@/context/theme-context.jsx";
 
 export default function Navbar() {
@@ -16,27 +17,36 @@ export default function Navbar() {
   const { scrollY } = useScroll();
   const { theme, toggleTheme } = useTheme();
 
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [open, setOpen] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const { friendRequests } = useNotifications();
-  const {
-    notifications: activityNotifications,
-    unreadCount: activityUnreadCount,
-    markAsRead,
-    markAllAsRead,
-    refetch: refetchActivity,
-  } = useNotificationFeed({ limit: 15 });
-
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setScrolled(latest > 40);
-  });
 
   useEffect(() => {
     setLoggedIn(isLoggedIn());
     setOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    if (!loggedIn) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          "http://localhost:5000/api/notifications",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setNotifications(res.data);
+      } catch (err) {
+        console.error("Failed to fetch notifications", err);
+      }
+    };
+
+    fetchNotifications();
+  }, [loggedIn]);
 
   const handleLogout = () => {
     logout();
@@ -53,57 +63,58 @@ export default function Navbar() {
     { to: "/posts", label: "Discussion" },
     { to: "/contact", label: "Contact" },
     { to: "/about", label: "About" },
-    { to: "/contributors", label: "Contributors" },
     { to: "/feedback", label: "Feedback" }
   ];
 
   return (
     <motion.nav
-      className={`sticky top-0 z-50 border-b transition-all duration-300
-        ${scrolled
-          ? "backdrop-blur-xl bg-zinc-950/90 border-white/20"
-          : "backdrop-blur-lg bg-zinc-950/70 border-white/10"
-        }`}
-      style={{
-        boxShadow: scrolled ? '0 4px 20px rgba(0,0,0,0.3)' : 'none'
-      }}
+      initial={{ y: -80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className="sticky top-0 z-50 backdrop-blur-2xl bg-black/70 border-b border-white/10 shadow-lg"
     >
       <div className="max-w-7xl mx-auto px-6">
-        <div className={`flex items-center justify-between transition-all duration-300
-          ${scrolled ? "h-14" : "h-16"}`}>
+        <div className="h-16 flex items-center justify-between">
 
           {/* Logo */}
-          <NavLink
-            to="/"
-            className="text-xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate("/")}
+            className="text-2xl font-extrabold cursor-pointer bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent"
           >
             HuddleUp
-          </NavLink>
+          </motion.div>
 
           {/* Desktop Links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-8 relative">
             {links.map(({ to, label }) => (
               <NavLink key={to} to={to}>
                 {({ isActive }) => (
-                  <span
-                    className={`relative text-sm font-medium transition-colors
-                    ${isActive ? "" : "text-zinc-400 hover:text-white"}`}
-                    style={isActive ? {
-                      background: 'linear-gradient(135deg, #10b981, #059669)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text'
-                    } : {}}
+                  <motion.div
+                    whileHover={{ y: -3 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    className="relative px-1 cursor-pointer"
                   >
-                    {label}
+                    <span
+                      className={`text-sm font-semibold tracking-wide transition-all duration-300
+                      ${
+                        isActive
+                          ? "text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500"
+                          : "text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      {label}
+                    </span>
+
+                    {/* Sliding Active Underline */}
                     {isActive && (
-                      <motion.span
-                        layoutId="navHighlight"
-                        className="absolute left-0 -bottom-1 h-[2px] w-full bg-gradient-to-r from-emerald-500 to-green-500 rounded"
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      <motion.div
+                        layoutId="activeLink"
+                        className="absolute left-0 -bottom-1 h-[2px] w-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-full"
                       />
                     )}
-                  </span>
+                  </motion.div>
                 )}
               </NavLink>
             ))}
@@ -152,49 +163,104 @@ export default function Navbar() {
                     <span className="absolute inset-0 rounded-xl bg-emerald-500/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity animate-pulse" />
                   </button>
 
-                  <NotificationDropdown
-                    isOpen={showNotifications}
-                    onClose={() => setShowNotifications(false)}
-                    activityNotifications={activityNotifications}
-                    activityUnreadCount={activityUnreadCount}
-                    onMarkAsRead={markAsRead}
-                    onMarkAllAsRead={markAllAsRead}
-                  />
-                </div>
+            {loggedIn && (
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 rounded-xl bg-white/5 hover:bg-white/10 transition"
+                >
+                  <Bell className="text-white" />
 
+                  {notifications.filter(n => !n.isRead).length > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-red-500 text-xs text-white px-2 rounded-full shadow-lg"
+                    >
+                      {notifications.filter(n => !n.isRead).length}
+                    </motion.span>
+                  )}
+                </motion.button>
+
+                <AnimatePresence>
+                  {showNotifications && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute right-0 mt-4 w-80 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4 space-y-3 max-h-96 overflow-y-auto"
+                    >
+                      {notifications.length === 0 ? (
+                        <p className="text-sm text-zinc-400">
+                          No notifications
+                        </p>
+                      ) : (
+                        notifications.map((n) => (
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            key={n._id}
+                            className={`p-3 rounded-xl text-sm transition cursor-pointer ${
+                              n.isRead
+                                ? "bg-zinc-800"
+                                : "bg-gradient-to-r from-indigo-600/30 to-purple-600/30"
+                            }`}
+                          >
+                            <strong className="text-white">
+                              {n.sender?.username}
+                            </strong>{" "}
+                            <span className="text-zinc-300">{n.type}</span>
+                          </motion.div>
+                        ))
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {loggedIn ? (
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   onClick={handleLogout}
-                  className="rounded-xl px-5 bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20 font-bold uppercase tracking-wider text-xs"
+                  className="px-6 py-2 font-semibold rounded-xl 
+                  bg-gradient-to-r from-pink-500 to-red-500 
+                  shadow-lg shadow-pink-500/30"
                 >
-                  Logout
+                  LOGOUT
                 </Button>
-              </>
+              </motion.div>
             ) : (
               <>
                 <Button
                   variant="ghost"
                   onClick={() => navigate("/login")}
-                  className="text-zinc-400 hover:text-white font-bold uppercase tracking-wider text-xs"
+                  className="text-zinc-400 hover:text-white"
                 >
                   Login
                 </Button>
-                <Button
-                  onClick={() => navigate("/register")}
-                  className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg shadow-blue-600/30 font-bold uppercase tracking-wider text-xs h-10 px-6"
-                >
-                  Register
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    onClick={() => navigate("/register")}
+                    className="rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 shadow-lg"
+                  >
+                    Register
+                  </Button>
+                </motion.div>
               </>
             )}
           </div>
 
           {/* Mobile Toggle */}
-          <button
+          <motion.button
+            whileTap={{ scale: 0.9 }}
             onClick={() => setOpen(!open)}
-            className="md:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition"
+            className="md:hidden p-2 text-zinc-400 hover:text-white transition"
           >
             {open ? <X /> : <Menu />}
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -273,10 +339,9 @@ export default function Navbar() {
                 </>
               )}
             </div>
-          </div>
-        </div>
-        </>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.nav>
   );
 }
