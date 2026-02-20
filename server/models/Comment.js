@@ -29,7 +29,19 @@ const CommentSchema = new mongoose.Schema({
     likes: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
-    }]
+    }],
+    flagged: {
+        type: Boolean,
+        default: false
+    },
+    flaggedBy: [{ 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User' 
+    }],
+    flagReason: {
+        type: String,
+        default: ""
+    }
 }, { timestamps: true });
 
 CommentSchema.index({ videoId: 1 });

@@ -18,6 +18,7 @@ import Feedback from './pages/Feedback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contributor from './pages/Contributor';
 import TermsOfService from './pages/TermsOfService';
+import Admin from './pages/Admin';
 import LiveMatchRooms from './pages/LiveMatchRooms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
 
@@ -69,6 +70,7 @@ function AppContent() {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/community-guidelines" element={<CommunityGuidelines />} />
             <Route path="/Feedback" element={<Feedback />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="/live-match" element={<LiveMatchRooms />} />
           </Routes>
         </div>
