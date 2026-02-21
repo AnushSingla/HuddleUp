@@ -48,6 +48,7 @@ export default function Navbar() {
     { to: "/upload", label: "Upload" },
     { to: "/explore", label: "Explore" },
     { to: "/posts", label: "Discussion" },
+    ...(loggedIn ? [{ to: "/saved", label: "Saved" }] : []),
     { to: "/contact", label: "Contact" },
     { to: "/about", label: "About" },
     { to: "/contributors", label: "Contributors" },

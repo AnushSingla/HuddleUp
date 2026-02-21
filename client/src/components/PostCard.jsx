@@ -3,14 +3,14 @@ import { motion } from 'framer-motion';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Heart, MessageCircle, Calendar, Tag, User, Trash2, Pencil, Share2, Link2, ArrowBigUp, ArrowBigDown, Pin, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Calendar, Tag, User, Trash2, Pencil, Share2, Link2, ArrowBigUp, ArrowBigDown, Pin, MoreHorizontal, Bookmark } from 'lucide-react';
 import CommentSection from './CommentSection';
 import { API } from '@/api';
 import { getToken, getUserId } from '@/utils/auth';
 import { getShareUrl, shareLink, copyLinkToClipboard } from '@/utils/share';
 import { toast } from 'sonner';
 
-const PostCard = ({ post, onDelete, isPinned = false }) => {
+const PostCard = ({ post, onDelete, isPinned = false, isSaved = false, onSaveToggle }) => {
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [likes, setLikes] = useState(post.likes?.length || 0);
@@ -304,6 +304,24 @@ const PostCard = ({ post, onDelete, isPinned = false }) => {
               <Share2 className="w-4 h-4" />
               <span>Share</span>
             </button>
+
+            {onSaveToggle && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onSaveToggle(post._id);
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm font-medium"
+                style={{ color: isSaved ? 'var(--accent)' : 'var(--text-sub)' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-elevated)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                title={isSaved ? 'Unsave' : 'Save for later'}
+              >
+                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+                <span>{isSaved ? 'Saved' : 'Save'}</span>
+              </button>
+            )}
           </div>
 
           {/* Thread Depth Visual Line + Comments Section */}

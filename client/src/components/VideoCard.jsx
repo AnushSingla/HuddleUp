@@ -4,12 +4,12 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import Badge from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Play, Calendar, User, Eye, Trash2, Pencil, Share2, Link2, Clock } from 'lucide-react';
+import { Play, Calendar, User, Eye, Trash2, Pencil, Share2, Link2, Clock, Bookmark } from 'lucide-react';
 import { API } from '@/api';
 import { getUserId, getToken } from '@/utils/auth';
 import { getShareUrl, shareLink, copyLinkToClipboard } from '@/utils/share';
 
-const VideoCard = ({ video, onPlay, onDelete }) => {
+const VideoCard = ({ video, onPlay, onDelete, isSaved = false, onSaveToggle }) => {
   const navigate = useNavigate();
   const userId = getUserId();
   const videoOwnerId = video?.postedBy?._id || video?.postedBy;
@@ -310,6 +310,30 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
             Watch
           </button>
           
+          {onSaveToggle && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSaveToggle(videoId);
+            }}
+            className="p-2 rounded-lg transition-all"
+            style={{
+              border: '1px solid var(--border-subtle)',
+              color: isSaved ? 'var(--accent)' : 'var(--text-sub)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent)';
+              e.currentTarget.style.color = 'var(--accent)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border-subtle)';
+              e.currentTarget.style.color = isSaved ? 'var(--accent)' : 'var(--text-sub)';
+            }}
+            title={isSaved ? 'Unsave' : 'Save for later'}
+          >
+            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+          </button>
+        )}
           <button
             onClick={handleCopyLink}
             className="p-2 rounded-lg transition-all"

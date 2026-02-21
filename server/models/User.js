@@ -28,6 +28,8 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    savedVideos: [{ type: mongoose.Schema.Types.ObjectId, ref: "Video" }],
+    savedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
 }, { timestamps: true })
 
 module.exports= mongoose.model("User",UserSchema)
