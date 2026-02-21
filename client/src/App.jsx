@@ -20,6 +20,9 @@ import Contributor from './pages/Contributor';
 import TermsOfService from './pages/TermsOfService';
 import PublicProfile from './pages/PublicProfile';
 import Saved from './pages/Saved';
+import Admin from './pages/Admin';
+import LiveMatchRooms from './pages/LiveMatchRooms';
+import CommunityGuidelines from './pages/CommunityGuidelines';
 
 // Components
 import Navbar from './components/Navbar';
@@ -68,7 +71,10 @@ function AppContent() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/contributors" element={<Contributor />} />
             <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/community-guidelines" element={<CommunityGuidelines />} />
             <Route path="/Feedback" element={<Feedback />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/live-match" element={<LiveMatchRooms />} />
           </Routes>
         </div>
       </main>

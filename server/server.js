@@ -1,4 +1,6 @@
 const express = require("express")
+const http = require("http");
+const { Server } = require("socket.io");
 const mongoose = require("mongoose")
 const dotenv = require("dotenv")
 const cors = require("cors")
@@ -9,11 +11,35 @@ const commentRoutes = require("./routes/comment")
 const notificationRoutes = require("./routes/notification");
 const postRoutes = require("./routes/post")
 const friendRoutes = require("./routes/friend")
+const adminRoutes = require("./routes/admin")
 const userRoutes = require("./routes/user")
 const savedRoutes = require("./routes/saved")
 
 dotenv.config();
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ["https://huddle-up-beta.vercel.app", "http://localhost:5173", "http://localhost:5174"],
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Socket.IO logic for live match rooms
+io.on("connection", (socket) => {
+  // Join a match room
+  socket.on("join_match", (matchId) => {
+    socket.join(`match_${matchId}`);
+  });
+
+  // Handle chat message
+  socket.on("send_message", ({ matchId, user, text }) => {
+    io.to(`match_${matchId}`).emit("receive_message", { user, text });
+  });
+
+  socket.on("disconnect", () => {});
+});
 
 app.use(cors({
   origin: ["https://huddle-up-beta.vercel.app", "http://localhost:5173", "http://localhost:5174"],
@@ -35,6 +61,7 @@ app.use("/api", friendRoutes)
 app.use("/api", userRoutes)
 app.use("/api", savedRoutes)
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/admin", adminRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/api", (req, res) => {
@@ -68,5 +95,5 @@ const connectDB = async () => {
 };
 
 connectDB()
-  .then(() => app.listen(5000, () => console.log("Server is running at port 5000")))
+  .then(() => server.listen(5000, () => console.log("Server is running at port 5000 (with Socket.IO)")))
   .catch(err => console.log(err))
