@@ -162,10 +162,9 @@ export default function Profile() {
             {!isEditing && (
               <Button
                 onClick={() => setIsEditing(true)}
-                className="gap-2"
+                className="!w-auto !px-3 !py-1.5 !text-sm"
                 variant="outline"
               >
-                <Edit2 size={18} />
                 Edit Profile
               </Button>
             )}
