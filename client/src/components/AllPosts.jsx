@@ -9,9 +9,20 @@ import { PlusCircle, Search, MessageSquare, Filter } from 'lucide-react';
 import { API } from '@/api';
 import PageWrapper from '@/components/ui/PageWrapper';
 import EmptyState from '@/components/ui/EmptyState';
+import { useSaved } from '@/hooks/useSaved';
+import { toast } from 'sonner';
 
 const AllPosts = () => {
   const location = useLocation();
+  const { isPostSaved, togglePost, isLoggedIn } = useSaved();
+
+  const handleSaveClick = (postId) => {
+    if (!isLoggedIn) {
+      toast.error('Login to save posts');
+      return;
+    }
+    togglePost(postId);
+  };
   const [searchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
@@ -154,6 +165,8 @@ const AllPosts = () => {
                     onDelete={(id) => {
                       setPosts(prev => prev.filter(p => p._id !== id));
                     }}
+                    isSaved={isPostSaved(post._id)}
+                    onSaveToggle={handleSaveClick}
                   />
                 </div>
               ))

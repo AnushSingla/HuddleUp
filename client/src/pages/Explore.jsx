@@ -3,17 +3,19 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { motion } from 'framer-motion';
 import PageWrapper from '@/components/ui/PageWrapper';
 import EmptyState from '@/components/ui/EmptyState';
-import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play, User, Link2, Video } from 'lucide-react';
+import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play, User, Link2, Video, Bookmark } from 'lucide-react';
 import VideoPlayer from '@/components/VideoPlayer';
 import { API } from '@/api';
 import { toast } from 'sonner';
 import { getShareUrl, copyLinkToClipboard } from '@/utils/share';
 import { getAssetUrl } from '@/utils/url';
+import { useSaved } from '@/hooks/useSaved';
 
 const Explore = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const { isVideoSaved, toggleVideo, isLoggedIn } = useSaved();
   const [videos, setVideos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -184,6 +186,27 @@ const Explore = () => {
 
               {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+
+              {/* Save - top right */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isLoggedIn) {
+                    toast.error('Login to save videos');
+                    return;
+                  }
+                  toggleVideo(video._id || video.id);
+                }}
+                className="absolute top-3 right-3 z-10 p-2 rounded-lg transition-opacity hover:opacity-100 opacity-90"
+                style={{
+                  background: 'rgba(0,0,0,0.6)',
+                  color: isVideoSaved(video._id) ? 'var(--turf-green)' : 'white',
+                  border: '1px solid rgba(255,255,255,0.2)'
+                }}
+                title={isVideoSaved(video._id) ? 'Unsave' : 'Save for later'}
+              >
+                <Bookmark className={`w-4 h-4 ${isVideoSaved(video._id) ? 'fill-current' : ''}`} />
+              </button>
 
               {/* Content */}
               <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -402,19 +425,40 @@ const Explore = () => {
                     </div>
                   )}
 
-                  {/* Copy link - top right */}
-                  <button
-                    onClick={(e) => handleCopyLink(e, video)}
-                    className="absolute top-3 right-3 z-10 p-2 rounded-lg transition-opacity hover:opacity-100 opacity-90"
-                    style={{
-                      background: 'rgba(0,0,0,0.6)',
-                      color: 'white',
-                      border: '1px solid rgba(255,255,255,0.2)'
-                    }}
-                    title="Copy link"
-                  >
-                    <Link2 className="w-4 h-4" />
-                  </button>
+                  {/* Top right: Save + Copy link */}
+                  <div className="absolute top-3 right-3 z-10 flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isLoggedIn) {
+                          toast.error('Login to save videos');
+                          return;
+                        }
+                        toggleVideo(video._id || video.id);
+                      }}
+                      className="p-2 rounded-lg transition-opacity hover:opacity-100 opacity-90"
+                      style={{
+                        background: 'rgba(0,0,0,0.6)',
+                        color: isVideoSaved(video._id) ? 'var(--turf-green)' : 'white',
+                        border: '1px solid rgba(255,255,255,0.2)'
+                      }}
+                      title={isVideoSaved(video._id) ? 'Unsave' : 'Save for later'}
+                    >
+                      <Bookmark className={`w-4 h-4 ${isVideoSaved(video._id) ? 'fill-current' : ''}`} />
+                    </button>
+                    <button
+                      onClick={(e) => handleCopyLink(e, video)}
+                      className="p-2 rounded-lg transition-opacity hover:opacity-100 opacity-90"
+                      style={{
+                        background: 'rgba(0,0,0,0.6)',
+                        color: 'white',
+                        border: '1px solid rgba(255,255,255,0.2)'
+                      }}
+                      title="Copy link"
+                    >
+                      <Link2 className="w-4 h-4" />
+                    </button>
+                  </div>
 
                   {/* Content */}
                   <div className="absolute bottom-0 left-0 right-0 p-4">

@@ -18,10 +18,11 @@ import Feedback from './pages/Feedback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contributor from './pages/Contributor';
 import TermsOfService from './pages/TermsOfService';
+import PublicProfile from './pages/PublicProfile';
+import Saved from './pages/Saved';
 import Admin from './pages/Admin';
 import LiveMatchRooms from './pages/LiveMatchRooms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
-import PublicProfile from './pages/PublicProfile'
 
 // Components
 import Navbar from './components/Navbar';
@@ -61,6 +62,7 @@ function AppContent() {
             <Route path="/edit-video" element={<EditVideo />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/saved" element={<Saved />} />
             <Route path="/user/:userId" element={<PublicProfile />} />
             <Route path="/posts" element={<AllPosts />} />
             <Route path="/create-post" element={<CreatePost />} />

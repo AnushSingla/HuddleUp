@@ -8,6 +8,7 @@ import VideoCard from '@/components/VideoCard';
 import PostCard from '@/components/PostCard';
 import { API } from '@/api';
 import { toast } from 'sonner';
+import { useSaved } from '@/hooks/useSaved';
 
 export default function PublicProfile() {
   const { userId } = useParams();
@@ -16,6 +17,7 @@ export default function PublicProfile() {
   const [videos, setVideos] = useState([]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { isVideoSaved, isPostSaved, toggleVideo, togglePost, isLoggedIn } = useSaved();
 
   useEffect(() => {
     const invalid = !userId || userId === 'undefined' || userId === 'null' || userId.trim() === '';
@@ -144,6 +146,8 @@ export default function PublicProfile() {
                   key={video._id}
                   video={video}
                   onPlay={handleVideoPlay}
+                  isSaved={isVideoSaved(video._id)}
+                  onSaveToggle={isLoggedIn ? toggleVideo : undefined}
                 />
               ))}
             </div>
@@ -165,7 +169,12 @@ export default function PublicProfile() {
           ) : (
             <div className="space-y-4">
               {posts.map((post) => (
-                <PostCard key={post._id} post={post} />
+                <PostCard
+                key={post._id}
+                post={post}
+                isSaved={isPostSaved(post._id)}
+                onSaveToggle={isLoggedIn ? togglePost : undefined}
+              />
               ))}
             </div>
           )}
