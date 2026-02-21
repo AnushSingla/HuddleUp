@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
-import { Menu, X, Bell, Moon, Sun, Shield } from "lucide-react";
+import { Menu, X, Bell, Moon, Sun, Shield, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
@@ -23,10 +23,12 @@ export default function Navbar() {
 
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [username, setUsername] = useState("");
   const { friendRequests } = useNotifications();
   const {
     notifications: activityNotifications,
@@ -57,10 +59,26 @@ export default function Navbar() {
     }
   };
 
+  const fetchUsername = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/auth/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsername(res.data.user?.username || "User");
+    } catch (err) {
+      console.error("Failed to fetch username:", err);
+    }
+  };
+
   useEffect(() => {
     setLoggedIn(isLoggedIn());
     setOpen(false);
+    setShowProfileMenu(false);
     checkAdminStatus();
+    if (isLoggedIn()) {
+      fetchUsername();
+    }
   }, [location]);
 
   useEffect(() => {
@@ -81,6 +99,7 @@ fetchNotifications();
   const handleLogout = () => {
     logout();
     setLoggedIn(false);
+    setShowProfileMenu(false);
     toast.success("User Logged Out");
     navigate("/login");
   };
@@ -230,6 +249,88 @@ fetchNotifications();
               </AnimatePresence>
             </div>
 
+                {/* Profile Avatar Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-300 hover:shadow-lg"
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981 0%, #6c5ce7 100%)',
+                      boxShadow: showProfileMenu ? '0 0 20px rgba(16, 185, 129, 0.4)' : 'none'
+                    }}
+                    title={username}
+                  >
+                    {username.charAt(0).toUpperCase()}
+                  </button>
+
+                  {/* Profile Dropdown Menu */}
+                  {showProfileMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute right-0 mt-3 w-56 rounded-2xl shadow-2xl overflow-hidden z-50"
+                      style={{
+                        background: 'rgba(24, 24, 27, 0.95)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)'
+                      }}
+                    >
+                      {/* Header Section */}
+                      <div className="p-4" style={{
+                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(108, 92, 231, 0.1) 100%)',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                      }}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                            {username.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-white">
+                              {username}
+                            </p>
+                            <p className="text-xs text-zinc-400">
+                              Logged in
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Menu Items */}
+                      <div className="py-2">
+                        <button
+                          onClick={() => {
+                            navigate("/profile");
+                            setShowProfileMenu(false);
+                          }}
+                          className="w-full px-4 py-3 text-sm font-medium flex items-center gap-3 transition-all hover:bg-white/5 text-white"
+                        >
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.2)' }}>
+                            <User className="w-4 h-4" style={{ color: '#10b981' }} />
+                          </div>
+                          <span>View Profile</span>
+                        </button>
+                      </div>
+
+                      {/* Divider */}
+                      <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
+
+                      {/* Logout Section */}
+                      <div className="p-2">
+                        <button
+                          onClick={handleLogout}
+                          className="w-full px-4 py-3 text-sm font-medium flex items-center gap-3 transition-all rounded-lg hover:bg-red-500/10 text-red-400"
+                        >
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(239, 68, 68, 0.15)' }}>
+                            <LogOut className="w-4 h-4" />
+                          </div>
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+
                 {/* Admin Button */}
                 {isAdmin && (
                   <Button
@@ -240,15 +341,6 @@ fetchNotifications();
                     Admin
                   </Button>
                 )}
-
-                <Button
-                  onClick={handleLogout}
-                  className="px-6 py-2 font-semibold rounded-xl 
-                  bg-gradient-to-r from-pink-500 to-red-500 
-                  shadow-lg shadow-pink-500/30"
-                >
-                  LOGOUT
-                </Button>
               </>
             ) : (
               <>
@@ -326,10 +418,14 @@ fetchNotifications();
                     {loggedIn ? (
                       <>
                         <Button
-                          onClick={() => navigate("/profile")}
+                          onClick={() => {
+                            navigate("/profile");
+                            setOpen(false);
+                          }}
                           variant="outline"
                           className="w-full border-blue-400 text-blue-400"
                         >
+                          <User className="w-4 h-4 mr-2" />
                           Profile
                         </Button>
                         {isAdmin && (
@@ -345,6 +441,7 @@ fetchNotifications();
                           onClick={handleLogout}
                           className="w-full bg-red-600 hover:bg-red-700"
                         >
+                          <LogOut className="w-4 h-4 mr-2" />
                           Logout
                         </Button>
                       </>
