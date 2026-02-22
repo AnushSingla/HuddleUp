@@ -20,6 +20,8 @@ import Contributor from './pages/Contributor';
 import TermsOfService from './pages/TermsOfService';
 import PublicProfile from './pages/PublicProfile';
 import Saved from './pages/Saved';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Admin from './pages/Admin';
 import LiveMatchRooms from './pages/LiveMatchRooms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
@@ -33,7 +35,7 @@ import BackToTopBtn from './components/BackToTopBtn';
 
 function AppContent() {
   const location = useLocation();
-  const hideLayout = location.pathname === '/login' || location.pathname === '/register';
+  const hideLayout = ['/login', '/register', '/forgot-password', '/reset-password'].includes(location.pathname);
 
   // Auth pages: full width, no container constraints
   if (hideLayout) {
@@ -43,6 +45,8 @@ function AppContent() {
           <Routes location={location} key={location.pathname}>
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
         </AnimatePresence>
       </div>

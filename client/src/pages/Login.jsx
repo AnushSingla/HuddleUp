@@ -167,10 +167,20 @@ export default function Login() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider"
-                     style={{ color: "#6b7280" }}>
-                Password
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider"
+                       style={{ color: "#6b7280" }}>
+                  Password
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-xs font-medium hover:underline"
+                  style={{ color: "#60a5fa" }}
+                >
+                  Forgot password?
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none"
                       style={{ color: "#9ca3af" }} />
