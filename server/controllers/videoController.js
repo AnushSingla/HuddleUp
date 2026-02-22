@@ -1,36 +1,38 @@
 const Video = require("../models/Video");
+const { deleteCachePattern } = require("../utils/cache");
 
-exports.createVideo = async(req,res)=>{
-    try{
-        console.log("File:", req.file);
-        console.log("Body:", req.body);
+exports.createVideo = async (req, res) => {
+  try {
+    console.log("File:", req.file);
+    console.log("Body:", req.body);
 
-        if (!req.user || !req.user.id) {
-          return res.status(401).json({ message: "Unauthorized: User not authenticated" });
-        }
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Unauthorized: User not authenticated" });
+    }
 
-        const {title,description,category} = req.body;
-        if (!req.file) {
-        return res.status(400).json({ message: "No video file uploaded" });
-         }
+    const { title, description, category } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ message: "No video file uploaded" });
+    }
 
-        const videoUrl = `/uploads/${req.file.filename}`;
-        const newVideo = new Video({
-        title,
-        description,
-        category,
-        videoUrl,
-        postedBy:req.user.id,
+    const videoUrl = `/uploads/${req.file.filename}`;
+    const newVideo = new Video({
+      title,
+      description,
+      category,
+      videoUrl,
+      postedBy: req.user.id,
     });
     await newVideo.save();
-    res.status(201).json({message: "Video Uploaded Successfully",video:newVideo});
+    await deleteCachePattern("feed:*");
+    res.status(201).json({ message: "Video Uploaded Successfully", video: newVideo });
 
-    }
-    catch(err){
-        console.error(err);
-        res.status(500).json({ message: "Error uploading video", error: err.message })
-    }
-  
+  }
+  catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error uploading video", error: err.message })
+  }
+
 }
 
 exports.getAllVideos = async (req, res) => {
@@ -67,6 +69,7 @@ exports.deleteVideo = async (req, res) => {
     }
 
     await Video.findByIdAndDelete(videoId);
+    await deleteCachePattern("feed:*");
 
     res.status(200).json({ message: "Video deleted" });
 
@@ -103,6 +106,7 @@ exports.updateVideo = async (req, res) => {
 
     const updatedVideo = await video.save();
     const populatedVideo = await updatedVideo.populate("postedBy", "username _id");
+    await deleteCachePattern("feed:*");
 
     res.status(200).json({
       message: "Video updated successfully",
