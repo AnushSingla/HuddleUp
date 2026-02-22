@@ -3,7 +3,7 @@ import clsx from 'clsx';
 
 export function Card({ children, className }) {
   return (
-    <div className={`rounded-xl bg-slate-900 p-6 shadow-xl shadow-black/20 ring-1 ring-white/10 ${className}`}>
+    <div className={`rounded-xl bg-slate-900 p-6 shadow-xl shadow-black/20 ring-1 ring-white/10 transition-all duration-300 ${className}`}>
       {children}
     </div>
   );
