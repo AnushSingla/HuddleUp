@@ -22,13 +22,17 @@ const postSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    flaggedBy: [{ 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: "User" 
+    flaggedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
     }],
     flagReason: {
         type: String,
         default: ""
+    },
+    views: {
+        type: Number,
+        default: 0
     },
     createdAt: {
         type: Date,
@@ -39,5 +43,8 @@ const postSchema = new mongoose.Schema({
 postSchema.index({ postedBy: 1 });
 postSchema.index({ category: 1 });
 postSchema.index({ createdAt: -1 });
+postSchema.index({ createdAt: -1, _id: -1 });
+postSchema.index({ category: 1, createdAt: -1 });
+postSchema.index({ postedBy: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Post", postSchema)

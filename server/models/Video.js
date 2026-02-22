@@ -39,9 +39,9 @@ const VideoSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  flaggedBy: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "User" 
+  flaggedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
   }],
   flagReason: {
     type: String,
@@ -52,5 +52,8 @@ const VideoSchema = new mongoose.Schema({
 VideoSchema.index({ postedBy: 1 });
 VideoSchema.index({ category: 1 });
 VideoSchema.index({ uploadDate: -1 });
+VideoSchema.index({ createdAt: -1, _id: -1 });
+VideoSchema.index({ category: 1, createdAt: -1 });
+VideoSchema.index({ postedBy: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Video", VideoSchema)

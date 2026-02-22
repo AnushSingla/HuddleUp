@@ -1,6 +1,7 @@
 const Post = require("../models/Post");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const { deleteCachePattern } = require("../utils/cache");
 
 exports.createPost = async (req, res) => {
   try {
@@ -14,6 +15,7 @@ exports.createPost = async (req, res) => {
     });
     const savedPost = await newPost.save();
     const populatedPost = await savedPost.populate("postedBy", "username");
+    await deleteCachePattern("feed:*");
     res.status(201).json(savedPost);
   } catch (err) {
     res.status(500).json({ message: "Failed to create Post", error: err.message })
@@ -67,6 +69,7 @@ exports.likePost = async (req, res) => {
       });
     }
 
+    await deleteCachePattern("feed:*");
     res.status(200).json({
       likedByUser: !isLiked,
       likesCount: updatedPost.likes.length,
@@ -99,6 +102,7 @@ exports.deletePost = async (req, res) => {
     }
 
     await Post.findByIdAndDelete(postId);
+    await deleteCachePattern("feed:*");
     res.status(200).json({ message: "Post deleted" });
 
   } catch (err) {
@@ -133,6 +137,7 @@ exports.updatePost = async (req, res) => {
 
     const updatedPost = await post.save();
     const populatedPost = await updatedPost.populate("postedBy", "username");
+    await deleteCachePattern("feed:*");
 
     res.status(200).json({
       message: "Post updated successfully",
