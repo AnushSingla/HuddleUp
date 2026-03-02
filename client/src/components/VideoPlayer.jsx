@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { X, Eye, Heart, Share2 } from 'lucide-react';
+import { X, Eye, Heart, Share2, Settings2 } from 'lucide-react';
 import CommentSection from './CommentSection';
 import { API } from '@/api';
 import { getToken } from '@/utils/auth';
@@ -9,6 +9,61 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { socket } from '@/lib/socket';
 
+const QUALITY_PREFERENCE_KEY = 'huddleup_video_quality_preference';
+const QUALITY_ORDER = ['1080p', '720p', '480p', '360p', 'original'];
+
+const getAvailableQualities = (video) => {
+  const versions = video?.videoVersions || {};
+  const available = QUALITY_ORDER.filter((q) => versions[q]);
+  // Always ensure "Auto" is available at the UI level
+  return { versions, list: available };
+};
+
+const pickQualityForNetwork = (availableQualities) => {
+  if (!availableQualities || availableQualities.length === 0) return null;
+
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const effectiveType = connection?.effectiveType;
+  const downlink = connection?.downlink;
+
+  // Very rough heuristic; can be tuned later
+  if (effectiveType === 'slow-2g' || effectiveType === '2g' || (downlink && downlink < 1)) {
+    return availableQualities.includes('360p')
+      ? '360p'
+      : availableQualities[availableQualities.length - 1];
+  }
+
+  if (effectiveType === '3g' || (downlink && downlink < 2.5)) {
+    if (availableQualities.includes('480p')) return '480p';
+    if (availableQualities.includes('360p')) return '360p';
+    return availableQualities[availableQualities.length - 1];
+  }
+
+  // For 4g / unknown but decent connections, prefer 720p/1080p
+  if (availableQualities.includes('720p')) return '720p';
+  if (availableQualities.includes('1080p')) return '1080p';
+
+  return availableQualities[0];
+};
+
+const loadQualityPreference = () => {
+  try {
+    const stored = localStorage.getItem(QUALITY_PREFERENCE_KEY);
+    if (!stored) return 'Auto';
+    return stored;
+  } catch {
+    return 'Auto';
+  }
+};
+
+const saveQualityPreference = (value) => {
+  try {
+    localStorage.setItem(QUALITY_PREFERENCE_KEY, value);
+  } catch {
+    // ignore
+  }
+};
+
 const VideoPlayer = ({ video, onClose }) => {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -16,9 +71,96 @@ const VideoPlayer = ({ video, onClose }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [views, setViews] = useState(0);
   const [hasViewed, setHasViewed] = useState(false);
+  const [selectedQuality, setSelectedQuality] = useState('Auto');
+  const [currentQuality, setCurrentQuality] = useState(null);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState(null);
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
   const videoId = video._id || video.id;
 
-  const videoUrl = getAssetUrl(video.videoUrl);
+  const { versions: videoVersions, list: availableQualities } = getAvailableQualities(video);
+
+  // Initialize quality and source URL when video or versions change
+  useEffect(() => {
+    if (!video) return;
+
+    const pref = loadQualityPreference();
+    let effectiveQuality = pref;
+
+    if (pref !== 'Auto' && !availableQualities.includes(pref)) {
+      // Fallback if preferred quality not available for this video
+      effectiveQuality = 'Auto';
+    }
+
+    if (effectiveQuality === 'Auto') {
+      const autoQuality = pickQualityForNetwork(availableQualities) || null;
+      setSelectedQuality('Auto');
+      setCurrentQuality(autoQuality);
+      const url =
+        (autoQuality && videoVersions[autoQuality]) ||
+        video.videoUrl ||
+        null;
+      setCurrentVideoUrl(url ? getAssetUrl(url) : null);
+    } else {
+      setSelectedQuality(effectiveQuality);
+      setCurrentQuality(effectiveQuality);
+      const url =
+        videoVersions[effectiveQuality] ||
+        video.videoUrl ||
+        null;
+      setCurrentVideoUrl(url ? getAssetUrl(url) : null);
+    }
+  }, [video, availableQualities, videoVersions]);
+
+  // Handle quality change while preserving playback position
+  const changeQuality = (quality) => {
+    if (!video) return;
+
+    saveQualityPreference(quality);
+    setSelectedQuality(quality);
+
+    // Compute the new target quality
+    let targetQuality = quality;
+    if (quality === 'Auto') {
+      targetQuality = pickQualityForNetwork(availableQualities) || null;
+    }
+
+    setCurrentQuality(targetQuality);
+
+    const rawUrl =
+      (targetQuality && videoVersions[targetQuality]) ||
+      video.videoUrl ||
+      null;
+    const newUrl = rawUrl ? getAssetUrl(rawUrl) : null;
+
+    if (!videoRef.current || !newUrl) {
+      setCurrentVideoUrl(newUrl);
+      return;
+    }
+
+    const wasPlaying = !videoRef.current.paused && !videoRef.current.ended;
+    const currentTime = videoRef.current.currentTime || 0;
+
+    // Update src and try to keep position
+    setCurrentVideoUrl(newUrl);
+
+    // Wait for React to update the DOM, then adjust playback
+    setTimeout(() => {
+      if (!videoRef.current) return;
+      try {
+        videoRef.current.currentTime = currentTime;
+        if (wasPlaying) {
+          const playPromise = videoRef.current.play();
+          if (playPromise && typeof playPromise.then === 'function') {
+            playPromise.catch(() => {
+              // autoplay might be blocked; ignore
+            });
+          }
+        }
+      } catch {
+        // If seeking fails, ignore
+      }
+    }, 0);
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -127,7 +269,7 @@ const VideoPlayer = ({ video, onClose }) => {
   const [videoError, setVideoError] = useState(false);
 
   const onVideoError = () => {
-    console.error("Video failed to load at:", videoUrl);
+    console.error("Video failed to load at:", currentVideoUrl);
     setVideoError(true);
     toast.error("Arena feed lost. Video failed to load.");
   };
@@ -184,7 +326,8 @@ const VideoPlayer = ({ video, onClose }) => {
               ) : (
                 <video
                   ref={videoRef}
-                  src={videoUrl}
+                  key={currentVideoUrl || 'video-fallback-src'}
+                  src={currentVideoUrl || getAssetUrl(video.videoUrl)}
                   controls
                   autoPlay
                   className="w-full h-full object-contain"
@@ -213,6 +356,53 @@ const VideoPlayer = ({ video, onClose }) => {
                   <Eye className="w-4 h-4" />
                   <span className="text-xs font-bold">{views} Views</span>
                 </div>
+
+                {/* Quality Selector */}
+                {availableQualities.length > 0 && (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowQualityMenu((prev) => !prev)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-white text-xs font-semibold hover:bg-white/10"
+                    >
+                      <Settings2 className="w-4 h-4" />
+                      <span>
+                        {selectedQuality === 'Auto'
+                          ? 'Auto'
+                          : currentQuality || selectedQuality}
+                      </span>
+                    </button>
+                    {showQualityMenu && (
+                      <div className="absolute mt-2 w-32 rounded-xl bg-zinc-900 text-white border border-white/10 shadow-xl overflow-hidden z-30">
+                        <button
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-white/10 ${selectedQuality === 'Auto' ? 'bg-white/10' : ''
+                            }`}
+                          onClick={() => {
+                            setShowQualityMenu(false);
+                            changeQuality('Auto');
+                          }}
+                        >
+                          Auto
+                        </button>
+                        {availableQualities.map((q) => (
+                          <button
+                            key={q}
+                            className={`w-full text-left px-3 py-2 text-xs hover:bg-white/10 ${currentQuality === q && selectedQuality !== 'Auto'
+                              ? 'bg-white/10'
+                              : ''
+                              }`}
+                            onClick={() => {
+                              setShowQualityMenu(false);
+                              changeQuality(q);
+                            }}
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="pointer-events-auto">
