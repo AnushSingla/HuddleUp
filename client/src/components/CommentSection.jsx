@@ -3,6 +3,7 @@ import CommentInput from './CommentInput';
 import CommentList from './CommentList';
 import { API } from '@/api';
 import { MessageCircle, TrendingUp, Users } from 'lucide-react';
+import { socket } from '@/lib/socket';
 
 export default function CommentSection({ contentId, contentType }) {
   const [comments, setComments] = useState([]);
@@ -30,17 +31,29 @@ export default function CommentSection({ contentId, contentType }) {
   }, [contentId, contentType]);
 
   const addComment = (newComment) => {
-    if (newComment.parentId) {
-      const addReply = (list) =>
-        list.map((comment) =>
-          comment._id === newComment.parentId
-            ? { ...comment, replies: [...(comment.replies || []), newComment] }
-            : { ...comment, replies: comment.replies ? addReply(comment.replies) : [] }
-        );
-      setComments((prev) => addReply(prev));
-    } else {
-      setComments((prev) => [newComment, ...prev]);
-    }
+    setComments((prev) => {
+      const existsInTree = (list) => {
+        for (const c of list) {
+          if (c._id === newComment._id) return true;
+          if (c.replies && c.replies.length && existsInTree(c.replies)) return true;
+        }
+        return false;
+      };
+
+      if (existsInTree(prev)) return prev;
+
+      if (newComment.parentId) {
+        const addReply = (list) =>
+          list.map((comment) =>
+            comment._id === newComment.parentId
+              ? { ...comment, replies: [...(comment.replies || []), newComment] }
+              : { ...comment, replies: comment.replies ? addReply(comment.replies) : [] }
+          );
+        return addReply(prev);
+      }
+
+      return [newComment, ...prev];
+    });
   };
 
   const handleDeleteComment = (commentId) => {
@@ -53,6 +66,42 @@ export default function CommentSection({ contentId, contentType }) {
         }));
     setComments((prev) => removeComment(prev));
   };
+
+  useEffect(() => {
+    if (!contentId || !contentType) return;
+
+    socket.connect();
+
+    const roomPayload = { contentId, contentType };
+    socket.emit('join_content', roomPayload);
+
+    const handleNewComment = (payload) => {
+      if (
+        payload.contentId !== contentId ||
+        payload.contentType !== contentType
+      ) {
+        return;
+      }
+      if (payload.comment) {
+        addComment(payload.comment);
+      }
+    };
+
+    const handleDeletedComment = (payload) => {
+      const targetId = payload.commentId;
+      if (!targetId) return;
+      handleDeleteComment(targetId);
+    };
+
+    socket.on('comment:new', handleNewComment);
+    socket.on('comment:deleted', handleDeletedComment);
+
+    return () => {
+      socket.emit('leave_content', roomPayload);
+      socket.off('comment:new', handleNewComment);
+      socket.off('comment:deleted', handleDeletedComment);
+    };
+  }, [contentId, contentType]);
 
   return (
     <div className="space-y-8">

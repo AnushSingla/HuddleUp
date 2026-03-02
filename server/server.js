@@ -6,6 +6,7 @@ const dotenv = require("dotenv")
 const cors = require("cors")
 const path = require('path');
 const { initRedis } = require("./config/redis");
+const { setIO, getContentRoom } = require("./socketRegistry");
 const { initQueryMonitoring, queryPerformanceMiddleware } = require("./middleware/queryMonitor");
 const { 
   apiLimiter, 
@@ -48,6 +49,8 @@ const io = new Server(server, {
   }
 });
 
+setIO(io);
+
 io.on("connection", (socket) => {
   socket.on("join_match", (matchId) => {
     socket.join(`match_${matchId}`);
@@ -55,6 +58,26 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", ({ matchId, user, text }) => {
     io.to(`match_${matchId}`).emit("receive_message", { user, text });
+  });
+
+  socket.on("join_content", ({ contentType, contentId }) => {
+    const room = getContentRoom({
+      videoId: contentType === "video" ? contentId : null,
+      postId: contentType === "post" ? contentId : null,
+    });
+    if (room) {
+      socket.join(room);
+    }
+  });
+
+  socket.on("leave_content", ({ contentType, contentId }) => {
+    const room = getContentRoom({
+      videoId: contentType === "video" ? contentId : null,
+      postId: contentType === "post" ? contentId : null,
+    });
+    if (room) {
+      socket.leave(room);
+    }
   });
 
   socket.on("join_feed", () => {
