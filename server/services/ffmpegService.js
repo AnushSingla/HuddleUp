@@ -1,7 +1,7 @@
 const ffmpeg = require("fluent-ffmpeg");
 const path = require("path");
 const fs = require("fs").promises;
-const { v4: uuidv4 } = require("uuid");
+const crypto = require("crypto");
 
 const QUALITY_PRESETS = {
   "360p": { width: 640, height: 360, bitrate: "500k" },
@@ -62,7 +62,7 @@ const generateThumbnails = (inputPath, outputDir, count = 5) => {
 
       for (let i = 1; i <= count; i++) {
         const timestamp = interval * i;
-        const filename = `thumb-${uuidv4()}.jpg`;
+        const filename = `thumb-${crypto.randomUUID()}.jpg`;
         const outputPath = path.join(outputDir, filename);
 
         await new Promise((res, rej) => {
@@ -98,7 +98,7 @@ const generateMultipleQualities = async (inputPath, outputDir) => {
   const results = {};
 
   for (const quality of qualitiesToGenerate) {
-    const filename = `${uuidv4()}-${quality}.mp4`;
+    const filename = `${crypto.randomUUID()}-${quality}.mp4`;
     const outputPath = path.join(outputDir, filename);
     
     await compressVideo(inputPath, outputPath, quality);

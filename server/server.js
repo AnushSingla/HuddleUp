@@ -6,6 +6,7 @@ const dotenv = require("dotenv")
 const cors = require("cors")
 const path = require('path');
 const { initRedis } = require("./config/redis");
+const { setIO, emitFeedEvent } = require("./socketEmitter");
 const { 
   apiLimiter, 
   authLimiter, 
@@ -62,9 +63,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => { });
 });
 
-const emitFeedEvent = (event, data) => {
-  io.to("feed_room").emit(event, data);
-};
+setIO(io);
 
 app.use(cors({
   origin: ["https://huddle-up-beta.vercel.app", "http://localhost:5173", "http://localhost:5174"],
@@ -121,3 +120,4 @@ connectDB()
   .catch(err => console.log(err))
 
 module.exports = { io, emitFeedEvent };
+// emitFeedEvent is re-exported from socketEmitter for use in controllers
