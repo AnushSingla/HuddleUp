@@ -32,8 +32,6 @@ const savedRoutes = require("./routes/saved")
 const feedRoutes = require("./routes/feed")
 const playlistRoutes = require("./routes/playlist")
 const analyticsRoutes = require("./routes/analytics")
-const searchRoutes = require("./routes/search")
-const performanceRoutes = require("./routes/performance")
 
 dotenv.config();
 initRedis();
@@ -103,21 +101,15 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use(queryPerformanceMiddleware);
-app.use("/api/auth", authLimiter, authRoutes)
-app.use("/api", apiLimiter, videoRoutes)
-app.use("/api", apiLimiter, commentRoutes)
-app.use("/api", apiLimiter, postRoutes)
-app.use("/api", apiLimiter, friendRoutes)
-app.use("/api", apiLimiter, userRoutes)
-app.use("/api", apiLimiter, savedRoutes)
-app.use("/api/notifications", apiLimiter, notificationRoutes);
-app.use("/api/admin", adminLimiter, adminRoutes);
-app.use("/api/feed", feedLimiter, feedRoutes);
-app.use("/api/playlists", apiLimiter, playlistRoutes);
-app.use("/api/analytics", apiLimiter, analyticsRoutes);
-app.use("/api", apiLimiter, searchRoutes);
-app.use("/api/performance", apiLimiter, performanceRoutes);
+app.use("/api/auth", authRoutes)
+app.use("/api", videoRoutes)
+app.use("/api", commentRoutes)
+app.use("/api", postRoutes)
+app.use("/api", friendRoutes)
+app.use("/api", userRoutes)
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/analytics", analyticsRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/api", (req, res) => {

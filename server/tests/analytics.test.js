@@ -165,6 +165,20 @@ describe("Analytics API", () => {
     );
   });
 
+  // ── 4b. View tracking works without authentication (public route) ──────────
+  test("4b. track-view succeeds without an auth token (public endpoint)", async () => {
+    Video.findById.mockResolvedValue({ ...fakeVideo });
+    Video.findByIdAndUpdate.mockResolvedValue({ ...fakeVideo, views: 43 });
+    ViewLog.create.mockResolvedValue({ _id: new mongoose.Types.ObjectId() });
+    VideoAnalytics.findOneAndUpdate.mockResolvedValue({});
+
+    const res = await request(app)
+      .post(`/api/analytics/track-view/${FAKE_VIDEO_ID}`)
+      .set("User-Agent", "Mozilla/5.0");
+    // No Authorization header – should still succeed
+    expect(res.status).toBe(200);
+  });
+
   // ── 5. View tracking returns 404 for unknown video ────────────────────────
   test("5. View tracking returns 404 for non-existent video", async () => {
     Video.findById.mockResolvedValue(null);
