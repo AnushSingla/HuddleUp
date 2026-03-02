@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import Badge from '@/components/ui/badge';
+import ShareMenu from '@/components/ui/ShareMenu';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Play, Calendar, User, Eye, Trash2, Pencil, Share2, Link2, Clock, Bookmark } from 'lucide-react';
@@ -354,28 +355,11 @@ const VideoCard = ({ video, onPlay, onDelete, isSaved = false, onSaveToggle }) =
             <Link2 className="w-4 h-4" />
           </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleShare();
-            }}
-            className="p-2 rounded-lg transition-all"
-            style={{
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-sub)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--accent)';
-              e.currentTarget.style.color = 'var(--accent)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-subtle)';
-              e.currentTarget.style.color = 'var(--text-sub)';
-            }}
-            title="Share video"
-          >
-            <Share2 className="w-4 h-4" />
-          </button>
+          <ShareMenu 
+            url={getShareUrl('video', videoId)}
+            title={video.title}
+            description={video.description}
+          />
         </div>
       </div>
     </div>

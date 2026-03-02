@@ -72,14 +72,17 @@ const VideoSchema = new mongoose.Schema({
   flagReason: {
     type: String,
     default: ""
-  }
+  },
+  hashtags: [{
+    type: String,
+    lowercase: true,
+    trim: true
+  }]
 })
 
 VideoSchema.index({ postedBy: 1 });
 VideoSchema.index({ category: 1 });
 VideoSchema.index({ uploadDate: -1 });
-VideoSchema.index({ createdAt: -1, _id: -1 });
-VideoSchema.index({ category: 1, createdAt: -1 });
-VideoSchema.index({ postedBy: 1, createdAt: -1 });
+VideoSchema.index({ title: "text", description: "text" });
 
 module.exports = mongoose.model("Video", VideoSchema)

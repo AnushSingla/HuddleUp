@@ -12,6 +12,16 @@ try {
 }
 
 /**
+ * Extract user ID from request for user-based rate limiting
+ */
+const getUserId = (req) => {
+    if (req.user?.id) {
+        return `user_${req.user.id}`;
+    }
+    return null;
+};
+
+/**
  * Creates a Redis store for rate limiting
  * Falls back to memory store if Redis is not available
  */
@@ -26,22 +36,12 @@ const createStore = (prefix) => {
 };
 
 /**
- * Extract user ID from request for user-based rate limiting
- */
-const getUserId = (req) => {
-    if (req.user?.id) {
-        return `user_${req.user.id}`;
-    }
-    return null;
-};
-
-/**
- * General API limiter - 100 requests per 15 minutes
+ * General API limiter - 1000 requests per 15 minutes (increased for development)
  * Applied to most API routes
  */
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 1000, // Increased from 100 to 1000
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("api"),
@@ -60,12 +60,12 @@ const apiLimiter = rateLimit({
 });
 
 /**
- * Strict auth limiter - 15 requests per 15 minutes
+ * Strict auth limiter - 100 requests per 15 minutes (increased for development)
  * Applied to login, registration, and password reset endpoints
  */
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 15,
+    max: 100, // Increased from 15 to 100
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("auth"),
