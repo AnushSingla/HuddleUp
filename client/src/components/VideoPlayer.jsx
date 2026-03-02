@@ -7,6 +7,7 @@ import { getAssetUrl } from '@/utils/url';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { socket } from '@/lib/socket';
 
 const VideoPlayer = ({ video, onClose }) => {
   const videoRef = useRef(null);
@@ -48,6 +49,34 @@ const VideoPlayer = ({ video, onClose }) => {
       setHasViewed(true);
     }
   }, [isPlaying, hasViewed, videoId]);
+
+  useEffect(() => {
+    if (!videoId) return;
+
+    socket.connect();
+
+    const roomPayload = { contentId: videoId, contentType: 'video' };
+    socket.emit('join_content', roomPayload);
+
+    const handleLikeUpdate = (payload) => {
+      if (
+        payload.contentType !== 'video' ||
+        payload.contentId !== videoId
+      ) {
+        return;
+      }
+      if (typeof payload.likes === 'number') {
+        setLikes(payload.likes);
+      }
+    };
+
+    socket.on('content:like_toggled', handleLikeUpdate);
+
+    return () => {
+      socket.emit('leave_content', roomPayload);
+      socket.off('content:like_toggled', handleLikeUpdate);
+    };
+  }, [videoId]);
 
   // Close modal on Escape key (#156)
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { API } from '@/api';
 import { getToken, getUserId } from '@/utils/auth';
 import { getShareUrl, shareLink, copyLinkToClipboard } from '@/utils/share';
 import { toast } from 'sonner';
+import { socket } from '@/lib/socket';
 
 const PostCard = ({ post, onDelete, isPinned = false, isSaved = false, onSaveToggle }) => {
   const navigate = useNavigate();
@@ -102,6 +103,34 @@ const PostCard = ({ post, onDelete, isPinned = false, isSaved = false, onSaveTog
   };
 
   const categoryStyle = post.category ? getCategoryColor(post.category) : null;
+
+  useEffect(() => {
+    if (!postId) return;
+
+    socket.connect();
+
+    const roomPayload = { contentId: postId, contentType: 'post' };
+    socket.emit('join_content', roomPayload);
+
+    const handleLikeUpdate = (payload) => {
+      if (
+        payload.contentType !== 'post' ||
+        payload.contentId !== postId
+      ) {
+        return;
+      }
+      if (typeof payload.likes === 'number') {
+        setLikes(payload.likes);
+      }
+    };
+
+    socket.on('content:like_toggled', handleLikeUpdate);
+
+    return () => {
+      socket.emit('leave_content', roomPayload);
+      socket.off('content:like_toggled', handleLikeUpdate);
+    };
+  }, [postId]);
 
   return (
     <motion.div

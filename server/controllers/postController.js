@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Notification = require("../models/Notification");
 const { deleteCachePattern } = require("../utils/cache");
 const { invalidateQueryCache } = require("../utils/queryCache");
+const { emitToContentRoom } = require("../socketRegistry");
 
 exports.createPost = async (req, res) => {
   try {
@@ -74,6 +75,16 @@ exports.likePost = async (req, res) => {
     }
 
     await deleteCachePattern("feed:*");
+
+    emitToContentRoom("content:like_toggled", {
+      contentId: postId,
+      contentType: "post",
+      likes: updatedPost.likes.length,
+      liked: !isLiked,
+      videoId: null,
+      postId,
+    });
+
     res.status(200).json({
       likedByUser: !isLiked,
       likesCount: updatedPost.likes.length,

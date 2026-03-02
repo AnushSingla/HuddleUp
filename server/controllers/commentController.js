@@ -7,6 +7,7 @@ const Notification = require("../models/Notification");
 const { trackLike, trackView, trackComment } = require("./analyticsController");
 const { getNestedComments } = require("../services/optimizedCommentService");
 const { invalidateQueryCache } = require("../utils/queryCache");
+const { emitToContentRoom } = require("../socketRegistry");
 
 async function createCommentNotification({ recipientId, senderId, type, resource, message }) {
   if (!recipientId || recipientId.toString() === senderId.toString()) return;
@@ -122,17 +123,32 @@ exports.createComment = async (req, res) => {
       }
     }
 
-    res.status(201).json({
+    const responseComment = {
       _id: saved._id,
-      author: saved.userId?.username || 'Anonymous',
+      author: saved.userId?.username || "Anonymous",
       content: saved.text,
       createdAt: saved.createdAt,
       parentId: saved.parentId,
       replies: [],
       likes: saved.likes || [],
       videoId: saved.videoId,
-      postId: saved.postId
-    });
+      postId: saved.postId,
+    };
+
+    const contentIdForSocket =
+      (commentData.videoId || commentData.postId || "").toString();
+
+    if (contentIdForSocket) {
+      emitToContentRoom("comment:new", {
+        comment: responseComment,
+        contentId: contentIdForSocket,
+        contentType: commentData.videoId ? "video" : "post",
+        videoId: commentData.videoId ? contentIdForSocket : null,
+        postId: commentData.postId ? contentIdForSocket : null,
+      });
+    }
+
+    res.status(201).json(responseComment);
   } catch (err) {
     console.error("🔥 Error creating comment:", err);
     res.status(500).json({ message: "Error creating comment", error: err.message });
@@ -189,6 +205,15 @@ exports.likeVideo = async (req, res) => {
 
     trackLike(id, userId, !isLiked).catch(() => {});
 
+    emitToContentRoom("content:like_toggled", {
+      contentId: id,
+      contentType: "video",
+      likes: updatedVideo.likes.length,
+      liked: !isLiked,
+      videoId: id,
+      postId: null,
+    });
+
     res.json({ likes: updatedVideo.likes.length, liked: !isLiked });
   } catch (err) {
     res.status(500).json({ message: "Error liking video", error: err.message });
@@ -242,6 +267,8 @@ exports.deleteComment = async (req, res) => {
       return res.status(403).json({ message: "Unauthorized - You can only delete your own comments" });
     }
 
+    const { videoId, postId } = comment;
+
     await Comment.findByIdAndDelete(commentId);
     
     await invalidateQueryCache([
@@ -249,6 +276,14 @@ exports.deleteComment = async (req, res) => {
       `comments:stats:*`,
       `comments:top:*`,
     ]);
+
+    if (videoId || postId) {
+      emitToContentRoom("comment:deleted", {
+        commentId,
+        videoId: videoId ? videoId.toString() : null,
+        postId: postId ? postId.toString() : null,
+      });
+    }
 
     res.status(200).json({ message: "Comment deleted successfully" });
   } catch (err) {
