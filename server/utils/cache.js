@@ -1,6 +1,6 @@
 const { getRedisClient, isRedisReady } = require("../config/redis");
 
-const DEFAULT_TTL = 60;
+const DEFAULT_TTL = 300;
 
 const getCache = async (key) => {
     if (!isRedisReady()) return null;

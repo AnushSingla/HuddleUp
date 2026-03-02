@@ -6,6 +6,7 @@ const dotenv = require("dotenv")
 const cors = require("cors")
 const path = require('path');
 const { initRedis } = require("./config/redis");
+const { initQueryMonitoring, queryPerformanceMiddleware } = require("./middleware/queryMonitor");
 const { 
   apiLimiter, 
   authLimiter, 
@@ -31,9 +32,11 @@ const feedRoutes = require("./routes/feed")
 const playlistRoutes = require("./routes/playlist")
 const analyticsRoutes = require("./routes/analytics")
 const searchRoutes = require("./routes/search")
+const performanceRoutes = require("./routes/performance")
 
 dotenv.config();
 initRedis();
+initQueryMonitoring();
 
 const app = express();
 const server = http.createServer(app);
@@ -77,6 +80,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(queryPerformanceMiddleware);
 app.use("/api/auth", authLimiter, authRoutes)
 app.use("/api", apiLimiter, videoRoutes)
 app.use("/api", apiLimiter, commentRoutes)
@@ -90,6 +94,7 @@ app.use("/api/feed", feedLimiter, feedRoutes);
 app.use("/api/playlists", apiLimiter, playlistRoutes);
 app.use("/api/analytics", apiLimiter, analyticsRoutes);
 app.use("/api", apiLimiter, searchRoutes);
+app.use("/api/performance", apiLimiter, performanceRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/api", (req, res) => {
@@ -105,9 +110,13 @@ const connectDB = async () => {
     await mongoose.connect(mongoUrl, {
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
-      maxPoolSize: 10,
+      maxPoolSize: 50,
+      minPoolSize: 10,
+      maxIdleTimeMS: 30000,
       retryWrites: true,
       w: 'majority',
+      readPreference: 'secondaryPreferred',
+      compressors: ['zlib'],
     });
     console.log("✅ MongoDB connected successfully");
   } catch (error) {
