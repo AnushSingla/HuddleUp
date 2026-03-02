@@ -46,5 +46,6 @@ postSchema.index({ createdAt: -1 });
 postSchema.index({ createdAt: -1, _id: -1 });
 postSchema.index({ category: 1, createdAt: -1 });
 postSchema.index({ postedBy: 1, createdAt: -1 });
+postSchema.index({ title: "text", content: "text" });
 
 module.exports = mongoose.model("Post", postSchema)

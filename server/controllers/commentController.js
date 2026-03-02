@@ -5,8 +5,9 @@ const Post = require("../models/Post");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const { trackLike, trackView, trackComment } = require("./analyticsController");
+const { getNestedComments } = require("../services/optimizedCommentService");
+const { invalidateQueryCache } = require("../utils/queryCache");
 
-// Helper: create notification (avoid self-notify and duplicates in same second)
 async function createCommentNotification({ recipientId, senderId, type, resource, message }) {
   if (!recipientId || recipientId.toString() === senderId.toString()) return;
   try {
@@ -23,7 +24,6 @@ async function createCommentNotification({ recipientId, senderId, type, resource
   }
 }
 
-// Create a comment or reply
 exports.createComment = async (req, res) => {
   const { videoId, postId, text, parentId } = req.body;
   const userId = req.user.id;
@@ -33,7 +33,6 @@ exports.createComment = async (req, res) => {
   try {
     let { videoId, postId } = req.body;
 
-    // Inherit from parent if missing (for replies)
     if (!videoId && !postId && parentId) {
       console.log("🔍 Inheriting target from parent:", parentId);
       const parentComment = await Comment.findById(parentId);
@@ -65,12 +64,16 @@ exports.createComment = async (req, res) => {
 
     await saved.populate("userId", "username");
 
-    // Track comment event on video analytics asynchronously
+    await invalidateQueryCache([
+      `comments:nested:*`,
+      `comments:stats:*`,
+      `comments:top:*`,
+    ]);
+
     if (commentData.videoId) {
       trackComment(commentData.videoId.toString()).catch(() => {});
     }
 
-    // --- Notifications ---
     const senderUser = await User.findById(userId).select("username").lean();
     const senderName = senderUser?.username || "Someone";
 
@@ -136,53 +139,19 @@ exports.createComment = async (req, res) => {
   }
 };
 
-
-
-// Get all comments for a specific video
 exports.getAllComments = async (req, res) => {
   try {
     const videoId = req.params.videoId;
     console.log("Fetching comments for videoId:", videoId);
 
-    // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
       return res.status(400).json({ message: "Invalid videoId format" });
     }
 
-    const comments = await Comment.find({ videoId: new mongoose.Types.ObjectId(videoId) })
-      .populate('userId', 'username _id')
-      .sort({ createdAt: -1 })
-      .lean();
+    const comments = await getNestedComments(videoId, null);
     console.log("Returning comments:", comments);
 
-    const formatted = comments.map(comment => ({
-      _id: comment._id,
-      author: comment.userId?.username || 'Anonymous',
-      authorId: comment.userId?._id?.toString() || null,
-      content: comment.text,
-      createdAt: comment.createdAt,
-      parentId: comment.parentId?.toString() || null,
-      videoId: comment.videoId?.toString(),
-      postId: comment.postId?.toString(),
-      replies: [],
-      likes: comment.likes || [],
-    }));
-
-    // nest replies
-    const commentMap = {};
-    formatted.forEach(c => commentMap[c._id] = c);
-
-    const topLevel = [];
-    formatted.forEach(c => {
-      if (c.parentId && commentMap[c.parentId]) {
-        commentMap[c.parentId].replies.push(c);
-      } else {
-        topLevel.push(c);
-      }
-    });
-
-    console.log("Returning comments:", topLevel);
-    res.json(topLevel);
+    res.json(comments);
   } catch (err) {
     console.error("Failed to fetch comments:", err);
     res.status(500).json({ message: "Error fetching comments", error: err.message });
@@ -197,43 +166,13 @@ exports.getAllPostComments = async (req, res) => {
       return res.status(400).json({ message: "Invalid postId format" });
     }
 
-    const comments = await Comment.find({ postId })
-      .populate('userId', 'username _id')
-      .sort({ createdAt: -1 })
-      .lean();
-
-    const formatted = comments.map(comment => ({
-      _id: comment._id,
-      author: comment.userId?.username || 'Anonymous',
-      authorId: comment.userId?._id?.toString() || null,
-      content: comment.text,
-      createdAt: comment.createdAt,
-      parentId: comment.parentId?.toString() || null,
-      postId: comment.postId?.toString(),
-      videoId: comment.videoId?.toString(),
-      replies: [],
-      likes: comment.likes || [],
-    }));
-
-    const commentMap = {};
-    formatted.forEach(c => commentMap[c._id] = c);
-
-    const topLevel = [];
-    formatted.forEach(c => {
-      if (c.parentId && commentMap[c.parentId]) {
-        commentMap[c.parentId].replies.push(c);
-      } else {
-        topLevel.push(c);
-      }
-    });
-
-    res.json(topLevel);
+    const comments = await getNestedComments(null, postId);
+    res.json(comments);
   } catch (err) {
     console.error("Failed to fetch post comments:", err);
     res.status(500).json({ message: "Error fetching post comments", error: err.message });
   }
 };
-
 
 exports.likeVideo = async (req, res) => {
   const { id } = req.params;
@@ -248,7 +187,6 @@ exports.likeVideo = async (req, res) => {
 
     const updatedVideo = await Video.findByIdAndUpdate(id, update, { new: true });
 
-    // Track like/unlike event asynchronously
     trackLike(id, userId, !isLiked).catch(() => {});
 
     res.json({ likes: updatedVideo.likes.length, liked: !isLiked });
@@ -263,7 +201,6 @@ exports.viewVideo = async (req, res) => {
     const video = await Video.findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true });
     if (!video) return res.status(404).json({ message: "Video Not Found" })
 
-    // Track view event with metadata asynchronously
     trackView(id, req).catch(() => {});
 
     res.json({ views: video.views })
@@ -280,7 +217,6 @@ exports.getSingleVideo = async (req, res) => {
       return res.status(404).json({ message: "Video not found" });
     }
 
-    // Optional: If using verifyToken middleware, req.user will be available
     const currentUserId = req.user?.id || null;
 
     res.json({
@@ -302,12 +238,18 @@ exports.deleteComment = async (req, res) => {
     const comment = await Comment.findById(commentId);
     if (!comment) return res.status(404).json({ message: "Comment not found" });
 
-    // Only the comment's author can delete (fixed: using userId instead of author)
     if (comment.userId.toString() !== userId) {
       return res.status(403).json({ message: "Unauthorized - You can only delete your own comments" });
     }
 
     await Comment.findByIdAndDelete(commentId);
+    
+    await invalidateQueryCache([
+      `comments:nested:*`,
+      `comments:stats:*`,
+      `comments:top:*`,
+    ]);
+
     res.status(200).json({ message: "Comment deleted successfully" });
   } catch (err) {
     console.error("Error deleting comment:", err);
@@ -367,4 +309,3 @@ exports.toggleLikeComment = async (req, res) => {
     });
   }
 };
-

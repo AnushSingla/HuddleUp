@@ -6,6 +6,7 @@ const dotenv = require("dotenv")
 const cors = require("cors")
 const path = require('path');
 const { initRedis } = require("./config/redis");
+const { initQueryMonitoring, queryPerformanceMiddleware } = require("./middleware/queryMonitor");
 const { 
   apiLimiter, 
   authLimiter, 
@@ -33,6 +34,7 @@ const analyticsRoutes = require("./routes/analytics")
 
 dotenv.config();
 initRedis();
+initQueryMonitoring();
 
 const app = express();
 const server = http.createServer(app);
@@ -100,9 +102,13 @@ const connectDB = async () => {
     await mongoose.connect(mongoUrl, {
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
-      maxPoolSize: 10,
+      maxPoolSize: 50,
+      minPoolSize: 10,
+      maxIdleTimeMS: 30000,
       retryWrites: true,
       w: 'majority',
+      readPreference: 'secondaryPreferred',
+      compressors: ['zlib'],
     });
     console.log("✅ MongoDB connected successfully");
   } catch (error) {

@@ -1,5 +1,6 @@
 const Video = require("../models/Video");
 const { deleteCachePattern } = require("../utils/cache");
+const { invalidateQueryCache } = require("../utils/queryCache");
 const { addVideoToQueue } = require("../services/videoQueue");
 const path = require("path");
 
@@ -36,7 +37,10 @@ exports.createVideo = async (req, res) => {
       processingStatus: "processing",
     });
 
-    await deleteCachePattern("feed:*");
+    await Promise.all([
+      deleteCachePattern("feed:*"),
+      invalidateQueryCache("video:*"),
+    ]);
 
     res.status(201).json({
       message: "Video uploaded and processing started",
@@ -111,7 +115,10 @@ exports.deleteVideo = async (req, res) => {
     }
 
     await Video.findByIdAndDelete(videoId);
-    await deleteCachePattern("feed:*");
+    await Promise.all([
+      deleteCachePattern("feed:*"),
+      invalidateQueryCache("video:*"),
+    ]);
 
     res.status(200).json({ message: "Video deleted" });
 
@@ -148,7 +155,10 @@ exports.updateVideo = async (req, res) => {
 
     const updatedVideo = await video.save();
     const populatedVideo = await updatedVideo.populate("postedBy", "username _id");
-    await deleteCachePattern("feed:*");
+    await Promise.all([
+      deleteCachePattern("feed:*"),
+      invalidateQueryCache("video:*"),
+    ]);
 
     res.status(200).json({
       message: "Video updated successfully",
