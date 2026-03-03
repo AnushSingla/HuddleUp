@@ -109,6 +109,9 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/moderation", moderationRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/playlists", playlistRoutes);
+app.use("/api/feed", feedRoutes);
+app.use("/api", savedRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/api", (req, res) => {

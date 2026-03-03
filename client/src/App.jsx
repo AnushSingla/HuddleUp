@@ -19,7 +19,6 @@ import Feedback from './pages/Feedback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contributor from './pages/Contributor';
 import TermsOfService from './pages/TermsOfService';
-import PublicProfile from './pages/PublicProfile';
 import Saved from './pages/Saved';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
