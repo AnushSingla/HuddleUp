@@ -8,7 +8,7 @@ const isAdmin = async (req, res, next) => {
     try {
         const User = require("../models/User");
         const user = await User.findById(req.user.id);
-        
+
         if (!user || !user.isAdmin) {
             return res.status(403).json({ message: "Access denied. Admin only." });
         }
@@ -74,5 +74,11 @@ router.delete(
 
 // Dismiss flag (admin only)
 router.post("/dismiss-flag", verifyToken, isAdmin, adminController.dismissFlag);
+
+// User Management (admin only)
+router.get("/users", verifyToken, isAdmin, adminController.getUsers);
+router.post("/users/:id/ban", verifyToken, isAdmin, adminController.banUser);
+router.post("/users/:id/unban", verifyToken, isAdmin, adminController.unbanUser);
+router.post("/users/:id/warn", verifyToken, isAdmin, adminController.warnUser);
 
 module.exports = router;

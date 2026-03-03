@@ -1,21 +1,43 @@
 const Post = require("../models/Post");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const Report = require("../models/Report");
 const { deleteCachePattern } = require("../utils/cache");
 const { invalidateQueryCache } = require("../utils/queryCache");
 const { emitToContentRoom } = require("../socketRegistry");
+const { filterMultipleFields } = require("../services/contentFilterService");
 
 exports.createPost = async (req, res) => {
   try {
     const { title, content, category } = req.body;
 
+    // Run content filter
+    const filterResult = filterMultipleFields({ title, content });
+
     const newPost = new Post({
       title,
       content,
       category,
-      postedBy: req.user.id
+      postedBy: req.user.id,
+      flagged: filterResult.flagged,
+      flagReason: filterResult.flagged ? filterResult.reasons.join('; ') : ''
     });
     const savedPost = await newPost.save();
+
+    // Auto-create report if content is flagged
+    if (filterResult.flagged) {
+      await Report.create({
+        reportedBy: req.user.id,
+        contentType: 'post',
+        contentId: savedPost._id,
+        reason: 'spam',
+        description: `Auto-flagged: ${filterResult.reasons.join('; ')}`,
+        status: 'pending',
+        priority: filterResult.severity === 'high' ? 'high' : 'medium',
+        contentSnapshot: { title, content, author: req.user.id }
+      });
+    }
+
     const populatedPost = await savedPost.populate("postedBy", "username");
     await Promise.all([
       deleteCachePattern("feed:*"),

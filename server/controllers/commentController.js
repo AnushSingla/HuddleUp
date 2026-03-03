@@ -4,10 +4,12 @@ const Video = require("../models/Video");
 const Post = require("../models/Post");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const Report = require("../models/Report");
 const { trackLike, trackView, trackComment } = require("./analyticsController");
 const { getNestedComments } = require("../services/optimizedCommentService");
 const { invalidateQueryCache } = require("../utils/queryCache");
 const { emitToContentRoom } = require("../socketRegistry");
+const { filterContent } = require("../services/contentFilterService");
 
 async function createCommentNotification({ recipientId, senderId, type, resource, message }) {
   if (!recipientId || recipientId.toString() === senderId.toString()) return;
@@ -48,18 +50,37 @@ exports.createComment = async (req, res) => {
       return res.status(400).json({ message: "Missing target (videoId/postId)" });
     }
 
+    // Run content filter on comment text
+    const filterResult = filterContent(text);
+
     const commentData = {
       text,
       userId: new mongoose.Types.ObjectId(userId),
       parentId: parentId ? new mongoose.Types.ObjectId(parentId) : null,
       videoId: videoId ? new mongoose.Types.ObjectId(videoId) : null,
-      postId: postId ? new mongoose.Types.ObjectId(postId) : null
+      postId: postId ? new mongoose.Types.ObjectId(postId) : null,
+      flagged: filterResult.flagged,
+      flagReason: filterResult.flagged ? filterResult.reasons.join('; ') : ''
     };
 
     console.log("🛠 Final commentData to be saved:", commentData);
 
     const newComment = new Comment(commentData);
     const saved = await newComment.save();
+
+    // Auto-create report if comment is flagged
+    if (filterResult.flagged) {
+      await Report.create({
+        reportedBy: userId,
+        contentType: 'comment',
+        contentId: saved._id,
+        reason: 'spam',
+        description: `Auto-flagged: ${filterResult.reasons.join('; ')}`,
+        status: 'pending',
+        priority: filterResult.severity === 'high' ? 'high' : 'medium',
+        contentSnapshot: { content: text, author: userId }
+      });
+    }
 
     console.log("✅ Saved Comment:", saved);
 
@@ -72,7 +93,7 @@ exports.createComment = async (req, res) => {
     ]);
 
     if (commentData.videoId) {
-      trackComment(commentData.videoId.toString()).catch(() => {});
+      trackComment(commentData.videoId.toString()).catch(() => { });
     }
 
     const senderUser = await User.findById(userId).select("username").lean();
@@ -203,7 +224,7 @@ exports.likeVideo = async (req, res) => {
 
     const updatedVideo = await Video.findByIdAndUpdate(id, update, { new: true });
 
-    trackLike(id, userId, !isLiked).catch(() => {});
+    trackLike(id, userId, !isLiked).catch(() => { });
 
     emitToContentRoom("content:like_toggled", {
       contentId: id,
@@ -226,7 +247,7 @@ exports.viewVideo = async (req, res) => {
     const video = await Video.findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true });
     if (!video) return res.status(404).json({ message: "Video Not Found" })
 
-    trackView(id, req).catch(() => {});
+    trackView(id, req).catch(() => { });
 
     res.json({ views: video.views })
 
@@ -270,7 +291,7 @@ exports.deleteComment = async (req, res) => {
     const { videoId, postId } = comment;
 
     await Comment.findByIdAndDelete(commentId);
-    
+
     await invalidateQueryCache([
       `comments:nested:*`,
       `comments:stats:*`,
