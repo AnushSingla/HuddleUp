@@ -8,9 +8,9 @@ const path = require('path');
 const { initRedis } = require("./config/redis");
 const { setIO, getContentRoom } = require("./socketRegistry");
 const { initQueryMonitoring, queryPerformanceMiddleware } = require("./middleware/queryMonitor");
-const { 
-  apiLimiter, 
-  authLimiter, 
+const {
+  apiLimiter,
+  authLimiter,
   feedLimiter,
   videoUploadLimiter,
   searchLimiter,
@@ -32,6 +32,7 @@ const savedRoutes = require("./routes/saved")
 const feedRoutes = require("./routes/feed")
 const playlistRoutes = require("./routes/playlist")
 const analyticsRoutes = require("./routes/analytics")
+const moderationRoutes = require("./routes/moderation")
 
 dotenv.config();
 initRedis();
@@ -109,6 +110,7 @@ app.use("/api", friendRoutes)
 app.use("/api", userRoutes)
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/moderation", moderationRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -153,7 +155,7 @@ connectDB()
 // Graceful shutdown handling
 const gracefulShutdown = async (signal) => {
   console.log(`\n${signal} received. Starting graceful shutdown...`);
-  
+
   try {
     // Close HTTP server
     console.log('Closing HTTP server...');
