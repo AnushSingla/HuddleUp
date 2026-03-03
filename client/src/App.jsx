@@ -27,7 +27,6 @@ import Admin from './pages/Admin';
 import LiveMatchRooms from './pages/LiveMatchRooms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
 import Analytics from './pages/Analytics';
-import Search from './pages/Search';
 
 // Components
 import Navbar from './components/Navbar';
@@ -85,7 +84,6 @@ function AppContent() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/live-match" element={<LiveMatchRooms />} />
             <Route path="/analytics" element={<Analytics />} />
-            <Route path="/search" element={<Search />} />
           </Routes>
         </div>
       </main>

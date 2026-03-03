@@ -13,7 +13,10 @@ const {
   recordView,
 } = require("../controllers/analyticsController");
 
-// All analytics routes require authentication
+// Public route – no auth required (anonymous views must be tracked)
+router.post("/track-view/:videoId", recordView);
+
+// All routes below require authentication (creator-only)
 router.use(verifyToken);
 
 // Overview – creator-level summary
@@ -35,8 +38,5 @@ router.get("/audience/geography", getGeography);
 
 // Traffic sources for a video
 router.get("/traffic-sources/:videoId", getTrafficSources);
-
-// Public view tracking (no auth required)
-router.post("/track-view/:videoId", recordView);
 
 module.exports = router;

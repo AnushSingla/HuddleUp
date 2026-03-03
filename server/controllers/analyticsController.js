@@ -1,6 +1,5 @@
 const Video = require("../models/Video");
 const User = require("../models/User");
-const Comment = require("../models/Comment");
 const ViewLog = require("../models/ViewLog");
 const VideoAnalytics = require("../models/VideoAnalytics");
 const UserAnalytics = require("../models/UserAnalytics");
@@ -25,13 +24,6 @@ function detectSource(referer = "") {
   const appDomains = ["huddleup", "localhost", "127.0.0.1"];
   if (appDomains.some((d) => referer.includes(d))) return "recommendations";
   return "external";
-}
-
-/** Return the hourly bucket Date (minutes/seconds zeroed) for a given Date. */
-function hourlyBucket(date = new Date()) {
-  const d = new Date(date);
-  d.setMinutes(0, 0, 0);
-  return d;
 }
 
 /** Upsert a VideoAnalytics document and ensure it exists. */
@@ -64,9 +56,9 @@ exports.trackView = async (videoId, req) => {
   try {
     const device = detectDevice(req.headers["user-agent"]);
     const source = detectSource(req.headers["referer"] || req.headers["referrer"]);
-    const hourOfDay = new Date().getHours();
-    // Populate country from Cloudflare header if available, otherwise "Unknown"
-    const country = req.headers["cf-ipcountry"] || "Unknown";
+    const hourOfDay = new Date().getUTCHours(); // UTC to stay consistent regardless of server timezone
+    // Populate country from trusted proxy headers (Cloudflare or Vercel), otherwise "Unknown"
+    const country = req.headers["cf-ipcountry"] || req.headers["x-vercel-ip-country"] || "Unknown";
 
     // Write view log (lightweight, no PII stored)
     await ViewLog.create({
@@ -382,7 +374,9 @@ exports.getVideoAnalytics = async (req, res) => {
 
 /**
  * GET /api/analytics/trends?period=7d|30d|90d
- * Aggregated view/like/comment trends over time for the creator.
+ * Returns daily view trend for the creator's videos over the given period.
+ * Response shape: { period, views: [{date, views}], likes: [], comments: [] }
+ * Note: likes and comments trend aggregation is not yet implemented.
  */
 exports.getTrends = async (req, res) => {
   try {
@@ -395,7 +389,7 @@ exports.getTrends = async (req, res) => {
     const videos = await Video.find({ postedBy: userId }).select("_id").lean();
     const videoIds = videos.map((v) => v._id);
 
-    if (!videoIds.length) return res.json({ period, views: [] });
+    if (!videoIds.length) return res.json({ period, views: [], likes: [], comments: [] });
 
     const viewTrend = await ViewLog.aggregate([
       { $match: { video: { $in: videoIds }, timestamp: { $gte: since } } },
@@ -409,7 +403,8 @@ exports.getTrends = async (req, res) => {
       { $project: { date: "$_id", views: "$count", _id: 0 } },
     ]);
 
-    res.json({ period, views: viewTrend }); // Note: likes/comments trends not yet implemented; extend when LikeLog/CommentLog are available
+    // likes/comments trend aggregation is not yet implemented; keys included for consistent response shape
+    res.json({ period, views: viewTrend, likes: [], comments: [] });
   } catch (err) {
     console.error("getTrends error:", err);
     res.status(500).json({ message: "Error fetching trends", error: err.message });

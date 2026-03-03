@@ -5,7 +5,7 @@ const Comment = require("../models/Comment");
 const { getCache, setCache } = require("../utils/cache");
 const mongoose = require("mongoose");
 
-const FEED_CACHE_TTL = 60;
+const FEED_CACHE_TTL = 300;
 const TRENDING_WINDOW_HOURS = 48;
 
 const calculateScore = (item) => {

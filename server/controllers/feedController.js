@@ -3,7 +3,7 @@ const {
     getTrendingFeed,
     getForYouFeed,
     getFollowingFeed,
-} = require("../services/feedService");
+} = require("../services/optimizedFeedService");
 
 const VALID_TYPES = ["latest", "trending", "for-you", "following"];
 

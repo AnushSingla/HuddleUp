@@ -1,22 +1,49 @@
 const Post = require("../models/Post");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const Report = require("../models/Report");
 const { deleteCachePattern } = require("../utils/cache");
 const { emitFeedEvent } = require("../socketEmitter");
+const { invalidateQueryCache } = require("../utils/queryCache");
+const { emitToContentRoom } = require("../socketRegistry");
+const { filterMultipleFields } = require("../services/contentFilterService");
 
 exports.createPost = async (req, res) => {
   try {
     const { title, content, category } = req.body;
 
+    // Run content filter
+    const filterResult = filterMultipleFields({ title, content });
+
     const newPost = new Post({
       title,
       content,
       category,
-      postedBy: req.user.id
+      postedBy: req.user.id,
+      flagged: filterResult.flagged,
+      flagReason: filterResult.flagged ? filterResult.reasons.join('; ') : ''
     });
     const savedPost = await newPost.save();
+
+    // Auto-create report if content is flagged
+    if (filterResult.flagged) {
+      await Report.create({
+        reportedBy: req.user.id,
+        contentType: 'post',
+        contentId: savedPost._id,
+        reason: 'spam',
+        description: `Auto-flagged: ${filterResult.reasons.join('; ')}`,
+        status: 'pending',
+        priority: filterResult.severity === 'high' ? 'high' : 'medium',
+        contentSnapshot: { title, content, author: req.user.id }
+      });
+    }
+
     const populatedPost = await savedPost.populate("postedBy", "username");
-    await deleteCachePattern("feed:*");
+    await Promise.all([
+      deleteCachePattern("feed:*"),
+      invalidateQueryCache("post:*"),
+    ]);
     res.status(201).json(savedPost);
   } catch (err) {
     res.status(500).json({ message: "Failed to create Post", error: err.message })
@@ -77,6 +104,16 @@ exports.likePost = async (req, res) => {
     }
 
     await deleteCachePattern("feed:*");
+
+    emitToContentRoom("content:like_toggled", {
+      contentId: postId,
+      contentType: "post",
+      likes: updatedPost.likes.length,
+      liked: !isLiked,
+      videoId: null,
+      postId,
+    });
+
     res.status(200).json({
       likedByUser: !isLiked,
       likesCount: updatedPost.likes.length,
@@ -109,7 +146,10 @@ exports.deletePost = async (req, res) => {
     }
 
     await Post.findByIdAndDelete(postId);
-    await deleteCachePattern("feed:*");
+    await Promise.all([
+      deleteCachePattern("feed:*"),
+      invalidateQueryCache("post:*"),
+    ]);
     res.status(200).json({ message: "Post deleted" });
 
   } catch (err) {
@@ -144,7 +184,10 @@ exports.updatePost = async (req, res) => {
 
     const updatedPost = await post.save();
     const populatedPost = await updatedPost.populate("postedBy", "username");
-    await deleteCachePattern("feed:*");
+    await Promise.all([
+      deleteCachePattern("feed:*"),
+      invalidateQueryCache("post:*"),
+    ]);
 
     res.status(200).json({
       message: "Post updated successfully",

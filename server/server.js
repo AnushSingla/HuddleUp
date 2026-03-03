@@ -7,9 +7,11 @@ const cors = require("cors")
 const path = require('path');
 const { initRedis } = require("./config/redis");
 const { setIO, emitFeedEvent } = require("./socketEmitter");
-const { 
-  apiLimiter, 
-  authLimiter, 
+const { getContentRoom } = require("./socketRegistry");
+const { initQueryMonitoring, queryPerformanceMiddleware } = require("./middleware/queryMonitor");
+const {
+  apiLimiter,
+  authLimiter,
   feedLimiter,
   videoUploadLimiter,
   searchLimiter,
@@ -31,10 +33,11 @@ const savedRoutes = require("./routes/saved")
 const feedRoutes = require("./routes/feed")
 const playlistRoutes = require("./routes/playlist")
 const analyticsRoutes = require("./routes/analytics")
-const searchRoutes = require("./routes/search")
+const moderationRoutes = require("./routes/moderation")
 
 dotenv.config();
 initRedis();
+initQueryMonitoring();
 
 const app = express();
 const server = http.createServer(app);
@@ -46,6 +49,8 @@ const io = new Server(server, {
   }
 });
 
+setIO(io);
+
 io.on("connection", (socket) => {
   socket.on("join_match", (matchId) => {
     socket.join(`match_${matchId}`);
@@ -53,6 +58,26 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", ({ matchId, user, text }) => {
     io.to(`match_${matchId}`).emit("receive_message", { user, text });
+  });
+
+  socket.on("join_content", ({ contentType, contentId }) => {
+    const room = getContentRoom({
+      videoId: contentType === "video" ? contentId : null,
+      postId: contentType === "post" ? contentId : null,
+    });
+    if (room) {
+      socket.join(room);
+    }
+  });
+
+  socket.on("leave_content", ({ contentType, contentId }) => {
+    const room = getContentRoom({
+      videoId: contentType === "video" ? contentId : null,
+      postId: contentType === "post" ? contentId : null,
+    });
+    if (room) {
+      socket.leave(room);
+    }
   });
 
   socket.on("join_feed", () => {
@@ -66,8 +91,6 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => { });
 });
 
-setIO(io);
-
 app.use(cors({
   origin: ["https://huddle-up-beta.vercel.app", "http://localhost:5173", "http://localhost:5174"],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -76,19 +99,16 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use("/api/auth", authLimiter, authRoutes)
-app.use("/api", apiLimiter, videoRoutes)
-app.use("/api", apiLimiter, commentRoutes)
-app.use("/api", apiLimiter, postRoutes)
-app.use("/api", apiLimiter, friendRoutes)
-app.use("/api", apiLimiter, userRoutes)
-app.use("/api", apiLimiter, savedRoutes)
-app.use("/api/notifications", apiLimiter, notificationRoutes);
-app.use("/api/admin", adminLimiter, adminRoutes);
-app.use("/api/feed", feedLimiter, feedRoutes);
-app.use("/api/playlists", apiLimiter, playlistRoutes);
-app.use("/api/analytics", apiLimiter, analyticsRoutes);
-app.use("/api", apiLimiter, searchRoutes);
+app.use("/api/auth", authRoutes)
+app.use("/api", videoRoutes)
+app.use("/api", commentRoutes)
+app.use("/api", postRoutes)
+app.use("/api", friendRoutes)
+app.use("/api", userRoutes)
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/moderation", moderationRoutes);
+app.use("/api/analytics", analyticsRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/api", (req, res) => {
@@ -104,9 +124,13 @@ const connectDB = async () => {
     await mongoose.connect(mongoUrl, {
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
-      maxPoolSize: 10,
+      maxPoolSize: 50,
+      minPoolSize: 10,
+      maxIdleTimeMS: 30000,
       retryWrites: true,
       w: 'majority',
+      readPreference: 'secondaryPreferred',
+      compressors: ['zlib'],
     });
     console.log("✅ MongoDB connected successfully");
   } catch (error) {
@@ -128,7 +152,7 @@ connectDB()
 // Graceful shutdown handling
 const gracefulShutdown = async (signal) => {
   console.log(`\n${signal} received. Starting graceful shutdown...`);
-  
+
   try {
     // Close HTTP server
     console.log('Closing HTTP server...');

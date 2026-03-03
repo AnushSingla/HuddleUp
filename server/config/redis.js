@@ -13,6 +13,11 @@ const initRedis = () => {
                 return Math.min(times * 200, 2000);
             },
             lazyConnect: true,
+            enableReadyCheck: true,
+            enableOfflineQueue: false,
+            connectTimeout: 10000,
+            maxRetriesPerRequest: 3,
+            commandTimeout: 5000,
         });
 
         redisClient.on("connect", () => {
