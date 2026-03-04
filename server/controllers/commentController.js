@@ -4,6 +4,7 @@ const Video = require("../models/Video");
 const Post = require("../models/Post");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const { emitFeedEvent } = require("../socketEmitter");
 const Report = require("../models/Report");
 const { trackLike, trackView, trackComment } = require("./analyticsController");
 const { getNestedComments } = require("../services/optimizedCommentService");
@@ -21,6 +22,11 @@ async function createCommentNotification({ recipientId, senderId, type, resource
       resource,
       message,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    });
+    emitFeedEvent("notification:toast", {
+      recipientId: recipientId.toString(),
+      message,
+      type,
     });
   } catch (e) {
     console.error("Notification create error:", e);
@@ -349,6 +355,11 @@ exports.toggleLikeComment = async (req, res) => {
         },
         message: "Someone reacted to your comment",
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      });
+      emitFeedEvent("notification:toast", {
+        recipientId: comment.userId.toString(),
+        message: "Someone reacted to your comment",
+        type: "reaction",
       });
     }
 

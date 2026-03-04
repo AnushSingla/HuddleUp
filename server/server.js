@@ -6,7 +6,8 @@ const dotenv = require("dotenv")
 const cors = require("cors")
 const path = require('path');
 const { initRedis } = require("./config/redis");
-const { setIO, getContentRoom } = require("./socketRegistry");
+const { setIO, emitFeedEvent } = require("./socketEmitter");
+const { getContentRoom } = require("./socketRegistry");
 const { initQueryMonitoring, queryPerformanceMiddleware } = require("./middleware/queryMonitor");
 const {
   apiLimiter,
@@ -90,10 +91,6 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => { });
 });
 
-const emitFeedEvent = (event, data) => {
-  io.to("feed_room").emit(event, data);
-};
-
 app.use(cors({
   origin: ["https://huddle-up-beta.vercel.app", "http://localhost:5173", "http://localhost:5174"],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -112,6 +109,9 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/moderation", moderationRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/playlists", playlistRoutes);
+app.use("/api/feed", feedRoutes);
+app.use("/api", savedRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/api", (req, res) => {
@@ -210,3 +210,4 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 module.exports = { io, emitFeedEvent };
+// emitFeedEvent is re-exported from socketEmitter for use in controllers

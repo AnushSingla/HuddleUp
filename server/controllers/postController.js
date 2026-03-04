@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Notification = require("../models/Notification");
 const Report = require("../models/Report");
 const { deleteCachePattern } = require("../utils/cache");
+const { emitFeedEvent } = require("../socketEmitter");
 const { invalidateQueryCache } = require("../utils/queryCache");
 const { emitToContentRoom } = require("../socketRegistry");
 const { filterMultipleFields } = require("../services/contentFilterService");
@@ -86,13 +87,19 @@ exports.likePost = async (req, res) => {
     if (!isLiked && post.postedBy.toString() !== userId.toString()) {
       const senderUser = await User.findById(userId).select("username").lean();
       const senderName = senderUser?.username || "Someone";
+      const message = `${senderName} liked your post`;
       await Notification.create({
         recipient: post.postedBy,
         sender: userId,
         type: "reaction",
         resource: { resourceType: "post", resourceId: post._id },
-        message: `${senderName} liked your post`,
+        message,
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      });
+      emitFeedEvent("notification:toast", {
+        recipientId: post.postedBy.toString(),
+        message,
+        type: "reaction",
       });
     }
 

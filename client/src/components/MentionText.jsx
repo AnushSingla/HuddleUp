@@ -1,45 +1,30 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+// URL pattern: http:// or https://, then non-whitespace (exclude angle brackets for safety)
+const URL_REGEX = /(https?:\/\/[^\s<>]+)/g;
+
+// Trim trailing punctuation from URL for href (e.g. "https://example.com." -> "https://example.com")
+const cleanUrlHref = (url) => (url || '').replace(/[.,;?!)]+$/, '');
+
 /**
- * MentionText component
- * Wraps @username mentions with clickable Link components.
- * 
- * @param {Object} props
- * @param {string} props.text - The text to process for mentions.
+ * Renders a segment that may contain @mentions and #hashtags (no URLs).
  */
-const MentionText = ({ text }) => {
-    if (!text) return null;
-
-    // Regex to match @username or #hashtag
-    // Capturing groups: 1 for @username, 2 for #hashtag
+function renderMentionAndHashtagSegment(segment, keyPrefix) {
+    if (!segment) return null;
     const regex = /(@(\w+))|(#(\w+))/g;
-
-    // Use split with capturing groups to get all parts
-    // [textBefore, fullMention, username, fullHashtag, hashtag, textBetween, ...]
-    const parts = text.split(regex);
-
+    const parts = segment.split(regex);
     return (
         <>
             {parts.map((part, index) => {
-                // The way split works with 4 capturing groups:
-                // index % 5 === 0: plain text
-                // index % 5 === 1: @username (full)
-                // index % 5 === 2: username (name only)
-                // index % 5 === 3: #hashtag (full)
-                // index % 5 === 4: hashtag (tag only)
-
                 const mod = index % 5;
-
-                if (mod === 0) {
-                    return <span key={index}>{part}</span>;
-                }
-
+                const key = `${keyPrefix}-${index}`;
+                if (mod === 0) return <span key={key}>{part}</span>;
                 if (mod === 1 && part) {
                     const username = parts[index + 1];
                     return (
                         <Link
-                            key={index}
+                            key={key}
                             to={`/user/${encodeURIComponent(username)}`}
                             className="text-primary font-bold hover:underline"
                             onClick={(e) => e.stopPropagation()}
@@ -48,12 +33,11 @@ const MentionText = ({ text }) => {
                         </Link>
                     );
                 }
-
                 if (mod === 3 && part) {
                     const tag = parts[index + 1];
                     return (
                         <Link
-                            key={index}
+                            key={key}
                             to={`/explore?search=${encodeURIComponent(tag)}`}
                             className="text-emerald-400 font-bold hover:underline"
                             onClick={(e) => e.stopPropagation()}
@@ -62,9 +46,46 @@ const MentionText = ({ text }) => {
                         </Link>
                     );
                 }
-
-                // Skip the inner capturing groups (username/hashtag name only)
                 return null;
+            })}
+        </>
+    );
+}
+
+/**
+ * MentionText component
+ * - Converts raw http(s) URLs into clickable links (target="_blank", rel="noopener noreferrer").
+ * - Wraps @username and #hashtag with in-app Link components.
+ */
+const MentionText = ({ text }) => {
+    if (!text) return null;
+
+    const segments = text.split(URL_REGEX);
+
+    return (
+        <>
+            {segments.map((part, index) => {
+                const isUrl = part && /^https?:\/\//.test(part);
+                if (isUrl) {
+                    const href = cleanUrlHref(part);
+                    return (
+                        <a
+                            key={`url-${index}`}
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-emerald-400 hover:text-emerald-300 underline break-all"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {part}
+                        </a>
+                    );
+                }
+                return (
+                    <React.Fragment key={`seg-${index}`}>
+                        {renderMentionAndHashtagSegment(part, `seg-${index}`)}
+                    </React.Fragment>
+                );
             })}
         </>
     );

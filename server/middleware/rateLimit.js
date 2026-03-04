@@ -1,5 +1,8 @@
 const rateLimit = require("express-rate-limit");
+const { ipKeyGenerator } = require("express-rate-limit");
 const { isRedisReady, getRedisClient } = require("../config/redis");
+
+const isDev = process.env.NODE_ENV !== "production";
 
 let RedisStore;
 try {
@@ -7,6 +10,16 @@ try {
 } catch {
     RedisStore = null;
 }
+
+/**
+ * Extract user ID from request for user-based rate limiting
+ */
+const getUserId = (req) => {
+    if (req.user?.id) {
+        return `user_${req.user.id}`;
+    }
+    return null;
+};
 
 /**
  * Creates a Redis store for rate limiting
@@ -32,8 +45,11 @@ const apiLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("api"),
+    keyGenerator: (req) => {
+        return getUserId(req) || ipKeyGenerator(req.ip);
+    },
     message: { status: 429, message: "Too many requests, please try again later." },
-    skip: (req) => false,
+    skip: () => isDev,
     handler: (req, res) => {
         res.status(429).json({
             status: 429,
@@ -54,7 +70,7 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
     store: createStore("auth"),
     message: { status: 429, message: "Too many authentication attempts, please try again later." },
-    skip: (req) => false,
+    skip: () => isDev,
     handler: (req, res) => {
         res.status(429).json({
             status: 429,
@@ -74,8 +90,11 @@ const feedLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("feed"),
+    keyGenerator: (req) => {
+        return getUserId(req) || ipKeyGenerator(req.ip);
+    },
     message: { status: 429, message: "Too many feed requests, please slow down." },
-    skip: (req) => false,
+    skip: () => isDev,
     handler: (req, res) => {
         res.status(429).json({
             status: 429,
@@ -95,8 +114,11 @@ const videoUploadLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("video_upload"),
+    keyGenerator: (req) => {
+        return getUserId(req) || ipKeyGenerator(req.ip);
+    },
     message: { status: 429, message: "Too many video uploads, please try again later." },
-    skip: (req) => false,
+    skip: () => isDev,
     handler: (req, res) => {
         res.status(429).json({
             status: 429,
@@ -116,8 +138,11 @@ const searchLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("search"),
+    keyGenerator: (req) => {
+        return getUserId(req) || ipKeyGenerator(req.ip);
+    },
     message: { status: 429, message: "Too many search requests." },
-    skip: (req) => false,
+    skip: () => isDev,
     handler: (req, res) => {
         res.status(429).json({
             status: 429,
@@ -137,8 +162,11 @@ const commentLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("comment"),
+    keyGenerator: (req) => {
+        return getUserId(req) || ipKeyGenerator(req.ip);
+    },
     message: { status: 429, message: "Too many comments, please slow down." },
-    skip: (req) => false,
+    skip: () => isDev,
     handler: (req, res) => {
         res.status(429).json({
             status: 429,
@@ -158,8 +186,11 @@ const postCreationLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("post_creation"),
+    keyGenerator: (req) => {
+        return getUserId(req) || ipKeyGenerator(req.ip);
+    },
     message: { status: 429, message: "Too many posts created, please try again later." },
-    skip: (req) => false,
+    skip: () => isDev,
     handler: (req, res) => {
         res.status(429).json({
             status: 429,
@@ -180,7 +211,7 @@ const passwordResetLimiter = rateLimit({
     legacyHeaders: false,
     store: createStore("password_reset"),
     message: { status: 429, message: "Too many password reset attempts." },
-    skip: (req) => false,
+    skip: () => isDev,
     handler: (req, res) => {
         res.status(429).json({
             status: 429,
@@ -200,8 +231,11 @@ const adminLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("admin"),
+    keyGenerator: (req) => {
+        return getUserId(req) || ipKeyGenerator(req.ip);
+    },
     message: { status: 429, message: "Too many admin operations." },
-    skip: (req) => false,
+    skip: () => isDev,
     handler: (req, res) => {
         res.status(429).json({
             status: 429,

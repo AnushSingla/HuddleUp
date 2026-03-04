@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API } from '@/api';
-import { isLoggedIn } from '@/utils/auth';
+import { isLoggedIn, getUserId } from '@/utils/auth';
 import { toast } from 'sonner';
+import { connectSocket } from '@/utils/socket';
 
 const NotificationContext = createContext();
 
@@ -94,6 +95,25 @@ export const NotificationProvider = ({ children }) => {
         if (isLoggedIn()) {
             loadSocialData();
         }
+    }, []);
+
+    // Real-time interaction toasts: listen for comment/like events and show toast to the recipient
+    useEffect(() => {
+        if (!isLoggedIn()) return;
+        const socket = connectSocket();
+        socket.emit("join_feed");
+
+        const handleNotificationToast = (data) => {
+            if (data?.recipientId && data.recipientId === getUserId()) {
+                toast.success(data.message || "Someone interacted with your content");
+            }
+        };
+
+        socket.on("notification:toast", handleNotificationToast);
+        return () => {
+            socket.off("notification:toast", handleNotificationToast);
+            socket.emit("leave_feed");
+        };
     }, []);
 
     return (
