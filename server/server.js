@@ -5,10 +5,22 @@ const mongoose = require("mongoose")
 const dotenv = require("dotenv")
 const cors = require("cors")
 const path = require('path');
+
+// Load environment variables first
+dotenv.config();
+
+// Validate environment variables before starting the server
+const { validateEnvironment } = require("./utils/validateEnv");
+if (!validateEnvironment()) {
+  console.error('\n❌ Server startup failed due to environment variable errors.');
+  console.error('Please fix the above issues and restart the server.\n');
+  process.exit(1);
+}
 const { initRedis } = require("./config/redis");
 const { setIO, emitFeedEvent } = require("./socketEmitter");
 const { getContentRoom } = require("./socketRegistry");
 const { initQueryMonitoring, queryPerformanceMiddleware } = require("./middleware/queryMonitor");
+const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
 const {
   apiLimiter,
   authLimiter,
@@ -35,7 +47,7 @@ const playlistRoutes = require("./routes/playlist")
 const analyticsRoutes = require("./routes/analytics")
 const moderationRoutes = require("./routes/moderation")
 
-dotenv.config();
+// Initialize services after environment validation
 initRedis();
 initQueryMonitoring();
 
@@ -118,6 +130,10 @@ app.get("/api", (req, res) => {
   res.json({ message: "HuddleUp API", status: "ok", version: "1.0" });
 });
 app.get("/favicon.ico", (req, res) => res.status(204));
+
+// Error handling middleware (must be last)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 const connectDB = async () => {
   try {

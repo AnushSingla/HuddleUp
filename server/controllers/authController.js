@@ -3,6 +3,7 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const { getJWTSecret } = require("../utils/validateEnv");
 
 exports.register = async (req, res) => {
     console.log("Received register request:", req.body);
@@ -40,10 +41,25 @@ exports.login = async (req, res) => {
                 res.status(401).json("Password Incorrect")
             )
         }
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-        res.json({ user: { username: user.username, email: user.email }, token })
+        
+        // Use safe JWT secret with proper error handling
+        try {
+            const jwtSecret = getJWTSecret();
+            const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "1d" });
+            res.json({ user: { username: user.username, email: user.email }, token })
+        } catch (jwtError) {
+            console.error('JWT signing error:', jwtError.message);
+            return res.status(500).json({ 
+                message: "Authentication service temporarily unavailable. Please try again later.",
+                error: "JWT_CONFIG_ERROR"
+            });
+        }
     } catch (err) {
-        res.status(500).json(err.message);
+        console.error('Login error:', err);
+        res.status(500).json({ 
+            message: "Login failed. Please try again.",
+            error: err.message 
+        });
     }
 }
 
