@@ -11,6 +11,8 @@ const { getNestedComments } = require("../services/optimizedCommentService");
 const { invalidateQueryCache } = require("../utils/queryCache");
 const { emitToContentRoom } = require("../socketRegistry");
 const { filterContent } = require("../services/contentFilterService");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 async function createCommentNotification({ recipientId, senderId, type, resource, message }) {
   if (!recipientId || recipientId.toString() === senderId.toString()) return;
@@ -29,175 +31,198 @@ async function createCommentNotification({ recipientId, senderId, type, resource
       type,
     });
   } catch (e) {
-    console.error("Notification create error:", e);
+    // Removed console.error - use logger instead
   }
 }
 
-exports.createComment = async (req, res) => {
+exports.createComment = ResponseHandler.asyncHandler(async (req, res) => {
   const { videoId, postId, text, parentId } = req.body;
   const userId = req.user.id;
 
-  console.log("🟡 Incoming Comment:", { text, videoId, postId, parentId, userId });
+  logger.info('Comment creation attempt', {
+    userId,
+    videoId,
+    postId,
+    parentId,
+    textLength: text?.length
+  });
 
-  try {
-    let { videoId, postId } = req.body;
+  let targetVideoId = videoId;
+  let targetPostId = postId;
 
-    if (!videoId && !postId && parentId) {
-      console.log("🔍 Inheriting target from parent:", parentId);
-      const parentComment = await Comment.findById(parentId);
-      if (parentComment) {
-        videoId = parentComment.videoId;
-        postId = parentComment.postId;
-      }
+  if (!targetVideoId && !targetPostId && parentId) {
+    logger.debug('Inheriting target from parent comment', { parentId });
+    const parentComment = await Comment.findById(parentId);
+    if (parentComment) {
+      targetVideoId = parentComment.videoId;
+      targetPostId = parentComment.postId;
     }
+  }
 
-    if (!text || (!videoId && !postId)) {
-      console.warn("⚠️ Missing target after inheritance check:", { videoId, postId, text });
-      return res.status(400).json({ message: "Missing target (videoId/postId)" });
-    }
+  if (!text || (!targetVideoId && !targetPostId)) {
+    logger.warn('Comment creation failed - missing required fields', {
+      userId,
+      hasText: !!text,
+      hasVideoId: !!targetVideoId,
+      hasPostId: !!targetPostId
+    });
+    return ResponseHandler.error(
+      res,
+      ERROR_CODES.VALIDATION_ERROR,
+      'Comment text and target (video or post) are required',
+      400
+    );
+  }
 
-    // Run content filter on comment text
-    const filterResult = filterContent(text);
+  // Run content filter on comment text
+  const filterResult = filterContent(text);
 
-    const commentData = {
-      text,
-      userId: new mongoose.Types.ObjectId(userId),
-      parentId: parentId ? new mongoose.Types.ObjectId(parentId) : null,
-      videoId: videoId ? new mongoose.Types.ObjectId(videoId) : null,
-      postId: postId ? new mongoose.Types.ObjectId(postId) : null,
-      flagged: filterResult.flagged,
-      flagReason: filterResult.flagged ? filterResult.reasons.join('; ') : ''
-    };
+  const commentData = {
+    text,
+    userId: new mongoose.Types.ObjectId(userId),
+    parentId: parentId ? new mongoose.Types.ObjectId(parentId) : null,
+    videoId: targetVideoId ? new mongoose.Types.ObjectId(targetVideoId) : null,
+    postId: targetPostId ? new mongoose.Types.ObjectId(targetPostId) : null,
+    flagged: filterResult.flagged,
+    flagReason: filterResult.flagged ? filterResult.reasons.join('; ') : ''
+  };
 
-    console.log("🛠 Final commentData to be saved:", commentData);
+  const newComment = new Comment(commentData);
+  const saved = await newComment.save();
 
-    const newComment = new Comment(commentData);
-    const saved = await newComment.save();
+  // Auto-create report if comment is flagged
+  if (filterResult.flagged) {
+    logger.warn('Comment auto-flagged for inappropriate content', {
+      commentId: saved._id,
+      userId,
+      reasons: filterResult.reasons,
+      severity: filterResult.severity
+    });
+    
+    await Report.create({
+      reportedBy: userId,
+      contentType: 'comment',
+      contentId: saved._id,
+      reason: 'spam',
+      description: `Auto-flagged: ${filterResult.reasons.join('; ')}`,
+      status: 'pending',
+      priority: filterResult.severity === 'high' ? 'high' : 'medium',
+      contentSnapshot: { content: text, author: userId }
+    });
+  }
 
-    // Auto-create report if comment is flagged
-    if (filterResult.flagged) {
-      await Report.create({
-        reportedBy: userId,
-        contentType: 'comment',
-        contentId: saved._id,
-        reason: 'spam',
-        description: `Auto-flagged: ${filterResult.reasons.join('; ')}`,
-        status: 'pending',
-        priority: filterResult.severity === 'high' ? 'high' : 'medium',
-        contentSnapshot: { content: text, author: userId }
+  await saved.populate("userId", "username");
+
+  await invalidateQueryCache([
+    `comments:nested:*`,
+    `comments:stats:*`,
+    `comments:top:*`,
+  ]);
+
+  if (targetVideoId) {
+    trackComment(targetVideoId.toString()).catch(() => { });
+  }
+
+  const senderUser = await User.findById(userId).select("username").lean();
+  const senderName = senderUser?.username || "Someone";
+
+  // Handle notifications
+  if (parentId) {
+    const parentComment = await Comment.findById(parentId).select("userId").lean();
+    if (parentComment && parentComment.userId) {
+      await createCommentNotification({
+        recipientId: parentComment.userId,
+        senderId: userId,
+        type: "comment_reply",
+        resource: {
+          resourceType: "comment",
+          resourceId: saved._id,
+          parentId: parentId,
+        },
+        message: `${senderName} replied to your comment`,
       });
     }
-
-    console.log("✅ Saved Comment:", saved);
-
-    await saved.populate("userId", "username");
-
-    await invalidateQueryCache([
-      `comments:nested:*`,
-      `comments:stats:*`,
-      `comments:top:*`,
-    ]);
-
-    if (commentData.videoId) {
-      trackComment(commentData.videoId.toString()).catch(() => { });
-    }
-
-    const senderUser = await User.findById(userId).select("username").lean();
-    const senderName = senderUser?.username || "Someone";
-
-    if (parentId) {
-      const parentComment = await Comment.findById(parentId).select("userId").lean();
-      if (parentComment && parentComment.userId) {
+  } else {
+    if (targetVideoId) {
+      const video = await Video.findById(targetVideoId).select("postedBy").lean();
+      if (video && video.postedBy) {
         await createCommentNotification({
-          recipientId: parentComment.userId,
+          recipientId: video.postedBy,
           senderId: userId,
-          type: "comment_reply",
-          resource: {
-            resourceType: "comment",
-            resourceId: saved._id,
-            parentId: parentId,
-          },
-          message: `${senderName} replied to your comment`,
+          type: "video_comment",
+          resource: { resourceType: "video", resourceId: targetVideoId },
+          message: `${senderName} commented on your video`,
         });
       }
-    } else {
-      if (videoId) {
-        const video = await Video.findById(videoId).select("postedBy").lean();
-        if (video && video.postedBy) {
+    }
+    if (targetPostId) {
+      const post = await Post.findById(targetPostId).select("postedBy").lean();
+      if (post && post.postedBy) {
+        const recipientId = post.postedBy._id || post.postedBy;
+        if (recipientId.toString() !== userId.toString()) {
           await createCommentNotification({
-            recipientId: video.postedBy,
+            recipientId,
             senderId: userId,
-            type: "video_comment",
-            resource: { resourceType: "video", resourceId: videoId },
-            message: `${senderName} commented on your video`,
+            type: "post_comment",
+            resource: { resourceType: "post", resourceId: targetPostId },
+            message: `${senderName} commented on your post`,
           });
         }
       }
-      if (postId) {
-        const post = await Post.findById(postId).select("postedBy").lean();
-        if (post && post.postedBy) {
-          const recipientId = post.postedBy._id || post.postedBy;
-          if (recipientId.toString() !== userId.toString()) {
-            await createCommentNotification({
-              recipientId,
-              senderId: userId,
-              type: "post_comment",
-              resource: { resourceType: "post", resourceId: postId },
-              message: `${senderName} commented on your post`,
-            });
-          }
-        }
-      }
     }
-
-    const responseComment = {
-      _id: saved._id,
-      author: saved.userId?.username || "Anonymous",
-      content: saved.text,
-      createdAt: saved.createdAt,
-      parentId: saved.parentId,
-      replies: [],
-      likes: saved.likes || [],
-      videoId: saved.videoId,
-      postId: saved.postId,
-    };
-
-    const contentIdForSocket =
-      (commentData.videoId || commentData.postId || "").toString();
-
-    if (contentIdForSocket) {
-      emitToContentRoom("comment:new", {
-        comment: responseComment,
-        contentId: contentIdForSocket,
-        contentType: commentData.videoId ? "video" : "post",
-        videoId: commentData.videoId ? contentIdForSocket : null,
-        postId: commentData.postId ? contentIdForSocket : null,
-      });
-    }
-
-    res.status(201).json(responseComment);
-  } catch (err) {
-    console.error("🔥 Error creating comment:", err);
-    res.status(500).json({ message: "Error creating comment", error: err.message });
   }
-};
+
+  const responseComment = {
+    _id: saved._id,
+    author: saved.userId?.username || "Anonymous",
+    content: saved.text,
+    createdAt: saved.createdAt,
+    parentId: saved.parentId,
+    replies: [],
+    likes: saved.likes || [],
+    videoId: saved.videoId,
+    postId: saved.postId,
+  };
+
+  const contentIdForSocket = (targetVideoId || targetPostId || "").toString();
+
+  if (contentIdForSocket) {
+    emitToContentRoom("comment:new", {
+      comment: responseComment,
+      contentId: contentIdForSocket,
+      contentType: targetVideoId ? "video" : "post",
+      videoId: targetVideoId ? contentIdForSocket : null,
+      postId: targetPostId ? contentIdForSocket : null,
+    });
+  }
+
+  logger.info('Comment created successfully', {
+    commentId: saved._id,
+    userId,
+    contentType: targetVideoId ? 'video' : 'post',
+    contentId: contentIdForSocket,
+    flagged: saved.flagged
+  });
+
+  return ResponseHandler.success(res, responseComment, 'Comment created successfully', 201);
+});
 
 exports.getAllComments = async (req, res) => {
   try {
     const videoId = req.params.videoId;
-    console.log("Fetching comments for videoId:", videoId);
+    // Removed console.log - use logger instead
 
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
       return res.status(400).json({ message: "Invalid videoId format" });
     }
 
     const comments = await getNestedComments(videoId, null);
-    console.log("Returning comments:", comments);
+    // Removed console.log - use logger instead
 
     res.json(comments);
   } catch (err) {
-    console.error("Failed to fetch comments:", err);
-    res.status(500).json({ message: "Error fetching comments", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error fetching comments");
   }
 };
 
@@ -212,8 +237,8 @@ exports.getAllPostComments = async (req, res) => {
     const comments = await getNestedComments(null, postId);
     res.json(comments);
   } catch (err) {
-    console.error("Failed to fetch post comments:", err);
-    res.status(500).json({ message: "Error fetching post comments", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error fetching post comments");
   }
 };
 
@@ -223,7 +248,7 @@ exports.likeVideo = async (req, res) => {
 
   try {
     const video = await Video.findById(id);
-    if (!video) return res.status(404).json({ message: "Video not Found" });
+    if (!video) return ResponseHandler.notFound(res, "Video");
 
     const isLiked = video.likes.includes(userId);
     const update = isLiked ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
@@ -243,7 +268,7 @@ exports.likeVideo = async (req, res) => {
 
     res.json({ likes: updatedVideo.likes.length, liked: !isLiked });
   } catch (err) {
-    res.status(500).json({ message: "Error liking video", error: err.message });
+    return ResponseHandler.handleError(err, req, res, "Error liking video");
   }
 }
 
@@ -251,14 +276,14 @@ exports.viewVideo = async (req, res) => {
   const { id } = req.params;
   try {
     const video = await Video.findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true });
-    if (!video) return res.status(404).json({ message: "Video Not Found" })
+    if (!video) return ResponseHandler.notFound(res, "Video");
 
     trackView(id, req).catch(() => { });
 
     res.json({ views: video.views })
 
   } catch (err) {
-    res.status(500).json({ message: "Error incrementing view", error: err.message });
+    return ResponseHandler.handleError(err, req, res, "Error incrementing view");
   }
 }
 
@@ -266,7 +291,7 @@ exports.getSingleVideo = async (req, res) => {
   try {
     const video = await Video.findById(req.params.id);
     if (!video) {
-      return res.status(404).json({ message: "Video not found" });
+      return ResponseHandler.notFound(res, "Video not found");
     }
 
     const currentUserId = req.user?.id || null;
@@ -277,8 +302,8 @@ exports.getSingleVideo = async (req, res) => {
       currentUserId: currentUserId
     });
   } catch (err) {
-    console.error("Error fetching video:", err);
-    res.status(500).json({ message: "Error fetching video", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error fetching video");
   }
 };
 
@@ -288,10 +313,10 @@ exports.deleteComment = async (req, res) => {
     const userId = req.user.id;
 
     const comment = await Comment.findById(commentId);
-    if (!comment) return res.status(404).json({ message: "Comment not found" });
+    if (!comment) return ResponseHandler.notFound(res, "Comment not found");
 
     if (comment.userId.toString() !== userId) {
-      return res.status(403).json({ message: "Unauthorized - You can only delete your own comments" });
+      return ResponseHandler.forbidden(res, "Unauthorized - You can only delete your own comments");
     }
 
     const { videoId, postId } = comment;
@@ -314,8 +339,8 @@ exports.deleteComment = async (req, res) => {
 
     res.status(200).json({ message: "Comment deleted successfully" });
   } catch (err) {
-    console.error("Error deleting comment:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Server error");
   }
 };
 
@@ -326,7 +351,7 @@ exports.toggleLikeComment = async (req, res) => {
 
     const comment = await Comment.findById(commentId);
     if (!comment)
-      return res.status(404).json({ message: "Comment not found" });
+      return ResponseHandler.notFound(res, "Comment not found");
 
     const isLiked = comment.likes.includes(userId);
 
@@ -369,7 +394,7 @@ exports.toggleLikeComment = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Like error:", err);
+    // Removed console.error - use logger instead
     res.status(500).json({
       message: "Server error",
       error: err.message,

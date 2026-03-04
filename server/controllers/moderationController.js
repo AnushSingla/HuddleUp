@@ -5,6 +5,8 @@ const Post = require("../models/Post");
 const Video = require("../models/Video");
 const Comment = require("../models/Comment");
 const User = require("../models/User");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 // ─── Helper: Get content model by type ───────────────────────────────────────
 
@@ -153,7 +155,7 @@ exports.getReportById = async (req, res) => {
             .populate("resolvedBy", "username");
 
         if (!report) {
-            return res.status(404).json({ message: "Report not found" });
+            return ResponseHandler.notFound(res, "Report not found");
         }
 
         // Populate the actual content
@@ -182,7 +184,7 @@ exports.resolveReport = async (req, res) => {
 
         const report = await Report.findById(req.params.id);
         if (!report) {
-            return res.status(404).json({ message: "Report not found" });
+            return ResponseHandler.notFound(res, "Report not found");
         }
 
         if (report.status === "resolved" || report.status === "dismissed") {
@@ -415,7 +417,7 @@ exports.resolveAppeal = async (req, res) => {
 
         const appeal = await Appeal.findById(req.params.id);
         if (!appeal) {
-            return res.status(404).json({ message: "Appeal not found" });
+            return ResponseHandler.notFound(res, "Appeal not found");
         }
 
         if (appeal.status !== "pending") {

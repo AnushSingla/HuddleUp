@@ -5,6 +5,8 @@ const User = require("../models/User");
 const Report = require("../models/Report");
 const ModerationLog = require("../models/ModerationLog");
 const Appeal = require("../models/Appeal");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 // Get all flagged posts
 exports.getFlaggedPosts = async (req, res) => {
@@ -58,7 +60,7 @@ exports.flagPost = async (req, res) => {
 
         const post = await Post.findById(postId);
         if (!post) {
-            return res.status(404).json({ message: "Post not found" });
+            return ResponseHandler.notFound(res, "Post not found");
         }
 
         if (!post.flaggedBy.includes(userId)) {
@@ -82,7 +84,7 @@ exports.flagVideo = async (req, res) => {
 
         const video = await Video.findById(videoId);
         if (!video) {
-            return res.status(404).json({ message: "Video not found" });
+            return ResponseHandler.notFound(res, "Video not found");
         }
 
         if (!video.flaggedBy.includes(userId)) {
@@ -106,7 +108,7 @@ exports.flagComment = async (req, res) => {
 
         const comment = await Comment.findById(commentId);
         if (!comment) {
-            return res.status(404).json({ message: "Comment not found" });
+            return ResponseHandler.notFound(res, "Comment not found");
         }
 
         if (!comment.flaggedBy.includes(userId)) {
@@ -129,7 +131,7 @@ exports.deletePost = async (req, res) => {
 
         const post = await Post.findByIdAndDelete(id);
         if (!post) {
-            return res.status(404).json({ message: "Post not found" });
+            return ResponseHandler.notFound(res, "Post not found");
         }
 
         // Also delete associated comments
@@ -148,7 +150,7 @@ exports.deleteVideo = async (req, res) => {
 
         const video = await Video.findByIdAndDelete(id);
         if (!video) {
-            return res.status(404).json({ message: "Video not found" });
+            return ResponseHandler.notFound(res, "Video not found");
         }
 
         // Also delete associated comments
@@ -167,7 +169,7 @@ exports.deleteComment = async (req, res) => {
 
         const comment = await Comment.findByIdAndDelete(id);
         if (!comment) {
-            return res.status(404).json({ message: "Comment not found" });
+            return ResponseHandler.notFound(res, "Comment not found");
         }
 
         res.json({ message: "Comment deleted successfully" });
@@ -314,11 +316,11 @@ exports.banUser = async (req, res) => {
 
         const user = await User.findById(id);
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return ResponseHandler.notFound(res, "User not found");
         }
 
         if (user.isAdmin || user.role === 'admin') {
-            return res.status(403).json({ message: "Cannot ban an admin user" });
+            return ResponseHandler.forbidden(res, "Cannot ban an admin user");
         }
 
         user.isBanned = true;
@@ -356,7 +358,7 @@ exports.unbanUser = async (req, res) => {
 
         const user = await User.findById(id);
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return ResponseHandler.notFound(res, "User not found");
         }
 
         user.isBanned = false;
@@ -389,7 +391,7 @@ exports.warnUser = async (req, res) => {
 
         const user = await User.findById(id);
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return ResponseHandler.notFound(res, "User not found");
         }
 
         user.warnings.push({
