@@ -1,15 +1,17 @@
 const User = require("../models/User");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 exports.getAllUsers = async (req, res) => {
   try {
-    console.log("🔒 Authenticated user ID:", req.user.id);
+    // Removed console.log - use logger instead
 
     const users = await User.find({ _id: { $ne: req.user.id } }).select("username");
-    console.log("📦 Users fetched:", users.length);
+    // Removed console.log - use logger instead
     res.json(users);
   } catch (err) {
-    console.error("🔥 Failed to fetch users:", err);
-    res.status(500).json({ message: "Failed to fetch users", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Failed to fetch users");
   }
 };
 
@@ -18,7 +20,7 @@ exports.getFriends = async (req, res) => {
     // Replace this with real friend fetching logic from DB
     const userId = req.user.id;
     const user = await User.findById(userId).populate("friends");
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return ResponseHandler.notFound(res, "User not found");
 
     res.json(user.friends);
   } catch (err) {
@@ -36,7 +38,7 @@ exports.sendFriendRequest = async (req, res) => {
 
     const receiver = await User.findById(toId);
     const sender = await User.findById(fromId);
-    if (!receiver || !sender) return res.status(404).json({ message: "User not found" });
+    if (!receiver || !sender) return ResponseHandler.notFound(res, "User not found");
 
     if (receiver.friendRequests.includes(fromId)) {
       return res.status(400).json({ message: "Friend request already sent" });
@@ -52,8 +54,8 @@ exports.sendFriendRequest = async (req, res) => {
 
     res.status(200).json({ message: "Friend request sent" });
   } catch (err) {
-    console.error("❌ Error sending request:", err);
-    res.status(500).json({ message: "Failed to send friend request", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Failed to send friend request");
   }
 };
 
@@ -64,7 +66,7 @@ exports.getFriendRequests = async (req, res) => {
     const user = await User.findById(req.user.id).populate("friendRequests", "username")
     res.json(user.friendRequests);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to get friend requests', error: err.message });
+    return ResponseHandler.handleError(err, req, res, "Failed to get friend requests");
   }
 }
 
@@ -73,7 +75,7 @@ exports.getSentRequests = async (req, res) => {
     const user = await User.findById(req.user.id).populate("sentRequests", "username");
     res.json(user.sentRequests);
   } catch (err) {
-    res.status(500).json({ message: "Failed to get sent requests", error: err.message });
+    return ResponseHandler.handleError(err, req, res, "Failed to get sent requests");
   }
 };
 
@@ -85,7 +87,7 @@ exports.acceptFriendRequests = async (req, res) => {
   try {
     const user = await User.findById(userId);
     const requester = await User.findById(requesterId);
-    if (!user || !requester) return res.status(404).json({ message: "User not found" });
+    if (!user || !requester) return ResponseHandler.notFound(res, "User not found");
 
     if (!user.friendRequests.includes(requesterId)) {
       return res.status(400).json({ message: "No such friend request" });
@@ -106,7 +108,7 @@ exports.acceptFriendRequests = async (req, res) => {
 
     res.status(200).json({ message: "Friend request accepted" });
   } catch (err) {
-    res.status(500).json({ message: "Failed to accept friend request", error: err.message });
+    return ResponseHandler.handleError(err, req, res, "Failed to accept friend request");
   }
 };
 
@@ -117,7 +119,7 @@ exports.declineFriendRequest = async (req, res) => {
   try {
     const user = await User.findById(userId);
     const requester = await User.findById(requesterId);
-    if (!user || !requester) return res.status(404).json({ message: "User not found" });
+    if (!user || !requester) return ResponseHandler.notFound(res, "User not found");
 
     // Remove from receiver's (current user) request list
     user.friendRequests = user.friendRequests.filter(id => id.toString() !== requesterId);
@@ -130,6 +132,6 @@ exports.declineFriendRequest = async (req, res) => {
 
     res.status(200).json({ message: "Friend request declined" });
   } catch (err) {
-    res.status(500).json({ message: "Failed to decline friend request", error: err.message });
+    return ResponseHandler.handleError(err, req, res, "Failed to decline friend request");
   }
 };

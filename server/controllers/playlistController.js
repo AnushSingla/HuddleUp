@@ -1,5 +1,7 @@
 const Playlist = require("../models/Playlist");
 const Video = require("../models/Video");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 // Create a new playlist
 exports.createPlaylist = async (req, res) => {
@@ -23,7 +25,7 @@ exports.createPlaylist = async (req, res) => {
       playlist
     });
   } catch (error) {
-    console.error("Error creating playlist:", error);
+    // Removed console.error - use logger instead
     res.status(500).json({
       success: false,
       message: "Failed to create playlist",
@@ -46,7 +48,7 @@ exports.getUserPlaylists = async (req, res) => {
       playlists
     });
   } catch (error) {
-    console.error("Error fetching playlists:", error);
+    // Removed console.error - use logger instead
     res.status(500).json({
       success: false,
       message: "Failed to fetch playlists",
@@ -76,7 +78,7 @@ exports.getPlaylist = async (req, res) => {
       playlist
     });
   } catch (error) {
-    console.error("Error fetching playlist:", error);
+    // Removed console.error - use logger instead
     res.status(500).json({
       success: false,
       message: "Failed to fetch playlist",
@@ -128,7 +130,7 @@ exports.addVideoToPlaylist = async (req, res) => {
       playlist
     });
   } catch (error) {
-    console.error("Error adding video to playlist:", error);
+    // Removed console.error - use logger instead
     res.status(500).json({
       success: false,
       message: "Failed to add video to playlist",
@@ -170,7 +172,7 @@ exports.removeVideoFromPlaylist = async (req, res) => {
       playlist
     });
   } catch (error) {
-    console.error("Error removing video from playlist:", error);
+    // Removed console.error - use logger instead
     res.status(500).json({
       success: false,
       message: "Failed to remove video from playlist",
@@ -200,7 +202,7 @@ exports.deletePlaylist = async (req, res) => {
       message: "Playlist deleted successfully"
     });
   } catch (error) {
-    console.error("Error deleting playlist:", error);
+    // Removed console.error - use logger instead
     res.status(500).json({
       success: false,
       message: "Failed to delete playlist",

@@ -3,6 +3,8 @@ const User = require("../models/User");
 const ViewLog = require("../models/ViewLog");
 const VideoAnalytics = require("../models/VideoAnalytics");
 const UserAnalytics = require("../models/UserAnalytics");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 // ─────────────────────────────────────────────
 // Helpers
@@ -85,7 +87,7 @@ exports.trackView = async (videoId, req) => {
       { upsert: true, new: true }
     ).catch(() => {});
   } catch (err) {
-    console.error("trackView error:", err.message);
+    // Removed console.error - use logger instead
   }
 };
 
@@ -102,7 +104,7 @@ exports.trackLike = async (videoId, userId, increment = true) => {
       { upsert: true }
     );
   } catch (err) {
-    console.error("trackLike error:", err.message);
+    // Removed console.error - use logger instead
   }
 };
 
@@ -117,7 +119,7 @@ exports.trackComment = async (videoId) => {
       { upsert: true }
     );
   } catch (err) {
-    console.error("trackComment error:", err.message);
+    // Removed console.error - use logger instead
   }
 };
 
@@ -229,8 +231,8 @@ exports.getOverview = async (req, res) => {
       newFollowers,
     });
   } catch (err) {
-    console.error("getOverview error:", err);
-    res.status(500).json({ message: "Error fetching analytics overview", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error fetching analytics overview");
   }
 };
 
@@ -282,8 +284,8 @@ exports.getVideoList = async (req, res) => {
 
     res.json(result);
   } catch (err) {
-    console.error("getVideoList error:", err);
-    res.status(500).json({ message: "Error fetching video list", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error fetching video list");
   }
 };
 
@@ -297,9 +299,9 @@ exports.getVideoAnalytics = async (req, res) => {
     const { videoId } = req.params;
 
     const video = await Video.findById(videoId).lean();
-    if (!video) return res.status(404).json({ message: "Video not found" });
+    if (!video) return ResponseHandler.notFound(res, "Video not found");
     if (video.postedBy.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "Access denied" });
+      return ResponseHandler.forbidden(res, "Access denied");
     }
 
     const analytics = await VideoAnalytics.findOne({ video: videoId }).lean();
@@ -367,8 +369,8 @@ exports.getVideoAnalytics = async (req, res) => {
       viewTrend: viewLogs,
     });
   } catch (err) {
-    console.error("getVideoAnalytics error:", err);
-    res.status(500).json({ message: "Error fetching video analytics", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error fetching video analytics");
   }
 };
 
@@ -406,8 +408,8 @@ exports.getTrends = async (req, res) => {
     // likes/comments trend aggregation is not yet implemented; keys included for consistent response shape
     res.json({ period, views: viewTrend, likes: [], comments: [] });
   } catch (err) {
-    console.error("getTrends error:", err);
-    res.status(500).json({ message: "Error fetching trends", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error fetching trends");
   }
 };
 
@@ -435,8 +437,8 @@ exports.getDeviceAnalytics = async (req, res) => {
 
     res.json(devices);
   } catch (err) {
-    console.error("getDeviceAnalytics error:", err);
-    res.status(500).json({ message: "Error fetching device analytics", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error fetching device analytics");
   }
 };
 
@@ -469,8 +471,8 @@ exports.getPeakHours = async (req, res) => {
 
     res.json(fullDay);
   } catch (err) {
-    console.error("getPeakHours error:", err);
-    res.status(500).json({ message: "Error fetching peak hours", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error fetching peak hours");
   }
 };
 
@@ -496,8 +498,8 @@ exports.getGeography = async (req, res) => {
 
     res.json(result);
   } catch (err) {
-    console.error("getGeography error:", err);
-    res.status(500).json({ message: "Error fetching geography analytics", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error fetching geography analytics");
   }
 };
 
@@ -511,9 +513,9 @@ exports.getTrafficSources = async (req, res) => {
     const { videoId } = req.params;
 
     const video = await Video.findById(videoId).lean();
-    if (!video) return res.status(404).json({ message: "Video not found" });
+    if (!video) return ResponseHandler.notFound(res, "Video not found");
     if (video.postedBy.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "Access denied" });
+      return ResponseHandler.forbidden(res, "Access denied");
     }
 
     const result = await ViewLog.aggregate([
@@ -526,8 +528,8 @@ exports.getTrafficSources = async (req, res) => {
 
     res.json(sources);
   } catch (err) {
-    console.error("getTrafficSources error:", err);
-    res.status(500).json({ message: "Error fetching traffic sources", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error fetching traffic sources");
   }
 };
 
@@ -539,7 +541,7 @@ exports.recordView = async (req, res) => {
     const { videoId } = req.params;
 
     const video = await Video.findById(videoId);
-    if (!video) return res.status(404).json({ message: "Video not found" });
+    if (!video) return ResponseHandler.notFound(res, "Video not found");
 
     await exports.trackView(videoId, req);
 
@@ -548,7 +550,7 @@ exports.recordView = async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error("recordView error:", err);
-    res.status(500).json({ message: "Error recording view", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error recording view");
   }
 };

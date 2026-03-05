@@ -3,49 +3,118 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const { getJWTSecret } = require("../utils/validateEnv");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
-exports.register = async (req, res) => {
-    console.log("Received register request:", req.body);
+exports.register = ResponseHandler.asyncHandler(async (req, res) => {
+    const { username, email, password } = req.body;
+    
+    logger.info('User registration attempt', { 
+        username, 
+        email,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+    });
+    
     try {
-        const { username, email, password } = req.body;
         const hashed = await bcrypt.hash(password, 10);
         const newUser = new User({ username, email, password: hashed });
         await newUser.save();
-        console.log("User saved:", newUser);
+        
+        logger.info('User registered successfully', { 
+            userId: newUser._id,
+            username: newUser.username,
+            email: newUser.email
+        });
 
-        res.status(201).json("User registered");
-    } catch (err) {
-        console.log("Error in register:", err);
-        if (err.code === 11000) {
-            const field = Object.keys(err.keyPattern)[0];
-            return res.status(400).json(`${field.charAt(0).toUpperCase() + field.slice(1)} already exists`);
-        }
-        res.status(500).json(err.message || "Internal Server Error")
+        return ResponseHandler.success(res, 
+            { 
+                user: { 
+                    id: newUser._id, 
+                    username: newUser.username, 
+                    email: newUser.email 
+                } 
+            }, 
+            "User registered successfully", 
+            201
+        );
+    } catch (error) {
+        return ResponseHandler.handleError(error, req, res, 'User registration');
     }
-}
+});
 
 
-exports.login = async (req, res) => {
+exports.login = ResponseHandler.asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+    
+    logger.info('User login attempt', { 
+        email,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+    });
+    
     try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email })
+        const user = await User.findOne({ email });
         if (!user) {
-            return (
-                res.status(404).json("User not Found")
-            )
+            logger.warn('Login failed - user not found', { email });
+            return ResponseHandler.error(
+                res,
+                ERROR_CODES.UNAUTHORIZED,
+                'Invalid email or password',
+                401
+            );
         }
-        const valid = await bcrypt.compare(password, user.password)
+        
+        const valid = await bcrypt.compare(password, user.password);
         if (!valid) {
-            return (
-                res.status(401).json("Password Incorrect")
-            )
+            logger.warn('Login failed - invalid password', { 
+                email,
+                userId: user._id
+            });
+            return ResponseHandler.error(
+                res,
+                ERROR_CODES.UNAUTHORIZED,
+                'Invalid email or password',
+                401
+            );
         }
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-        res.json({ user: { username: user.username, email: user.email }, token })
-    } catch (err) {
-        res.status(500).json(err.message);
+        
+        // Use safe JWT secret with proper error handling
+        try {
+            const jwtSecret = getJWTSecret();
+            const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "1d" });
+            
+            logger.info('User logged in successfully', { 
+                userId: user._id,
+                username: user.username,
+                email: user.email
+            });
+            
+            return ResponseHandler.success(res, {
+                user: { 
+                    id: user._id,
+                    username: user.username, 
+                    email: user.email 
+                }, 
+                token 
+            }, 'Login successful');
+        } catch (jwtError) {
+            logger.error('JWT signing error during login', { 
+                error: jwtError.message,
+                userId: user._id
+            });
+            return ResponseHandler.error(
+                res,
+                ERROR_CODES.SERVICE_UNAVAILABLE,
+                "Authentication service temporarily unavailable. Please try again later.",
+                503
+            );
+        }
+    } catch (error) {
+        return ResponseHandler.handleError(error, req, res, 'User login');
     }
-}
+});
 
 // Get user profile
 exports.getUserProfile = async (req, res) => {

@@ -1,3 +1,6 @@
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
+
 const {
   performSearch,
   getAutocompleteSuggestions,
@@ -47,7 +50,7 @@ const search = async (req, res) => {
 
     return res.json(results);
   } catch (err) {
-    console.error("Search error:", err);
+    // Removed console.error - use logger instead
     return res.status(500).json({ error: "Search failed" });
   }
 };
@@ -64,7 +67,7 @@ const suggestions = async (req, res) => {
     const results = await getAutocompleteSuggestions(query);
     return res.json(results);
   } catch (err) {
-    console.error("Suggestions error:", err);
+    // Removed console.error - use logger instead
     return res.status(500).json([]);
   }
 };
@@ -74,7 +77,7 @@ const trending = async (req, res) => {
     const results = await getTrendingSearches();
     return res.json(results);
   } catch (err) {
-    console.error("Trending error:", err);
+    // Removed console.error - use logger instead
     return res.status(500).json([]);
   }
 };
@@ -88,7 +91,7 @@ const history = async (req, res) => {
     const results = await getSearchHistory(userId);
     return res.json(results);
   } catch (err) {
-    console.error("History error:", err);
+    // Removed console.error - use logger instead
     return res.status(500).json([]);
   }
 };

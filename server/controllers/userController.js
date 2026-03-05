@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const mongoose = require("mongoose");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 // Get public profile by userId or username (no auth required)
 exports.getPublicProfile = async (req, res) => {
@@ -18,12 +20,12 @@ exports.getPublicProfile = async (req, res) => {
     }
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return ResponseHandler.notFound(res, "User not found");
     }
 
     res.json({ user: { _id: user._id, username: user.username } });
   } catch (err) {
-    console.error("getPublicProfile error:", err);
-    res.status(500).json({ message: "Error fetching profile", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Error fetching profile");
   }
 };
