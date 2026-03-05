@@ -159,12 +159,17 @@ export default function Navbar() {
     fetchNotifications();
   }, [loggedIn]);
 
-  const handleLogout = () => {
-    logout();
-    setLoggedIn(false);
-    setShowProfileMenu(false);
-    toast.success("User Logged Out");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout(); // This now handles the API call and cleanup
+      setLoggedIn(false);
+      setShowProfileMenu(false);
+      toast.success("User Logged Out");
+    } catch (error) {
+      // logout() already handles errors and redirects
+      setLoggedIn(false);
+      setShowProfileMenu(false);
+    }
   };
 
   const links = [

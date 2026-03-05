@@ -16,6 +16,7 @@
     "bcryptjs": "^3.0.2",
     "bull": "^4.16.5",
     "cloudinary": "^2.9.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
@@ -25,7 +26,8 @@
     "ioredis": "^5.9.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.0",
-    "multer": "^2.0.1"
+    "multer": "^2.0.1",
+    "nodemailer": "^8.0.1"
   },
   "devDependencies": {
     "jest": "^30.2.0",
@@ -33,7 +35,9 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "testMatch": ["**/tests/**/*.test.js"],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
     "forceExit": true,
     "detectOpenHandles": true
   }

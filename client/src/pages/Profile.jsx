@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { Edit2, Save, X, Lock, Users, BookMarked, Camera } from 'lucide-react';
+import { Edit2, Save, X, Lock, Users, BookMarked, Camera, Shield, Monitor } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Profile() {
@@ -454,7 +454,32 @@ export default function Profile() {
 
             {/* Security Tab */}
             {activeTab === 'security' && (
-              <div className="space-y-6">
+              <div className="space-y-8">
+                {/* Sessions Management */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-white">
+                    <Shield size={20} className="text-blue-400" />
+                    Active Sessions
+                  </h3>
+                  <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-white font-medium">Manage your active sessions</p>
+                        <p className="text-slate-400 text-sm">View and revoke access to your account from other devices</p>
+                      </div>
+                      <Monitor className="text-slate-400" size={24} />
+                    </div>
+                    <Button 
+                      onClick={() => navigate('/sessions')}
+                      className="bg-blue-600 hover:bg-blue-700 gap-2"
+                    >
+                      <Shield size={18} />
+                      Manage Sessions
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Change Password */}
                 <div>
                   <h3 className="text-lg font-semibold mb-6 flex items-center gap-2 text-white">
                     <Lock size={20} className="text-blue-400" />

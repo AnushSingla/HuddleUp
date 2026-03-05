@@ -4,6 +4,7 @@ const { Server } = require("socket.io");
 const mongoose = require("mongoose")
 const dotenv = require("dotenv")
 const cors = require("cors")
+const cookieParser = require("cookie-parser")
 const path = require('path');
 
 // Load environment variables first
@@ -21,6 +22,7 @@ const { setIO, emitFeedEvent } = require("./socketEmitter");
 const { getContentRoom } = require("./socketRegistry");
 const { initQueryMonitoring, queryPerformanceMiddleware } = require("./middleware/queryMonitor");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
+const { csrfProtection } = require("./middleware/csrf");
 const {
   apiLimiter,
   authLimiter,
@@ -111,6 +113,8 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(cookieParser());
+app.use(csrfProtection);
 app.use("/api/auth", authRoutes)
 app.use("/api", videoRoutes)
 app.use("/api", commentRoutes)
