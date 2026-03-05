@@ -9,7 +9,7 @@ import {
     Trash2, AlertTriangle, CheckCircle, Shield, Users, Flag,
     BarChart3, Eye, Ban, MessageSquare, FileText, Video,
     Clock, ChevronLeft, ChevronRight, Search, Filter,
-    Gavel, ScrollText, Scale, X, AlertCircle
+    Gavel, ScrollText, Scale, X, AlertCircle, Copy, Hash
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -660,6 +660,205 @@ function AppealsTab() {
     );
 }
 
+// ─── Duplicates Tab ──────────────────────────────────────────────────────────
+
+function DuplicatesTab() {
+    const [duplicateStats, setDuplicateStats] = useState({});
+    const [duplicateGroups, setDuplicateGroups] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
+    const fetchDuplicateStats = useCallback(async () => {
+        try {
+            const { data } = await axios.get(`${API_URL}/duplicates/stats`, getAuthHeader());
+            setDuplicateStats(data);
+        } catch (err) {
+            toast.error('Failed to fetch duplicate statistics');
+        }
+    }, []);
+
+    const fetchDuplicateGroups = useCallback(async (pageNum = 1) => {
+        try {
+            setLoading(true);
+            const { data } = await axios.get(`${API_URL}/duplicates/groups?page=${pageNum}&limit=10`, getAuthHeader());
+            setDuplicateGroups(data.duplicateGroups || []);
+            setTotalPages(data.pagination?.totalPages || 1);
+        } catch (err) {
+            toast.error('Failed to fetch duplicate groups');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchDuplicateStats();
+        fetchDuplicateGroups(page);
+    }, [page, fetchDuplicateStats, fetchDuplicateGroups]);
+
+    const formatFileSize = (bytes) => {
+        if (!bytes) return 'Unknown';
+        const mb = bytes / (1024 * 1024);
+        return `${mb.toFixed(1)} MB`;
+    };
+
+    const formatDuration = (seconds) => {
+        if (!seconds) return 'Unknown';
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="bg-zinc-900/80 border-zinc-800">
+                    <CardContent className="p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-zinc-400">Total Videos</p>
+                                <p className="text-3xl font-bold text-white mt-1">{duplicateStats.totalVideos ?? '—'}</p>
+                            </div>
+                            <Video className="w-8 h-8 text-blue-400 opacity-80" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-zinc-900/80 border-zinc-800">
+                    <CardContent className="p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-zinc-400">Duplicate Groups</p>
+                                <p className="text-3xl font-bold text-white mt-1">{duplicateStats.duplicateGroups ?? '—'}</p>
+                            </div>
+                            <Copy className="w-8 h-8 text-red-400 opacity-80" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-zinc-900/80 border-zinc-800">
+                    <CardContent className="p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-zinc-400">Duplicate Videos</p>
+                                <p className="text-3xl font-bold text-white mt-1">{duplicateStats.duplicateVideos ?? '—'}</p>
+                            </div>
+                            <Hash className="w-8 h-8 text-orange-400 opacity-80" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-zinc-900/80 border-zinc-800">
+                    <CardContent className="p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-zinc-400">Unique Videos</p>
+                                <p className="text-3xl font-bold text-white mt-1">{duplicateStats.uniqueVideos ?? '—'}</p>
+                            </div>
+                            <CheckCircle className="w-8 h-8 text-green-400 opacity-80" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Duplicate Groups */}
+            <Card className="bg-zinc-900/80 border-zinc-800">
+                <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                        <Copy className="w-5 h-5" />
+                        Duplicate Video Groups
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {loading ? (
+                        <div className="flex items-center justify-center py-8">
+                            <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full" />
+                        </div>
+                    ) : duplicateGroups.length === 0 ? (
+                        <div className="text-center py-8 text-zinc-400">
+                            <Copy className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                            <p>No duplicate groups found</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            {duplicateGroups.map((group, groupIndex) => (
+                                <div key={group._id} className="border border-zinc-700 rounded-lg p-4">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <Hash className="w-4 h-4 text-zinc-400" />
+                                        <span className="text-sm text-zinc-400 font-mono">
+                                            Hash: {group._id.substring(0, 16)}...
+                                        </span>
+                                        <Badge variant="secondary" className="ml-auto">
+                                            {group.count} duplicates
+                                        </Badge>
+                                    </div>
+                                    
+                                    <div className="grid gap-3">
+                                        {group.videos.map((video, videoIndex) => (
+                                            <div key={video._id} className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+                                                <div className="flex-1">
+                                                    <h4 className="font-medium text-white mb-1">{video.title}</h4>
+                                                    <div className="flex items-center gap-4 text-sm text-zinc-400">
+                                                        <span>By: {video.postedBy?.username || 'Unknown'}</span>
+                                                        <span>{formatDate(video.createdAt)}</span>
+                                                        {video.metadata?.duration && (
+                                                            <span>{formatDuration(video.metadata.duration)}</span>
+                                                        )}
+                                                        {video.originalFileSize && (
+                                                            <span>{formatFileSize(video.originalFileSize)}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Badge variant={videoIndex === 0 ? "default" : "secondary"}>
+                                                        {videoIndex === 0 ? 'Original' : 'Duplicate'}
+                                                    </Badge>
+                                                    <button
+                                                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-colors"
+                                                        title="Delete duplicate"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-6 pt-4 border-t border-zinc-700">
+                            <p className="text-sm text-zinc-400">
+                                Page {page} of {totalPages}
+                            </p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="p-2 text-zinc-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                    className="p-2 text-zinc-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
 // ─── Main Admin Component ────────────────────────────────────────────────────
 
 export default function Admin() {
@@ -718,6 +917,7 @@ export default function Admin() {
         { id: 'overview', label: 'Overview', icon: BarChart3 },
         { id: 'queue', label: 'Moderation Queue', icon: Flag },
         { id: 'users', label: 'User Management', icon: Users },
+        { id: 'duplicates', label: 'Duplicates', icon: Copy },
         { id: 'logs', label: 'Mod Logs', icon: ScrollText },
         { id: 'appeals', label: 'Appeals', icon: Scale },
     ];
@@ -762,6 +962,7 @@ export default function Admin() {
                     {activeTab === 'overview' && <OverviewTab stats={stats} modStats={modStats} />}
                     {activeTab === 'queue' && <QueueTab />}
                     {activeTab === 'users' && <UsersTab />}
+                    {activeTab === 'duplicates' && <DuplicatesTab />}
                     {activeTab === 'logs' && <LogsTab />}
                     {activeTab === 'appeals' && <AppealsTab />}
                 </div>

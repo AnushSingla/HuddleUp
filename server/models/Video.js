@@ -77,12 +77,25 @@ const VideoSchema = new mongoose.Schema({
     type: String,
     lowercase: true,
     trim: true
-  }]
+  }],
+  // Duplicate detection fields
+  fileHash: {
+    type: String,
+    index: true
+  },
+  originalFileSize: {
+    type: Number
+  },
+  originalFileName: {
+    type: String
+  }
 })
 
 VideoSchema.index({ postedBy: 1 });
 VideoSchema.index({ category: 1 });
 VideoSchema.index({ uploadDate: -1 });
 VideoSchema.index({ title: "text", description: "text" });
+VideoSchema.index({ fileHash: 1 });
+VideoSchema.index({ "metadata.duration": 1, "metadata.fileSize": 1 });
 
 module.exports = mongoose.model("Video", VideoSchema)
