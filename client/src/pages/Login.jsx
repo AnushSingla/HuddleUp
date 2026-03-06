@@ -138,6 +138,18 @@ export default function Login() {
             <p className="text-gray-500 text-sm">Sign in to continue to your account</p>
           </div>
 
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="w-full h-10 rounded-xl text-sm font-medium text-gray-300 hover:text-white transition-all duration-200"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.09)",
+            }}
+          >
+            Go back to home
+          </button>
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
 
