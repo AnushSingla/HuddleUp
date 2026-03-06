@@ -5,6 +5,7 @@ const mongoose = require("mongoose")
 const dotenv = require("dotenv")
 const cors = require("cors")
 const path = require('path');
+const { apiLimiter } = require("./middleware/rateLimiter");
 const authRoutes = require("./routes/auth")
 const videoRoutes = require("./routes/video")
 const commentRoutes = require("./routes/comment")
@@ -48,9 +49,8 @@ app.use(cors({
   credentials: true
 }));
 
-
-
-
+// Apply general rate limiting to all API routes
+app.use("/api", apiLimiter);
 
 app.use(express.json());
 app.use("/api/auth", authRoutes)
