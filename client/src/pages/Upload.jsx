@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
 import PageMeta from "@/components/PageMeta";
 import VideoUploadProgress from "@/components/VideoUploadProgress";
+import DuplicateDetectionModal from "@/components/DuplicateDetectionModal";
 import { UploadCloud, X, CheckCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useVideoUpload } from "@/hooks/useVideoUpload";
@@ -144,13 +145,19 @@ const Upload = () => {
   const { errors, validateField, validateAll, clearError, validators } = useFormValidation();
   const {
     uploadVideo,
+    proceedWithDuplicate,
     checkProcessingStatus,
     uploadStatus,
     uploadProgress,
     processingProgress,
     error: uploadError,
     videoId,
+    duplicateInfo,
   } = useVideoUpload();
+
+  // State for duplicate detection modal
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [currentFormData, setCurrentFormData] = useState(null);
 
   useEffect(() => {
     if (uploadStatus === "processing" && videoId) {
@@ -231,8 +238,31 @@ const Upload = () => {
       await uploadVideo(formData);
       toast.success("Video uploaded! Processing started...");
     } catch (err) {
-      toast.error(uploadError || "Upload failed");
+      // Handle duplicate detection
+      if (uploadStatus === "duplicate_detected" && duplicateInfo) {
+        setCurrentFormData(formData);
+        setShowDuplicateModal(true);
+      } else {
+        toast.error(uploadError || "Upload failed");
+      }
     }
+  };
+
+  const handleProceedWithDuplicate = async () => {
+    if (!currentFormData) return;
+    
+    try {
+      setShowDuplicateModal(false);
+      await proceedWithDuplicate(currentFormData);
+      toast.success("Video uploaded! Processing started...");
+    } catch (err) {
+      toast.error("Upload failed");
+    }
+  };
+
+  const handleCancelDuplicate = () => {
+    setShowDuplicateModal(false);
+    setCurrentFormData(null);
   };
 
   return (
@@ -553,6 +583,15 @@ const Upload = () => {
           </div>
         </div>
       </div>
+
+      {/* Duplicate Detection Modal */}
+      <DuplicateDetectionModal
+        isOpen={showDuplicateModal}
+        onClose={handleCancelDuplicate}
+        duplicateInfo={duplicateInfo}
+        onProceed={handleProceedWithDuplicate}
+        onCancel={handleCancelDuplicate}
+      />
     </PageWrapper>
   );
 };

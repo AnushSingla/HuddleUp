@@ -2,6 +2,7 @@ const Video = require("../models/Video");
 const { deleteCachePattern } = require("../utils/cache");
 const { invalidateQueryCache } = require("../utils/queryCache");
 const { addVideoToQueue } = require("../services/videoQueue");
+const { detectDuplicates, getDuplicateStats } = require("../services/duplicateDetectionService");
 const path = require("path");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
@@ -16,7 +17,7 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
     return ResponseHandler.unauthorized(res);
   }
 
-  const { title, description, category } = req.body;
+  const { title, description, category, ignoreDuplicates } = req.body;
   if (!req.file) {
     logger.warn('Video creation failed - no file uploaded', {
       userId: req.user.id,
@@ -42,41 +43,131 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
   const videoUrl = `/uploads/${req.file.filename}`;
   const inputPath = path.join(__dirname, "..", "uploads", req.file.filename);
 
-  const newVideo = new Video({
-    title,
-    description,
-    category,
-    videoUrl,
-    postedBy: req.user.id,
-    processingStatus: "pending",
-    processingProgress: 0,
-  });
+  try {
+    // Perform duplicate detection
+    const duplicateResult = await detectDuplicates(
+      inputPath,
+      {
+        size: req.file.size,
+        originalname: req.file.originalname
+      },
+      req.user.id,
+      {} // Empty metadata object since video hasn't been processed yet
+    );
 
-  await newVideo.save();
+    // Handle exact duplicates
+    if (duplicateResult.isDuplicate && duplicateResult.type === 'exact') {
+      logger.warn('Exact duplicate detected, rejecting upload', {
+        userId: req.user.id,
+        filename: req.file.filename,
+        duplicateVideoId: duplicateResult.duplicate._id
+      });
 
-  const jobId = await addVideoToQueue(newVideo._id.toString(), inputPath, req.user.id);
-  
-  await Video.findByIdAndUpdate(newVideo._id, {
-    jobId,
-    processingStatus: "processing",
-  });
+      return ResponseHandler.error(
+        res,
+        ERROR_CODES.VALIDATION_ERROR,
+        duplicateResult.message,
+        409,
+        {
+          duplicateType: 'exact',
+          originalVideo: {
+            id: duplicateResult.duplicate._id,
+            title: duplicateResult.duplicate.title,
+            uploadedBy: duplicateResult.duplicate.postedBy.username,
+            uploadDate: duplicateResult.duplicate.createdAt
+          }
+        }
+      );
+    }
 
-  await Promise.all([
-    deleteCachePattern("feed:*"),
-    invalidateQueryCache("video:*"),
-  ]);
+    // Handle potential duplicates
+    if (duplicateResult.type === 'potential' && !ignoreDuplicates) {
+      logger.info('Potential duplicates detected, requesting user confirmation', {
+        userId: req.user.id,
+        filename: req.file.filename,
+        potentialCount: duplicateResult.potentialDuplicates.length
+      });
 
-  logger.info('Video uploaded successfully', {
-    videoId: newVideo._id,
-    userId: req.user.id,
-    title: newVideo.title,
-    jobId
-  });
+      return ResponseHandler.error(
+        res,
+        ERROR_CODES.VALIDATION_ERROR,
+        duplicateResult.message,
+        409,
+        {
+          duplicateType: 'potential',
+          potentialDuplicates: duplicateResult.potentialDuplicates.map(video => ({
+            id: video._id,
+            title: video.title,
+            uploadedBy: video.postedBy.username,
+            uploadDate: video.createdAt,
+            duration: video.metadata?.duration,
+            fileSize: video.metadata?.fileSize
+          })),
+          canProceed: true
+        }
+      );
+    }
 
-  return ResponseHandler.success(res, {
-    video: newVideo,
-    jobId,
-  }, "Video uploaded and processing started", 201);
+    // Create video record with duplicate detection data
+    const newVideo = new Video({
+      title,
+      description,
+      category,
+      videoUrl,
+      postedBy: req.user.id,
+      processingStatus: "pending",
+      processingProgress: 0,
+      fileHash: duplicateResult.fileHash,
+      originalFileSize: req.file.size,
+      originalFileName: req.file.originalname,
+      metadata: {
+        fileSize: req.file.size
+      }
+    });
+
+    await newVideo.save();
+
+    const jobId = await addVideoToQueue(newVideo._id.toString(), inputPath, req.user.id);
+    
+    await Video.findByIdAndUpdate(newVideo._id, {
+      jobId,
+      processingStatus: "processing",
+    });
+
+    await Promise.all([
+      deleteCachePattern("feed:*"),
+      invalidateQueryCache("video:*"),
+    ]);
+
+    logger.info('Video uploaded successfully', {
+      videoId: newVideo._id,
+      userId: req.user.id,
+      title: newVideo.title,
+      jobId,
+      fileHash: duplicateResult.fileHash,
+      duplicateStatus: duplicateResult.type
+    });
+
+    return ResponseHandler.success(res, {
+      video: newVideo,
+      jobId,
+      duplicateStatus: duplicateResult.type
+    }, "Video uploaded and processing started", 201);
+
+  } catch (error) {
+    logger.error('Error during video upload with duplicate detection', {
+      userId: req.user.id,
+      filename: req.file.filename,
+      error: error.message
+    });
+
+    return ResponseHandler.error(
+      res,
+      ERROR_CODES.INTERNAL_ERROR,
+      'Error processing video upload',
+      500
+    );
+  }
 });
 
 exports.getAllVideos = async (req, res) => {
@@ -229,3 +320,95 @@ exports.getProcessingStatus = async (req, res) => {
     res.status(500).json({ message: "Error fetching status", error: err.message });
   }
 };
+
+// Get duplicate detection statistics (admin only)
+exports.getDuplicateStats = ResponseHandler.asyncHandler(async (req, res) => {
+  try {
+    const stats = await getDuplicateStats();
+    
+    logger.info('Duplicate stats requested', {
+      userId: req.user.id,
+      stats
+    });
+
+    return ResponseHandler.success(res, stats, "Duplicate statistics retrieved successfully");
+  } catch (error) {
+    logger.error('Error fetching duplicate stats', {
+      userId: req.user.id,
+      error: error.message
+    });
+
+    return ResponseHandler.error(
+      res,
+      ERROR_CODES.INTERNAL_ERROR,
+      'Error fetching duplicate statistics',
+      500
+    );
+  }
+});
+
+// Get videos with duplicate hashes (admin only)
+exports.getDuplicateGroups = ResponseHandler.asyncHandler(async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Find duplicate groups
+    const duplicateHashes = await Video.aggregate([
+      { $match: { fileHash: { $exists: true, $ne: null } } },
+      { $group: { 
+          _id: '$fileHash', 
+          videos: { $push: '$$ROOT' },
+          count: { $sum: 1 } 
+        } 
+      },
+      { $match: { count: { $gt: 1 } } },
+      { $skip: skip },
+      { $limit: parseInt(limit) }
+    ]);
+
+    // Populate user information
+    for (let group of duplicateHashes) {
+      for (let video of group.videos) {
+        const user = await Video.populate(video, { path: 'postedBy', select: 'username' });
+      }
+    }
+
+    const totalGroups = await Video.aggregate([
+      { $match: { fileHash: { $exists: true, $ne: null } } },
+      { $group: { _id: '$fileHash', count: { $sum: 1 } } },
+      { $match: { count: { $gt: 1 } } },
+      { $count: 'total' }
+    ]);
+
+    logger.info('Duplicate groups requested', {
+      userId: req.user.id,
+      page,
+      limit,
+      groupsFound: duplicateHashes.length
+    });
+
+    return ResponseHandler.success(res, {
+      duplicateGroups: duplicateHashes,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: totalGroups[0]?.total || 0,
+        totalPages: Math.ceil((totalGroups[0]?.total || 0) / parseInt(limit))
+      }
+    }, "Duplicate groups retrieved successfully");
+
+  } catch (error) {
+    logger.error('Error fetching duplicate groups', {
+      userId: req.user.id,
+      error: error.message
+    });
+
+    return ResponseHandler.error(
+      res,
+      ERROR_CODES.INTERNAL_ERROR,
+      'Error fetching duplicate groups',
+      500
+    );
+  }
+});
