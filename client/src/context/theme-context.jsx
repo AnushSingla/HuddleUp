@@ -15,7 +15,7 @@ const getInitialTheme = () => {
 };
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(getInitialTheme);
+  const [theme, setTheme] = useState(getInitialTheme());
 
   useEffect(() => {
     const root = document.documentElement;

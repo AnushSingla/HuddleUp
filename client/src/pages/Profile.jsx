@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { API } from '@/api';
+import PageMeta from '@/components/PageMeta';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -119,6 +120,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
+        <PageMeta title="Profile" description="Your HuddleUp profile." />
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-zinc-400">Loading profile...</p>
@@ -130,6 +132,7 @@ export default function Profile() {
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
+        <PageMeta title="Profile" description="Your HuddleUp profile." />
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>No Profile Found</CardTitle>
@@ -146,6 +149,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-8 px-4">
+      <PageMeta title="My profile" description="Manage your HuddleUp profile, videos, and posts." />
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Profile Header Card */}
         <Card className="bg-gradient-to-br from-blue-600/10 to-purple-600/10 border-blue-500/30 overflow-hidden">

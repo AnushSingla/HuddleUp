@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
+import PageMeta from "@/components/PageMeta";
 import {
   FileText,
   UserCheck,
@@ -130,6 +131,7 @@ function renderMarkdownBold(text) {
 const TermsOfService = () => {
   return (
     <PageWrapper>
+      <PageMeta title="Terms of Service" description="Terms of use for HuddleUp. By using the platform you agree to these terms." />
       <div
         className="min-h-screen"
         style={{ background: "var(--bg-primary)" }}

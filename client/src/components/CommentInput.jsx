@@ -29,7 +29,7 @@ export default function CommentInput({
       const payload = {
         text: comment,
         ...(contentType === 'post' ? { postId: contentId } : { videoId: contentId }),
-        parentId: parentId || null,
+        ...(parentId && { parentId }),
       };
       const res = await API.post('/comments', payload, {
         headers: { Authorization: `Bearer ${getToken()}` },

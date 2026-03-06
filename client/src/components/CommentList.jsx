@@ -7,6 +7,7 @@ import { getToken, getUserId } from '@/utils/auth';
 import { toast } from 'sonner';
 import CommentInput from './CommentInput';
 import EmptyState from '@/components/ui/EmptyState';
+import MentionText from './MentionText';
 
 function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP = false }) {
   const navigate = useNavigate();
@@ -164,7 +165,7 @@ function CommentItem({ comment, onAddComment, onDeleteComment, level = 0, isOP =
 
           {/* Comment Body */}
           <p className="text-sm leading-relaxed" style={{ color: 'var(--text-main)' }}>
-            {comment.content}
+            <MentionText text={comment.content} />
           </p>
 
           {/* Actions */}

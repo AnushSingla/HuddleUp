@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Send, Star } from "lucide-react";
 import PageWrapper from "@/components/ui/PageWrapper";
+import PageMeta from "@/components/PageMeta";
 
 export default function Feedback() {
   const [form, setForm] = useState({ 
@@ -30,6 +31,7 @@ export default function Feedback() {
 
   return (
     <PageWrapper>
+      <PageMeta title="Feedback" description="Send feedback to the HuddleUp team. We value your input." />
     <div className="min-h-screen py-16 px-6" 
       style={{ background: 'var(--bg-primary)' }}>
       

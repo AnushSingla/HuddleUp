@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const Notification = require("../models/Notification");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 /** GET /api/notifications?limit=10&skip=0 - Fetch user's notifications (paginated) */
 exports.getNotifications = async (req, res) => {
@@ -56,7 +58,7 @@ exports.markAsRead = async (req, res) => {
       recipient: req.user.id,
     });
     if (!notification) {
-      return res.status(404).json({ message: "Notification not found" });
+      return ResponseHandler.notFound(res, "Notification not found");
     }
     notification.isRead = true;
     await notification.save();
@@ -74,7 +76,7 @@ exports.markAsReadLegacy = async (req, res) => {
       recipient: req.user.id,
     });
     if (!notification) {
-      return res.status(404).json({ message: "Notification not found" });
+      return ResponseHandler.notFound(res, "Notification not found");
     }
     notification.isRead = true;
     await notification.save();
@@ -106,7 +108,7 @@ exports.deleteNotification = async (req, res) => {
       recipient: req.user.id,
     });
     if (!deleted) {
-      return res.status(404).json({ message: "Notification not found" });
+      return ResponseHandler.notFound(res, "Notification not found");
     }
     res.json({ message: "Notification deleted" });
   } catch (error) {

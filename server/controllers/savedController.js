@@ -2,6 +2,8 @@ const User = require("../models/User");
 const Video = require("../models/Video");
 const Post = require("../models/Post");
 const mongoose = require("mongoose");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 const getSaved = async (req, res) => {
   try {
@@ -10,13 +12,13 @@ const getSaved = async (req, res) => {
       .populate("savedVideos")
       .populate({ path: "savedPosts", populate: { path: "postedBy", select: "username _id" } })
       .lean();
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return ResponseHandler.notFound(res, "User not found");
     const savedVideos = (user.savedVideos || []).filter(Boolean);
     const savedPosts = (user.savedPosts || []).filter(Boolean);
     return res.json({ savedVideos, savedPosts });
   } catch (err) {
-    console.error("getSaved error:", err);
-    return res.status(500).json({ message: "Failed to fetch saved", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Failed to fetch saved");
   }
 };
 
@@ -31,11 +33,11 @@ const addVideo = async (req, res) => {
       { $addToSet: { savedVideos: videoId } },
       { new: true }
     ).select("savedVideos");
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return ResponseHandler.notFound(res, "User not found");
     return res.json({ saved: true, savedVideos: user.savedVideos });
   } catch (err) {
-    console.error("addVideo saved error:", err);
-    return res.status(500).json({ message: "Failed to save video", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Failed to save video");
   }
 };
 
@@ -50,11 +52,11 @@ const removeVideo = async (req, res) => {
       { $pull: { savedVideos: videoId } },
       { new: true }
     ).select("savedVideos");
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return ResponseHandler.notFound(res, "User not found");
     return res.json({ saved: false, savedVideos: user.savedVideos });
   } catch (err) {
-    console.error("removeVideo saved error:", err);
-    return res.status(500).json({ message: "Failed to unsave video", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Failed to unsave video");
   }
 };
 
@@ -69,11 +71,11 @@ const addPost = async (req, res) => {
       { $addToSet: { savedPosts: postId } },
       { new: true }
     ).select("savedPosts");
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return ResponseHandler.notFound(res, "User not found");
     return res.json({ saved: true, savedPosts: user.savedPosts });
   } catch (err) {
-    console.error("addPost saved error:", err);
-    return res.status(500).json({ message: "Failed to save post", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Failed to save post");
   }
 };
 
@@ -88,11 +90,11 @@ const removePost = async (req, res) => {
       { $pull: { savedPosts: postId } },
       { new: true }
     ).select("savedPosts");
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return ResponseHandler.notFound(res, "User not found");
     return res.json({ saved: false, savedPosts: user.savedPosts });
   } catch (err) {
-    console.error("removePost saved error:", err);
-    return res.status(500).json({ message: "Failed to unsave post", error: err.message });
+    // Removed console.error - use logger instead
+    return ResponseHandler.handleError(err, req, res, "Failed to unsave post");
   }
 };
 

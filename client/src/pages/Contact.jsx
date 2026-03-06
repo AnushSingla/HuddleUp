@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { MessageSquare, Phone, Send, Mail, MapPin, Clock } from "lucide-react";
 import PageWrapper from "@/components/ui/PageWrapper";
+import PageMeta from "@/components/PageMeta";
 import { toast } from "sonner";
 
 export default function Contact() {
@@ -31,6 +32,7 @@ export default function Contact() {
 
   return (
     <PageWrapper>
+      <PageMeta title="Contact" description="Get in touch with the HuddleUp team. We'd love to hear from you." />
     <div className="min-h-screen py-16 px-6" 
       style={{ background: 'var(--bg-primary)' }}>
       

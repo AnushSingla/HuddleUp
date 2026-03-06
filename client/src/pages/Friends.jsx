@@ -16,6 +16,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { API } from "../api";
+import PageMeta from "@/components/PageMeta";
 import { useNotifications } from "@/context/NotificationContext";
 import { getUserId } from "@/utils/auth";
 
@@ -82,6 +83,7 @@ const Friends = () => {
   return (
     <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors duration-500 overflow-hidden"
       style={{ background: 'var(--bg-primary)' }}>
+      <PageMeta title="Friends" description="Find and connect with friends on HuddleUp. Send requests and manage your network." />
       {/* Background Glows */}
       <div className="absolute -top-40 -left-20 w-[600px] h-[600px] bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute top-1/2 -right-20 w-[500px] h-[500px] bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />

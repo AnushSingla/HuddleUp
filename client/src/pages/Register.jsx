@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API } from "../api";
+import PageMeta from '@/components/PageMeta';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex" style={{ background: "#080a14" }}>
+      <PageMeta title="Sign Up" description="Create your HuddleUp account to share sports moments, join discussions, and connect with fans." />
 
       {/* ── Left branding panel ── */}
       <div
@@ -133,6 +135,18 @@ export default function Register() {
             <h1 className="text-2xl font-extrabold text-white tracking-tight">Create your account</h1>
             <p className="text-gray-500 text-sm">It's free and only takes a minute</p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="w-full h-10 rounded-xl text-sm font-medium text-gray-300 hover:text-white transition-all duration-200"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.09)",
+            }}
+          >
+            Go back to home
+          </button>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>

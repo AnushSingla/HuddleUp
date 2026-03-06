@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
+import PageMeta from "@/components/PageMeta";
 import { Shield, Database, Share2, Mail, Clock, Eye, Lock, UserCheck } from "lucide-react";
 
 const EFFECTIVE_DATE = "February 17, 2026";
@@ -95,6 +96,7 @@ function renderMarkdownBold(text) {
 const PrivacyPolicy = () => {
   return (
     <PageWrapper>
+      <PageMeta title="Privacy Policy" description="How HuddleUp collects, uses, and protects your data. Read our privacy policy." />
       <div className="min-h-screen" style={{ background: "var(--bg-primary)" }}>
         {/* Hero Section */}
         <section className="px-6 md:px-12 pt-20 pb-10">

@@ -84,3 +84,58 @@ export async function shareLink(url, title, text = '', onCopy, onError) {
     await fallbackCopy();
   }
 }
+
+/**
+ * Share to Twitter/X
+ * @param {string} url - video URL
+ * @param {string} title - video title
+ * @param {string} [description] - video description
+ */
+export function shareToTwitter(url, title, description = '') {
+  const text = `${title}${description ? '\n\n' + description.substring(0, 100) : ''}\n\n`;
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+  window.open(twitterUrl, '_blank', 'width=550,height=420');
+}
+
+/**
+ * Share to Facebook
+ * @param {string} url - video URL
+ */
+export function shareToFacebook(url) {
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  window.open(facebookUrl, '_blank', 'width=550,height=420');
+}
+
+/**
+ * Share to WhatsApp
+ * @param {string} url - video URL
+ * @param {string} title - video title
+ */
+export function shareToWhatsApp(url, title) {
+  const text = `Check out: ${title}\n${url}`;
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(whatsappUrl, '_blank');
+}
+
+/**
+ * Share to LinkedIn
+ * @param {string} url - video URL
+ * @param {string} title - video title
+ */
+export function shareToLinkedIn(url, title) {
+  const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+  window.open(linkedinUrl, '_blank', 'width=550,height=420');
+}
+
+/**
+ * Share via Email
+ * @param {string} url - video URL
+ * @param {string} title - video title
+ * @param {string} [description] - video description
+ */
+export function shareViaEmail(url, title, description = '') {
+  const subject = `Check out this video: ${title}`;
+  const body = `${description}\n\nWatch here: ${url}`;
+  const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoUrl;
+}

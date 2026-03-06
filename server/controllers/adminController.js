@@ -2,6 +2,11 @@ const Post = require("../models/Post");
 const Video = require("../models/Video");
 const Comment = require("../models/Comment");
 const User = require("../models/User");
+const Report = require("../models/Report");
+const ModerationLog = require("../models/ModerationLog");
+const Appeal = require("../models/Appeal");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 // Get all flagged posts
 exports.getFlaggedPosts = async (req, res) => {
@@ -10,7 +15,7 @@ exports.getFlaggedPosts = async (req, res) => {
             .populate('postedBy', 'username email')
             .populate('flaggedBy', 'username')
             .sort({ createdAt: -1 });
-        
+
         res.json(posts);
     } catch (error) {
         res.status(500).json({ message: "Error fetching flagged posts", error: error.message });
@@ -24,7 +29,7 @@ exports.getFlaggedVideos = async (req, res) => {
             .populate('postedBy', 'username email')
             .populate('flaggedBy', 'username')
             .sort({ createdAt: -1 });
-        
+
         res.json(videos);
     } catch (error) {
         res.status(500).json({ message: "Error fetching flagged videos", error: error.message });
@@ -40,7 +45,7 @@ exports.getFlaggedComments = async (req, res) => {
             .populate('videoId', 'title')
             .populate('postId', 'title')
             .sort({ createdAt: -1 });
-        
+
         res.json(comments);
     } catch (error) {
         res.status(500).json({ message: "Error fetching flagged comments", error: error.message });
@@ -55,7 +60,7 @@ exports.flagPost = async (req, res) => {
 
         const post = await Post.findById(postId);
         if (!post) {
-            return res.status(404).json({ message: "Post not found" });
+            return ResponseHandler.notFound(res, "Post not found");
         }
 
         if (!post.flaggedBy.includes(userId)) {
@@ -63,7 +68,7 @@ exports.flagPost = async (req, res) => {
         }
         post.flagged = true;
         post.flagReason = reason || post.flagReason;
-        
+
         await post.save();
         res.json({ message: "Post flagged successfully", post });
     } catch (error) {
@@ -79,7 +84,7 @@ exports.flagVideo = async (req, res) => {
 
         const video = await Video.findById(videoId);
         if (!video) {
-            return res.status(404).json({ message: "Video not found" });
+            return ResponseHandler.notFound(res, "Video not found");
         }
 
         if (!video.flaggedBy.includes(userId)) {
@@ -87,7 +92,7 @@ exports.flagVideo = async (req, res) => {
         }
         video.flagged = true;
         video.flagReason = reason || video.flagReason;
-        
+
         await video.save();
         res.json({ message: "Video flagged successfully", video });
     } catch (error) {
@@ -103,7 +108,7 @@ exports.flagComment = async (req, res) => {
 
         const comment = await Comment.findById(commentId);
         if (!comment) {
-            return res.status(404).json({ message: "Comment not found" });
+            return ResponseHandler.notFound(res, "Comment not found");
         }
 
         if (!comment.flaggedBy.includes(userId)) {
@@ -111,7 +116,7 @@ exports.flagComment = async (req, res) => {
         }
         comment.flagged = true;
         comment.flagReason = reason || comment.flagReason;
-        
+
         await comment.save();
         res.json({ message: "Comment flagged successfully", comment });
     } catch (error) {
@@ -123,10 +128,10 @@ exports.flagComment = async (req, res) => {
 exports.deletePost = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const post = await Post.findByIdAndDelete(id);
         if (!post) {
-            return res.status(404).json({ message: "Post not found" });
+            return ResponseHandler.notFound(res, "Post not found");
         }
 
         // Also delete associated comments
@@ -142,10 +147,10 @@ exports.deletePost = async (req, res) => {
 exports.deleteVideo = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const video = await Video.findByIdAndDelete(id);
         if (!video) {
-            return res.status(404).json({ message: "Video not found" });
+            return ResponseHandler.notFound(res, "Video not found");
         }
 
         // Also delete associated comments
@@ -161,10 +166,10 @@ exports.deleteVideo = async (req, res) => {
 exports.deleteComment = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const comment = await Comment.findByIdAndDelete(id);
         if (!comment) {
-            return res.status(404).json({ message: "Comment not found" });
+            return ResponseHandler.notFound(res, "Comment not found");
         }
 
         res.json({ message: "Comment deleted successfully" });
@@ -202,15 +207,30 @@ exports.dismissFlag = async (req, res) => {
     }
 };
 
-// Get admin statistics
+// Get admin statistics (enhanced)
 exports.getAdminStats = async (req, res) => {
     try {
-        const flaggedPostsCount = await Post.countDocuments({ flagged: true });
-        const flaggedVideosCount = await Video.countDocuments({ flagged: true });
-        const flaggedCommentsCount = await Comment.countDocuments({ flagged: true });
-        const totalUsers = await User.countDocuments();
-        const totalPosts = await Post.countDocuments();
-        const totalVideos = await Video.countDocuments();
+        const [
+            flaggedPostsCount,
+            flaggedVideosCount,
+            flaggedCommentsCount,
+            totalUsers,
+            totalPosts,
+            totalVideos,
+            pendingReports,
+            pendingAppeals,
+            bannedUsers
+        ] = await Promise.all([
+            Post.countDocuments({ flagged: true }),
+            Video.countDocuments({ flagged: true }),
+            Comment.countDocuments({ flagged: true }),
+            User.countDocuments(),
+            Post.countDocuments(),
+            Video.countDocuments(),
+            Report.countDocuments({ status: "pending" }),
+            Appeal.countDocuments({ status: "pending" }),
+            User.countDocuments({ isBanned: true })
+        ]);
 
         res.json({
             flaggedPosts: flaggedPostsCount,
@@ -218,7 +238,10 @@ exports.getAdminStats = async (req, res) => {
             flaggedComments: flaggedCommentsCount,
             totalUsers,
             totalPosts,
-            totalVideos
+            totalVideos,
+            pendingReports,
+            pendingAppeals,
+            bannedUsers
         });
     } catch (error) {
         res.status(500).json({ message: "Error fetching admin stats", error: error.message });
@@ -229,8 +252,166 @@ exports.getAdminStats = async (req, res) => {
 exports.checkAdminStatus = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
-        res.json({ isAdmin: user.isAdmin || false });
+        res.json({
+            isAdmin: user.isAdmin || user.role === 'admin' || false,
+            role: user.role || 'user'
+        });
     } catch (error) {
         res.status(500).json({ message: "Error checking admin status", error: error.message });
+    }
+};
+
+// ─── User Management ─────────────────────────────────────────────────────────
+
+// Get all users (paginated)
+exports.getUsers = async (req, res) => {
+    try {
+        const { page = 1, limit = 20, search, filter } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const query = {};
+        if (search) {
+            query.$or = [
+                { username: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
+            ];
+        }
+        if (filter === 'banned') query.isBanned = true;
+        if (filter === 'warned') query['warnings.0'] = { $exists: true };
+
+        const [users, total] = await Promise.all([
+            User.find(query)
+                .select('username email role isAdmin isBanned banReason bannedAt bannedUntil suspensionCount warnings createdAt')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit))
+                .lean(),
+            User.countDocuments(query)
+        ]);
+
+        res.json({
+            users,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching users", error: error.message });
+    }
+};
+
+// Ban a user
+exports.banUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason, duration } = req.body; // duration in days, null = permanent
+        const adminId = req.user.id;
+
+        if (id === adminId) {
+            return res.status(400).json({ message: "You cannot ban yourself" });
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return ResponseHandler.notFound(res, "User not found");
+        }
+
+        if (user.isAdmin || user.role === 'admin') {
+            return ResponseHandler.forbidden(res, "Cannot ban an admin user");
+        }
+
+        user.isBanned = true;
+        user.banReason = reason || "Policy violation";
+        user.bannedAt = new Date();
+        user.bannedUntil = duration ? new Date(Date.now() + duration * 24 * 60 * 60 * 1000) : null;
+        user.suspensionCount = (user.suspensionCount || 0) + 1;
+        await user.save();
+
+        // Log the action
+        await ModerationLog.create({
+            moderator: adminId,
+            action: duration ? "suspend" : "ban",
+            targetType: "user",
+            targetId: id,
+            reason: reason || "Policy violation",
+            details: {
+                duration: duration ? `${duration} days` : "permanent",
+                username: user.username
+            }
+        });
+
+        const banType = duration ? `suspended for ${duration} days` : "permanently banned";
+        res.json({ message: `User ${user.username} has been ${banType}` });
+    } catch (error) {
+        res.status(500).json({ message: "Error banning user", error: error.message });
+    }
+};
+
+// Unban a user
+exports.unbanUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const adminId = req.user.id;
+
+        const user = await User.findById(id);
+        if (!user) {
+            return ResponseHandler.notFound(res, "User not found");
+        }
+
+        user.isBanned = false;
+        user.banReason = "";
+        user.bannedAt = null;
+        user.bannedUntil = null;
+        await user.save();
+
+        await ModerationLog.create({
+            moderator: adminId,
+            action: "unban",
+            targetType: "user",
+            targetId: id,
+            reason: "Admin unbanned user",
+            details: { username: user.username }
+        });
+
+        res.json({ message: `User ${user.username} has been unbanned` });
+    } catch (error) {
+        res.status(500).json({ message: "Error unbanning user", error: error.message });
+    }
+};
+
+// Warn a user
+exports.warnUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+        const adminId = req.user.id;
+
+        const user = await User.findById(id);
+        if (!user) {
+            return ResponseHandler.notFound(res, "User not found");
+        }
+
+        user.warnings.push({
+            reason: reason || "Policy violation",
+            issuedBy: adminId,
+            issuedAt: new Date()
+        });
+        await user.save();
+
+        await ModerationLog.create({
+            moderator: adminId,
+            action: "warn",
+            targetType: "user",
+            targetId: id,
+            reason: reason || "Policy violation",
+            details: { username: user.username, totalWarnings: user.warnings.length }
+        });
+
+        res.json({ message: `Warning issued to ${user.username}. Total warnings: ${user.warnings.length}` });
+    } catch (error) {
+        res.status(500).json({ message: "Error warning user", error: error.message });
     }
 };

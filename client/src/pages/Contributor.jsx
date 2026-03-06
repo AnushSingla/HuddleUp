@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
+import PageMeta from "@/components/PageMeta";
 import {
   Users,
   GitCommit,
@@ -103,6 +104,7 @@ const Contributor = () => {
 
   return (
     <PageWrapper>
+      <PageMeta title="Contributors" description="Meet the open-source contributors who build HuddleUp." />
       <div className="min-h-screen" style={{ background: "var(--bg-primary)" }}>
         {/* Hero Section */}
         <section className="px-6 md:px-12 pt-20 pb-10">

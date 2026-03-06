@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Heart, MessageCircle, Calendar, Tag, User, Trash2, Pencil, Share2, Link2, ArrowBigUp, ArrowBigDown, Pin, MoreHorizontal, Bookmark } from 'lucide-react';
+import { Heart, MessageCircle, Calendar, Tag, User, Trash2, Pencil, Share2, Link2, ArrowBigUp, ArrowBigDown, Pin, MoreHorizontal, Bookmark, Flag, X } from 'lucide-react';
 import CommentSection from './CommentSection';
+import MentionText from './MentionText';
 import { API } from '@/api';
 import { getToken, getUserId } from '@/utils/auth';
 import { getShareUrl, shareLink, copyLinkToClipboard } from '@/utils/share';
 import { toast } from 'sonner';
+import { socket } from '@/lib/socket';
 
 const PostCard = ({ post, onDelete, isPinned = false, isSaved = false, onSaveToggle }) => {
   const navigate = useNavigate();
@@ -16,6 +18,9 @@ const PostCard = ({ post, onDelete, isPinned = false, isSaved = false, onSaveTog
   const [likes, setLikes] = useState(post.likes?.length || 0);
   const [showComments, setShowComments] = useState(false);
   const [voteState, setVoteState] = useState(null); // 'up', 'down', or null
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('spam');
+  const [reportDescription, setReportDescription] = useState('');
 
   const postId = post._id;
   const userId = getUserId();
@@ -56,6 +61,25 @@ const PostCard = ({ post, onDelete, isPinned = false, isSaved = false, onSaveTog
     } catch (err) {
       console.error('❌ Failed to delete post:', err);
       toast.error(err.response?.data?.message || "Failed to delete post.");
+    }
+  };
+
+  const handleReport = async () => {
+    const token = getToken();
+    if (!token) { toast.error('Please login to report content'); return; }
+    try {
+      await API.post('/moderation/report', {
+        contentType: 'post',
+        contentId: postId,
+        reason: reportReason,
+        description: reportDescription
+      });
+      toast.success('Report submitted. Our moderators will review it.');
+      setShowReportModal(false);
+      setReportReason('spam');
+      setReportDescription('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit report');
     }
   };
 
@@ -101,6 +125,34 @@ const PostCard = ({ post, onDelete, isPinned = false, isSaved = false, onSaveTog
   };
 
   const categoryStyle = post.category ? getCategoryColor(post.category) : null;
+
+  useEffect(() => {
+    if (!postId) return;
+
+    socket.connect();
+
+    const roomPayload = { contentId: postId, contentType: 'post' };
+    socket.emit('join_content', roomPayload);
+
+    const handleLikeUpdate = (payload) => {
+      if (
+        payload.contentType !== 'post' ||
+        payload.contentId !== postId
+      ) {
+        return;
+      }
+      if (typeof payload.likes === 'number') {
+        setLikes(payload.likes);
+      }
+    };
+
+    socket.on('content:like_toggled', handleLikeUpdate);
+
+    return () => {
+      socket.emit('leave_content', roomPayload);
+      socket.off('content:like_toggled', handleLikeUpdate);
+    };
+  }, [postId]);
 
   return (
     <motion.div
@@ -248,7 +300,7 @@ const PostCard = ({ post, onDelete, isPinned = false, isSaved = false, onSaveTog
                 color: 'var(--text-sub)'
               }}
             >
-              {post.content}
+              <MentionText text={post.content} />
             </p>
           </div>
 
@@ -322,6 +374,20 @@ const PostCard = ({ post, onDelete, isPinned = false, isSaved = false, onSaveTog
                 <span>{isSaved ? 'Saved' : 'Save'}</span>
               </button>
             )}
+
+            {userId !== postOwnerId && (
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm font-medium"
+                style={{ color: 'var(--text-sub)' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-elevated)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                title="Report post"
+              >
+                <Flag className="w-4 h-4" />
+                <span>Report</span>
+              </button>
+            )}
           </div>
 
           {/* Thread Depth Visual Line + Comments Section */}
@@ -342,6 +408,41 @@ const PostCard = ({ post, onDelete, isPinned = false, isSaved = false, onSaveTog
           )}
         </div>
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowReportModal(false)}>
+          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Flag className="w-5 h-5 text-red-400" /> Report Post
+              </h3>
+              <button onClick={() => setShowReportModal(false)} className="text-zinc-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <select value={reportReason} onChange={e => setReportReason(e.target.value)}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-sm text-white mb-3 outline-none focus:border-red-500">
+              <option value="spam">Spam</option>
+              <option value="harassment">Harassment</option>
+              <option value="hate_speech">Hate Speech</option>
+              <option value="violence">Violence</option>
+              <option value="misinformation">Misinformation</option>
+              <option value="other">Other</option>
+            </select>
+            <textarea value={reportDescription} onChange={e => setReportDescription(e.target.value)}
+              placeholder="Describe the issue (optional)..."
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-sm text-white placeholder-zinc-500 mb-4 resize-none outline-none focus:border-red-500"
+              rows={2} />
+            <div className="flex gap-2">
+              <button onClick={() => setShowReportModal(false)}
+                className="flex-1 py-2.5 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white text-sm transition-colors">Cancel</button>
+              <button onClick={handleReport}
+                className="flex-1 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors">Submit Report</button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };

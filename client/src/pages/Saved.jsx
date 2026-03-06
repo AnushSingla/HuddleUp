@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import PageWrapper from '@/components/ui/PageWrapper';
+import PageMeta from '@/components/PageMeta';
 import EmptyState from '@/components/ui/EmptyState';
 import VideoCard from '@/components/VideoCard';
 import PostCard from '@/components/PostCard';
@@ -69,6 +70,7 @@ export default function Saved() {
 
   return (
     <PageWrapper>
+      <PageMeta title="Saved" description="Your saved videos and posts on HuddleUp." />
       <div className="min-h-screen py-8" style={{ background: 'var(--bg-primary)' }}>
         <div className="max-w-6xl mx-auto px-4">
           <motion.div

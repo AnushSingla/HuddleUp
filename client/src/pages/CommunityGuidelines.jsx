@@ -1,5 +1,6 @@
 import React from "react";
 import PageWrapper from "@/components/ui/PageWrapper";
+import PageMeta from "@/components/PageMeta";
 import { motion } from "framer-motion";
 import { ShieldCheck, MessageCircle, AlertTriangle, FileText, Lock, Flag, UserCheck, HeartHandshake } from "lucide-react";
 
@@ -54,12 +55,78 @@ const guidelines = [
   },
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const cardVariants = {
+  initial: {
+    y: 20,
+    opacity: 0,
+  },
+  animate: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+    },
+  },
+  hover: {
+    y: -12,
+    scale: 1.03,
+    boxShadow: "0 25px 50px -12px rgba(6, 78, 59, 0.4)",
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+};
+
+const iconVariants = {
+  hover: {
+    scale: 1.2,
+    rotate: 5,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 15,
+    },
+  },
+};
+
+const titleVariants = {
+  hover: {
+    scale: 1.02,
+    transition: {
+      duration: 0.2,
+    },
+  },
+};
+
+const glowVariants = {
+  hover: {
+    opacity: 1,
+    scale: 1.05,
+    background: "radial-gradient(circle at 30% 30%, #10b98140 0%, transparent 50%), radial-gradient(circle at 70% 70%, #06b6d440 0%, transparent 50%)",
+    transition: {
+      duration: 0.3,
+    },
+  },
+};
+
 const CommunityGuidelines = () => (
   <PageWrapper>
+    <PageMeta title="Community Guidelines" description="HuddleUp community guidelines. Respect, sportsmanship, and safe space for all." />
     <div className="min-h-screen px-6 md:px-12 py-20 bg-gradient-to-br from-zinc-950 via-zinc-900 to-black">
-      
       <div className="max-w-5xl mx-auto">
-        
         {/* Heading */}
         <motion.h1
           initial={{ opacity: 0, y: -30 }}
@@ -76,34 +143,63 @@ const CommunityGuidelines = () => (
         </p>
 
         {/* Cards Grid */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid md:grid-cols-2 gap-8"
+        >
           {guidelines.map((item, idx) => (
             <motion.div
               key={idx}
-              whileHover={{ y: -8, scale: 1.02 }}
-              transition={{ type: "spring", stiffness: 200 }}
-              className="group relative bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-emerald-500/20 hover:border-emerald-400/40 transition-all duration-300"
+              variants={cardVariants}
+              className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-xl overflow-hidden"
+              whileHover="hover"
             >
-              
-              {/* Glow Effect */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-400/10 to-cyan-400/10 opacity-0 group-hover:opacity-100 transition duration-300"></div>
+              {/* Enhanced Glow Effect */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 via-transparent to-cyan-400/20"
+                variants={glowVariants}
+              />
 
               {/* Content */}
               <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-4 text-emerald-400 group-hover:text-cyan-400 transition duration-300">
-                  {item.icon}
-                  <h2 className="text-xl font-bold">
+                <motion.div 
+                  className="flex items-center gap-4 mb-6"
+                  variants={iconVariants}
+                  whileHover="hover"
+                >
+                  <motion.div
+                    className="p-2 bg-emerald-400/10 rounded-xl backdrop-blur-sm border border-emerald-400/20 group-hover:bg-cyan-400/10 group-hover:border-cyan-400/20 transition-all duration-300"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    {React.cloneElement(item.icon, { 
+                      className: "group-hover:text-cyan-400 text-emerald-400 transition-colors duration-300 drop-shadow-lg" 
+                    })}
+                  </motion.div>
+                  <motion.h2 
+                    className="text-2xl font-bold bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent"
+                    variants={titleVariants}
+                  >
                     {item.title}
-                  </h2>
-                </div>
+                  </motion.h2>
+                </motion.div>
 
-                <p className="text-zinc-300 leading-relaxed text-sm md:text-base">
+                <p className="text-zinc-300 leading-relaxed text-base tracking-wide">
                   {item.description}
                 </p>
               </div>
+
+              {/* Subtle shimmer on hover */}
+              <motion.div
+                className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-cyan-400 to-transparent opacity-0 group-hover:opacity-100"
+                initial={{ x: -100 }}
+                whileHover={{ x: "100%" }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
+              />
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Footer */}
         <div className="mt-16 text-center text-sm text-zinc-500">

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PageWrapper from "@/components/ui/PageWrapper";
+import PageMeta from "@/components/PageMeta";
 import {
   Upload,
   Users,
@@ -130,7 +131,7 @@ function FeatureCards() {
             <h3
               className="relative text-lg font-bold mb-2"
               style={{
-                color: isHovered ? item.color : 'var(--ice-white)',
+                color: isHovered ? item.color : 'var(--text-main)',
                 transition: 'color 0.3s ease',
                 zIndex: 1,
               }}
@@ -200,6 +201,10 @@ export default function Home() {
 
   return (
     <PageWrapper>
+      <PageMeta
+        title="Sports Moments & Debate"
+        description="Share game-changing sports moments, join live discussions, and connect with fans. Upload highlights and debate the play."
+      />
       <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
 
         {/* HERO - PRODUCT NARRATIVE FIRST */}
@@ -244,7 +249,7 @@ export default function Home() {
                   style={{
                     fontSize: 'clamp(40px, 8vw, 96px)',
                     lineHeight: '1',
-                    color: 'var(--ice-white)',
+                    color: 'var(--text-main)',
                     letterSpacing: '-0.03em',
                     marginBottom: 'var(--space-6)'
                   }}>
@@ -317,12 +322,11 @@ export default function Home() {
                     }}
                     className="relative inline-flex items-center gap-3 px-9 py-4 rounded-full font-semibold text-lg border focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                     style={{
-                      background:
-                        "linear-gradient(135deg, rgba(15,23,42,0.9), rgba(15,23,42,0.3))",
+                      background: "var(--bg-overlay)",
                       borderColor: "rgba(56,189,248,0.6)",
                       boxShadow:
-                        "0 12px 35px rgba(15, 23, 42, 0.85)",
-                      color: "var(--ice-white)",
+                        "0 8px 24px rgba(15, 23, 42, 0.15)",
+                      color: "var(--text-main)",
                     }}
                   >
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500/10 border border-cyan-400/60">
@@ -366,10 +370,10 @@ export default function Home() {
 
               <div className="absolute bottom-0 left-0 p-8">
                 <p className="text-xs font-mono mb-3 tracking-wider"
-                  style={{ color: 'var(--ice-white)', opacity: 0.8 }}>
+                  style={{ color: 'var(--text-sub)', opacity: 0.9 }}>
                   {featuredMoment.timeAgo.toUpperCase()} BY {featuredMoment.uploader.toUpperCase()}
                 </p>
-                <h3 className="text-4xl font-black mb-4" style={{ color: 'var(--ice-white)' }}>
+                <h3 className="text-4xl font-black mb-4" style={{ color: 'var(--text-main)' }}>
                   {featuredMoment.title}
                 </h3>
                 <button
@@ -454,7 +458,7 @@ export default function Home() {
             <button
               onClick={() => navigate("/posts")}
               className="text-sm font-medium flex items-center gap-1 hover-lift"
-              style={{ color: 'white' }}
+              style={{ color: 'var(--text-energy)' }}
             >
               View All
               <ArrowRight className="w-4 h-4" />

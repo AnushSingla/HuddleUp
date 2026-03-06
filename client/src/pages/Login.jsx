@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API } from "@/api";
+import PageMeta from '@/components/PageMeta';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex" style={{ background: "#080a14" }}>
+      <PageMeta title="Sign In" description="Sign in to HuddleUp to share sports moments, join discussions, and connect with fans." />
 
       {/* ── Left branding panel ── */}
       <div
@@ -136,6 +138,18 @@ export default function Login() {
             <p className="text-gray-500 text-sm">Sign in to continue to your account</p>
           </div>
 
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="w-full h-10 rounded-xl text-sm font-medium text-gray-300 hover:text-white transition-all duration-200"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.09)",
+            }}
+          >
+            Go back to home
+          </button>
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
 
@@ -167,10 +181,20 @@ export default function Login() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider"
-                     style={{ color: "#6b7280" }}>
-                Password
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider"
+                       style={{ color: "#6b7280" }}>
+                  Password
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-xs font-medium hover:underline"
+                  style={{ color: "#60a5fa" }}
+                >
+                  Forgot password?
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none"
                       style={{ color: "#9ca3af" }} />

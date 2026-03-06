@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Video, FileText } from 'lucide-react';
 import PageWrapper from '@/components/ui/PageWrapper';
+import PageMeta from '@/components/PageMeta';
 import EmptyState from '@/components/ui/EmptyState';
 import VideoCard from '@/components/VideoCard';
 import PostCard from '@/components/PostCard';
@@ -95,6 +96,10 @@ export default function PublicProfile() {
 
   return (
     <PageWrapper>
+      <PageMeta
+        title={`${displayName}'s profile`}
+        description={`View ${displayName}'s videos and posts on HuddleUp.`}
+      />
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
