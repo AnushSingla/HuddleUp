@@ -31,24 +31,16 @@ async function createCommentNotification({ recipientId, senderId, type, resource
       type,
     });
   } catch (e) {
-    // Removed console.error - use logger instead
+    logger.error('Failed to create comment notification', { recipientId, senderId, type, error: e.message });
   }
 }
 
 exports.createComment = ResponseHandler.asyncHandler(async (req, res) => {
-  const { videoId, postId, text, parentId } = req.body;
+  const { text, parentId } = req.body;
   const userId = req.user.id;
 
-  logger.info('Comment creation attempt', {
-    userId,
-    videoId,
-    postId,
-    parentId,
-    textLength: text?.length
-  });
-
-  let targetVideoId = videoId;
-  let targetPostId = postId;
+  let targetVideoId = req.body.videoId;
+  let targetPostId = req.body.postId;
 
   if (!targetVideoId && !targetPostId && parentId) {
     logger.debug('Inheriting target from parent comment', { parentId });
@@ -98,7 +90,7 @@ exports.createComment = ResponseHandler.asyncHandler(async (req, res) => {
       reasons: filterResult.reasons,
       severity: filterResult.severity
     });
-    
+
     await Report.create({
       reportedBy: userId,
       contentType: 'comment',
@@ -210,18 +202,15 @@ exports.createComment = ResponseHandler.asyncHandler(async (req, res) => {
 exports.getAllComments = async (req, res) => {
   try {
     const videoId = req.params.videoId;
-    // Removed console.log - use logger instead
 
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
       return res.status(400).json({ message: "Invalid videoId format" });
     }
 
     const comments = await getNestedComments(videoId, null);
-    // Removed console.log - use logger instead
 
     res.json(comments);
   } catch (err) {
-    // Removed console.error - use logger instead
     return ResponseHandler.handleError(err, req, res, "Error fetching comments");
   }
 };
@@ -237,7 +226,6 @@ exports.getAllPostComments = async (req, res) => {
     const comments = await getNestedComments(null, postId);
     res.json(comments);
   } catch (err) {
-    // Removed console.error - use logger instead
     return ResponseHandler.handleError(err, req, res, "Error fetching post comments");
   }
 };
@@ -302,7 +290,6 @@ exports.getSingleVideo = async (req, res) => {
       currentUserId: currentUserId
     });
   } catch (err) {
-    // Removed console.error - use logger instead
     return ResponseHandler.handleError(err, req, res, "Error fetching video");
   }
 };
@@ -339,7 +326,6 @@ exports.deleteComment = async (req, res) => {
 
     res.status(200).json({ message: "Comment deleted successfully" });
   } catch (err) {
-    // Removed console.error - use logger instead
     return ResponseHandler.handleError(err, req, res, "Server error");
   }
 };
@@ -394,10 +380,6 @@ exports.toggleLikeComment = async (req, res) => {
     });
 
   } catch (err) {
-    // Removed console.error - use logger instead
-    res.status(500).json({
-      message: "Server error",
-      error: err.message,
-    });
+    return ResponseHandler.handleError(err, req, res, "Error toggling comment like");
   }
 };
