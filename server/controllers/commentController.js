@@ -39,14 +39,6 @@ exports.createComment = ResponseHandler.asyncHandler(async (req, res) => {
   const { videoId, postId, text, parentId } = req.body;
   const userId = req.user.id;
 
-  logger.info('Comment creation attempt', {
-    userId,
-    videoId,
-    postId,
-    parentId,
-    textLength: text?.length
-  });
-
   let targetVideoId = videoId;
   let targetPostId = postId;
 
@@ -98,7 +90,7 @@ exports.createComment = ResponseHandler.asyncHandler(async (req, res) => {
       reasons: filterResult.reasons,
       severity: filterResult.severity
     });
-    
+
     await Report.create({
       reportedBy: userId,
       contentType: 'comment',
