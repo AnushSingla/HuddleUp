@@ -36,11 +36,11 @@ async function createCommentNotification({ recipientId, senderId, type, resource
 }
 
 exports.createComment = ResponseHandler.asyncHandler(async (req, res) => {
-  const { videoId, postId, text, parentId } = req.body;
+  const { text, parentId } = req.body;
   const userId = req.user.id;
 
-  let targetVideoId = videoId;
-  let targetPostId = postId;
+  let targetVideoId = req.body.videoId;
+  let targetPostId = req.body.postId;
 
   if (!targetVideoId && !targetPostId && parentId) {
     logger.debug('Inheriting target from parent comment', { parentId });
