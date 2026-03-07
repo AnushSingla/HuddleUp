@@ -1,14 +1,45 @@
 const User = require("../models/User");
+const mongoose = require("mongoose");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 exports.getAllUsers = async (req, res) => {
   try {
-    // Removed console.log - use logger instead
+    const currentUserId = req.user.id;
 
-    const users = await User.find({ _id: { $ne: req.user.id } }).select("username");
-    // Removed console.log - use logger instead
-    res.json(users);
+    // Use aggregation to get users with friend status in one query
+    const usersWithStatus = await User.aggregate([
+      { $match: { _id: { $ne: new mongoose.Types.ObjectId(currentUserId) } } },
+      {
+        $lookup: {
+          from: 'users',
+          let: { userId: '$_id' },
+          pipeline: [
+            { $match: { _id: new mongoose.Types.ObjectId(currentUserId) } },
+            {
+              $project: {
+                isFriend: { $in: ['$$userId', '$friends'] },
+                hasRequestFrom: { $in: ['$$userId', '$friendRequests'] },
+                hasSentRequestTo: { $in: ['$$userId', '$sentRequests'] }
+              }
+            }
+          ],
+          as: 'friendStatus'
+        }
+      },
+      { $unwind: { path: '$friendStatus', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          username: 1,
+          isFriend: { $ifNull: ['$friendStatus.isFriend', false] },
+          hasRequestFrom: { $ifNull: ['$friendStatus.hasRequestFrom', false] },
+          hasSentRequestTo: { $ifNull: ['$friendStatus.hasSentRequestTo', false] }
+        }
+      }
+    ]);
+
+    res.json(usersWithStatus);
   } catch (err) {
     // Removed console.error - use logger instead
     return ResponseHandler.handleError(err, req, res, "Failed to fetch users");
