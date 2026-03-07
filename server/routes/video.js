@@ -11,7 +11,8 @@ const {
 } = require("../controllers/videoController");
 const { verifyToken } = require("../middleware/auth");
 const { videoValidator } = require("../middleware/validation");
-const { upload, validateUploadedFile, cleanupOnError } = require("../middleware/multer");
+const { upload, validateUploadedFile, cleanupOnError, getUploadLimits } = require("../middleware/multer");
+const { advancedFileSecurityValidator, logSecurityAnalysis } = require("../middleware/fileSecurityValidator");
 const { videoUploadLimiter } = require("../middleware/rateLimit");
 const { uploadLimiter } = require("../middleware/rateLimiter");
 
@@ -30,6 +31,23 @@ const isAdmin = async (req, res, next) => {
     }
 };
 
+// Get upload requirements and limits
+router.get("/upload/limits", verifyToken, (req, res) => {
+    try {
+        const limits = getUploadLimits(req);
+        res.json({
+            message: "Upload limits retrieved successfully",
+            limits
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Error retrieving upload limits",
+            error: error.message
+        });
+    }
+});
+
+// Enhanced video upload with comprehensive validation
 router.post("/video/upload", 
   verifyToken, 
   uploadLimiter,
@@ -37,9 +55,12 @@ router.post("/video/upload",
   upload.single("video"), 
   cleanupOnError,
   validateUploadedFile,
+  advancedFileSecurityValidator,
+  logSecurityAnalysis,
   videoValidator, 
   createVideo
 );
+
 router.get("/videos", getAllVideos);
 router.get("/videos/:id/status", getProcessingStatus);
 router.put("/videos/:id", verifyToken, videoValidator, updateVideo);
