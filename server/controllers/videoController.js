@@ -213,6 +213,10 @@ exports.getAllVideos = async (req, res) => {
 };
 
 const SoftDeleteService = require("../services/softDeleteService");
+const TransactionHelper = require("../utils/transactionHelper");
+const Comment = require("../models/Comment");
+const VideoAnalytics = require("../models/VideoAnalytics");
+const ViewLog = require("../models/ViewLog");
 
 exports.deleteVideo = ResponseHandler.asyncHandler(async (req, res) => {
   const videoId = req.params.id;
@@ -241,21 +245,34 @@ exports.deleteVideo = ResponseHandler.asyncHandler(async (req, res) => {
     return ResponseHandler.forbidden(res, 'You can only delete your own videos');
   }
 
-  // Soft delete the video with enhanced service (includes cascade and audit logging)
-  const systemInfo = {
-    ipAddress: req.ip,
-    userAgent: req.get('User-Agent'),
-    apiVersion: '1.0'
-  };
+  // Use transaction to ensure atomicity
+  await TransactionHelper.withTransactionIfSupported(async (session) => {
+    const sessionOpt = session ? { session } : {};
 
-  await SoftDeleteService.softDelete(Video, videoId, userId, 'User deleted', { systemInfo });
+    // Soft delete the video with enhanced service
+    const systemInfo = {
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      apiVersion: '1.0'
+    };
+
+    await SoftDeleteService.softDelete(Video, videoId, userId, 'User deleted', { systemInfo, ...sessionOpt });
+    
+    // Delete related data in transaction
+    await Promise.all([
+      Comment.deleteMany({ videoId }, sessionOpt),
+      VideoAnalytics.deleteOne({ video: videoId }, sessionOpt),
+      ViewLog.deleteMany({ video: videoId }, sessionOpt)
+    ]);
+  });
   
+  // Clear cache after successful transaction
   await Promise.all([
     deleteCachePattern("feed:*"),
     invalidateQueryCache("video:*"),
   ]);
 
-  logger.info('Video soft deleted successfully', {
+  logger.info('Video deleted successfully with transaction', {
     videoId,
     userId,
     title: video.title

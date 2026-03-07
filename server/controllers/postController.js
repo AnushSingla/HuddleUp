@@ -132,6 +132,8 @@ exports.likePost = async (req, res) => {
 
 
 const SoftDeleteService = require("../services/softDeleteService");
+const TransactionHelper = require("../utils/transactionHelper");
+const Comment = require("../models/Comment");
 
 exports.deletePost = async (req, res) => {
   try {
@@ -149,19 +151,29 @@ exports.deletePost = async (req, res) => {
       return ResponseHandler.forbidden(res, "Not Allowed To Delete");
     }
 
-    // Soft delete the post with enhanced service (includes cascade and audit logging)
-    const systemInfo = {
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent'),
-      apiVersion: '1.0'
-    };
+    // Use transaction to ensure atomicity
+    await TransactionHelper.withTransactionIfSupported(async (session) => {
+      const sessionOpt = session ? { session } : {};
 
-    await SoftDeleteService.softDelete(Post, postId, userId, 'User deleted', { systemInfo });
+      // Soft delete the post with enhanced service
+      const systemInfo = {
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        apiVersion: '1.0'
+      };
+
+      await SoftDeleteService.softDelete(Post, postId, userId, 'User deleted', { systemInfo, ...sessionOpt });
+      
+      // Delete related comments in transaction
+      await Comment.deleteMany({ postId }, sessionOpt);
+    });
     
+    // Clear cache after successful transaction
     await Promise.all([
       deleteCachePattern("feed:*"),
       invalidateQueryCache("post:*"),
     ]);
+    
     res.status(200).json({ message: "Post deleted" });
 
   } catch (err) {
