@@ -49,7 +49,6 @@ function checkDiskSpace() {
   }
 }
 
-// Generate secure unique filename
 function generateSecureFilename(originalname) {
   const ext = path.extname(originalname).toLowerCase();
   const randomString = crypto.randomBytes(16).toString('hex');
@@ -57,7 +56,6 @@ function generateSecureFilename(originalname) {
   return `video_${timestamp}_${randomString}${ext}`;
 }
 
-// Validate file extension
 function isValidExtension(filename) {
   const ext = path.extname(filename).toLowerCase();
   return ALLOWED_EXTENSIONS.includes(ext);

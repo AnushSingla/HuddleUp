@@ -1,14 +1,23 @@
 const User = require("../models/User");
+const PaginationHelper = require("../utils/paginationHelper");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 exports.getAllUsers = async (req, res) => {
   try {
-    // Removed console.log - use logger instead
-
-    const users = await User.find({ _id: { $ne: req.user.id } }).select("username");
-    // Removed console.log - use logger instead
-    res.json(users);
+    const paginationParams = PaginationHelper.getPaginationParams(req.query);
+    
+    const result = await PaginationHelper.executePaginatedQuery(
+      User,
+      { _id: { $ne: req.user.id } },
+      {
+        select: 'username',
+        sort: { username: 1 }
+      },
+      paginationParams
+    );
+    
+    res.json(result);
   } catch (err) {
     // Removed console.error - use logger instead
     return ResponseHandler.handleError(err, req, res, "Failed to fetch users");
