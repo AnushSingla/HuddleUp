@@ -1,4 +1,6 @@
+const mongoose = require("mongoose");
 const logger = require("../utils/logger");
+const AuditLogger = require("./auditLogger");
 
 /**
  * Soft Delete Service
@@ -6,15 +8,22 @@ const logger = require("../utils/logger");
  */
 class SoftDeleteService {
   /**
-   * Soft delete a document
+   * Soft delete a document with audit logging
    * @param {Object} model - Mongoose model
    * @param {String} id - Document ID
    * @param {String} deletedBy - User ID who deleted the document
    * @param {String} deleteReason - Reason for deletion
+   * @param {Object} options - Additional options
    * @returns {Object} Updated document
    */
-  static async softDelete(model, id, deletedBy, deleteReason = 'User deleted') {
+  static async softDelete(model, id, deletedBy, deleteReason = 'User deleted', options = {}) {
     try {
+      // Get original document for audit trail
+      const originalDoc = await model.findById(id).lean();
+      if (!originalDoc) {
+        throw new Error('Document not found');
+      }
+
       const document = await model.findByIdAndUpdate(
         id,
         {
@@ -26,11 +35,24 @@ class SoftDeleteService {
         { new: true }
       );
 
-      if (!document) {
-        throw new Error('Document not found');
+      // Create audit log
+      await AuditLogger.logDeletion(
+        model.modelName,
+        id,
+        deletedBy,
+        deleteReason,
+        {
+          originalData: originalDoc,
+          systemInfo: options.systemInfo || {}
+        }
+      );
+
+      // Handle cascade deletion if specified
+      if (options.cascade !== false) {
+        await this.handleCascadeDeletion(model.modelName, id, deletedBy, deleteReason, options);
       }
 
-      logger.info('Document soft deleted', {
+      logger.info('Document soft deleted successfully', {
         model: model.modelName,
         documentId: id,
         deletedBy,
@@ -49,14 +71,36 @@ class SoftDeleteService {
   }
 
   /**
-   * Restore a soft deleted document
+   * Restore a soft deleted document with audit logging
    * @param {Object} model - Mongoose model
    * @param {String} id - Document ID
    * @param {String} restoredBy - User ID who restored the document
+   * @param {Object} options - Additional options
    * @returns {Object} Updated document
    */
-  static async restore(model, id, restoredBy) {
+  static async restore(model, id, restoredBy, options = {}) {
     try {
+      // Get original document for audit trail
+      const originalDoc = await model.findById(id, null, { includeSoftDeleted: true }).lean();
+      if (!originalDoc) {
+        throw new Error('Document not found');
+      }
+
+      if (!originalDoc.isDeleted) {
+        throw new Error('Document is not deleted');
+      }
+
+      // Check recovery window if specified
+      if (options.checkRecoveryWindow !== false) {
+        const recoveryWindow = options.recoveryWindow || 30 * 24 * 60 * 60 * 1000; // 30 days
+        const deletedAt = new Date(originalDoc.deletedAt);
+        const now = new Date();
+        
+        if (now - deletedAt > recoveryWindow) {
+          throw new Error('Recovery window has expired');
+        }
+      }
+
       const document = await model.findByIdAndUpdate(
         id,
         {
@@ -69,14 +113,26 @@ class SoftDeleteService {
           restoredAt: new Date(),
           restoredBy: restoredBy
         },
-        { new: true }
+        { new: true, includeSoftDeleted: true }
       );
 
-      if (!document) {
-        throw new Error('Document not found');
+      // Create audit log
+      await AuditLogger.logRestoration(
+        model.modelName,
+        id,
+        restoredBy,
+        {
+          originalData: originalDoc,
+          systemInfo: options.systemInfo || {}
+        }
+      );
+
+      // Handle cascade restoration if specified
+      if (options.cascade !== false) {
+        await this.handleCascadeRestoration(model.modelName, id, restoredBy, options);
       }
 
-      logger.info('Document restored', {
+      logger.info('Document restored successfully', {
         model: model.modelName,
         documentId: id,
         restoredBy
@@ -87,6 +143,162 @@ class SoftDeleteService {
       logger.error('Document restoration failed', {
         model: model.modelName,
         documentId: id,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Handle cascade deletion for parent-child relationships
+   */
+  static async handleCascadeDeletion(parentModel, parentId, deletedBy, deleteReason, options = {}) {
+    const cascadeActions = [];
+
+    try {
+      if (parentModel === 'Video') {
+        // Soft delete all comments for this video
+        const Comment = require("../models/Comment");
+        const comments = await Comment.find({ videoId: parentId, isDeleted: { $ne: true } });
+        
+        for (const comment of comments) {
+          await Comment.findByIdAndUpdate(comment._id, {
+            isDeleted: true,
+            deletedAt: new Date(),
+            deletedBy: deletedBy,
+            deleteReason: 'Parent video deleted'
+          });
+          
+          cascadeActions.push({
+            type: 'Comment',
+            id: comment._id,
+            action: 'soft_deleted'
+          });
+        }
+      } else if (parentModel === 'Post') {
+        // Soft delete all comments for this post
+        const Comment = require("../models/Comment");
+        const comments = await Comment.find({ postId: parentId, isDeleted: { $ne: true } });
+        
+        for (const comment of comments) {
+          await Comment.findByIdAndUpdate(comment._id, {
+            isDeleted: true,
+            deletedAt: new Date(),
+            deletedBy: deletedBy,
+            deleteReason: 'Parent post deleted'
+          });
+          
+          cascadeActions.push({
+            type: 'Comment',
+            id: comment._id,
+            action: 'soft_deleted'
+          });
+        }
+      }
+
+      // Log cascade operation if any actions were taken
+      if (cascadeActions.length > 0) {
+        await AuditLogger.logCascadeOperation(
+          parentModel,
+          parentId,
+          cascadeActions,
+          deletedBy,
+          'CASCADE_DELETE',
+          { systemInfo: options.systemInfo || {} }
+        );
+      }
+
+      return cascadeActions;
+    } catch (error) {
+      logger.error('Cascade deletion failed', {
+        parentModel,
+        parentId,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Handle cascade restoration for parent-child relationships
+   */
+  static async handleCascadeRestoration(parentModel, parentId, restoredBy, options = {}) {
+    const cascadeActions = [];
+
+    try {
+      if (parentModel === 'Video') {
+        // Restore comments that were cascade-deleted with this video
+        const Comment = require("../models/Comment");
+        const comments = await Comment.find({ 
+          videoId: parentId, 
+          isDeleted: true,
+          deleteReason: 'Parent video deleted'
+        }, null, { includeSoftDeleted: true });
+        
+        for (const comment of comments) {
+          await Comment.findByIdAndUpdate(comment._id, {
+            $unset: {
+              deletedAt: 1,
+              deletedBy: 1,
+              deleteReason: 1
+            },
+            isDeleted: false,
+            restoredAt: new Date(),
+            restoredBy: restoredBy
+          }, { includeSoftDeleted: true });
+          
+          cascadeActions.push({
+            type: 'Comment',
+            id: comment._id,
+            action: 'restored'
+          });
+        }
+      } else if (parentModel === 'Post') {
+        // Restore comments that were cascade-deleted with this post
+        const Comment = require("../models/Comment");
+        const comments = await Comment.find({ 
+          postId: parentId, 
+          isDeleted: true,
+          deleteReason: 'Parent post deleted'
+        }, null, { includeSoftDeleted: true });
+        
+        for (const comment of comments) {
+          await Comment.findByIdAndUpdate(comment._id, {
+            $unset: {
+              deletedAt: 1,
+              deletedBy: 1,
+              deleteReason: 1
+            },
+            isDeleted: false,
+            restoredAt: new Date(),
+            restoredBy: restoredBy
+          }, { includeSoftDeleted: true });
+          
+          cascadeActions.push({
+            type: 'Comment',
+            id: comment._id,
+            action: 'restored'
+          });
+        }
+      }
+
+      // Log cascade operation if any actions were taken
+      if (cascadeActions.length > 0) {
+        await AuditLogger.logCascadeOperation(
+          parentModel,
+          parentId,
+          cascadeActions,
+          restoredBy,
+          'CASCADE_RESTORE',
+          { systemInfo: options.systemInfo || {} }
+        );
+      }
+
+      return cascadeActions;
+    } catch (error) {
+      logger.error('Cascade restoration failed', {
+        parentModel,
+        parentId,
         error: error.message
       });
       throw error;

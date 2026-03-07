@@ -131,6 +131,8 @@ exports.likePost = async (req, res) => {
 
 
 
+const SoftDeleteService = require("../services/softDeleteService");
+
 exports.deletePost = async (req, res) => {
   try {
     const postId = req.params.postId;
@@ -147,8 +149,14 @@ exports.deletePost = async (req, res) => {
       return ResponseHandler.forbidden(res, "Not Allowed To Delete");
     }
 
-    // Soft delete the post
-    await post.softDelete(userId, 'User deleted');
+    // Soft delete the post with enhanced service (includes cascade and audit logging)
+    const systemInfo = {
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      apiVersion: '1.0'
+    };
+
+    await SoftDeleteService.softDelete(Post, postId, userId, 'User deleted', { systemInfo });
     
     await Promise.all([
       deleteCachePattern("feed:*"),

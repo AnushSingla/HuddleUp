@@ -212,6 +212,8 @@ exports.getAllVideos = async (req, res) => {
   }
 };
 
+const SoftDeleteService = require("../services/softDeleteService");
+
 exports.deleteVideo = ResponseHandler.asyncHandler(async (req, res) => {
   const videoId = req.params.id;
   const userId = req.user.id;
@@ -239,8 +241,14 @@ exports.deleteVideo = ResponseHandler.asyncHandler(async (req, res) => {
     return ResponseHandler.forbidden(res, 'You can only delete your own videos');
   }
 
-  // Soft delete the video
-  await video.softDelete(userId, 'User deleted');
+  // Soft delete the video with enhanced service (includes cascade and audit logging)
+  const systemInfo = {
+    ipAddress: req.ip,
+    userAgent: req.get('User-Agent'),
+    apiVersion: '1.0'
+  };
+
+  await SoftDeleteService.softDelete(Video, videoId, userId, 'User deleted', { systemInfo });
   
   await Promise.all([
     deleteCachePattern("feed:*"),

@@ -1,10 +1,14 @@
 const Post = require("../models/Post");
 const Video = require("../models/Video");
 const Comment = require("../models/Comment");
+const Playlist = require("../models/Playlist");
 const User = require("../models/User");
 const Report = require("../models/Report");
 const ModerationLog = require("../models/ModerationLog");
 const Appeal = require("../models/Appeal");
+const SoftDeleteService = require("../services/softDeleteService");
+const AuditLogger = require("../services/auditLogger");
+const CleanupScheduler = require("../services/cleanupScheduler");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
@@ -729,6 +733,188 @@ exports.cleanupDeletedContent = async (req, res) => {
         res.status(500).json({ 
             success: false,
             message: "Error in cleanup", 
+            error: error.message 
+        });
+    }
+};
+
+// Get audit trail with filtering
+exports.getAuditTrail = async (req, res) => {
+    try {
+        const {
+            eventType,
+            contentType,
+            userId,
+            dateFrom,
+            dateTo,
+            page = 1,
+            limit = 50
+        } = req.query;
+
+        const filters = {
+            eventType,
+            contentType,
+            userId,
+            dateFrom,
+            dateTo,
+            page: parseInt(page),
+            limit: parseInt(limit)
+        };
+
+        const report = await AuditLogger.generateReport(filters);
+
+        res.json({
+            success: true,
+            data: report
+        });
+    } catch (error) {
+        logger.error('Failed to get audit trail', { error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to retrieve audit trail',
+            error: error.message 
+        });
+    }
+};
+
+// Export audit trail
+exports.exportAuditTrail = async (req, res) => {
+    try {
+        const {
+            dateFrom,
+            dateTo,
+            contentTypes = [],
+            format = 'csv'
+        } = req.body;
+
+        if (!dateFrom || !dateTo) {
+            return res.status(400).json({
+                success: false,
+                message: 'Date range is required'
+            });
+        }
+
+        const dateRange = { from: dateFrom, to: dateTo };
+        const exportData = await AuditLogger.exportAuditTrail(dateRange, contentTypes, format);
+
+        if (format === 'csv') {
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', `attachment; filename="${exportData.filename}"`);
+            res.send(exportData.content);
+        } else {
+            res.json({
+                success: true,
+                data: exportData
+            });
+        }
+    } catch (error) {
+        logger.error('Failed to export audit trail', { error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to export audit trail',
+            error: error.message 
+        });
+    }
+};
+
+// Get audit statistics
+exports.getAuditStats = async (req, res) => {
+    try {
+        const { dateFrom, dateTo } = req.query;
+        
+        const dateRange = {};
+        if (dateFrom) dateRange.from = dateFrom;
+        if (dateTo) dateRange.to = dateTo;
+
+        const stats = await AuditLogger.getAuditStats(dateRange);
+
+        res.json({
+            success: true,
+            data: stats
+        });
+    } catch (error) {
+        logger.error('Failed to get audit statistics', { error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to retrieve audit statistics',
+            error: error.message 
+        });
+    }
+};
+
+// Manual cleanup trigger
+exports.triggerCleanup = async (req, res) => {
+    try {
+        const {
+            retentionDays = 30,
+            batchSize = 100,
+            dryRun = false
+        } = req.body;
+
+        const userId = req.user.id;
+        const results = await CleanupScheduler.manualCleanup({
+            retentionDays,
+            batchSize,
+            dryRun
+        }, userId);
+
+        res.json({
+            success: true,
+            data: results
+        });
+    } catch (error) {
+        logger.error('Manual cleanup failed', { error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Cleanup operation failed',
+            error: error.message 
+        });
+    }
+};
+
+// Get cleanup statistics
+exports.getCleanupStats = async (req, res) => {
+    try {
+        const { days = 30 } = req.query;
+        const stats = await CleanupScheduler.getCleanupStats(parseInt(days));
+
+        res.json({
+            success: true,
+            data: stats
+        });
+    } catch (error) {
+        logger.error('Failed to get cleanup statistics', { error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to retrieve cleanup statistics',
+            error: error.message 
+        });
+    }
+};
+
+// Update retention period configuration
+exports.updateRetentionPeriod = async (req, res) => {
+    try {
+        const { days } = req.body;
+
+        if (!days || days < 1 || days > 365) {
+            return res.status(400).json({
+                success: false,
+                message: 'Retention period must be between 1 and 365 days'
+            });
+        }
+
+        const result = CleanupScheduler.updateRetentionPeriod(days);
+
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        logger.error('Failed to update retention period', { error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to update retention period',
             error: error.message 
         });
     }

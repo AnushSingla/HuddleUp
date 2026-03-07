@@ -89,3 +89,12 @@ router.post("/users/:id/unban", verifyToken, isAdmin, adminController.unbanUser)
 router.post("/users/:id/warn", verifyToken, isAdmin, adminController.warnUser);
 
 module.exports = router;
+// Audit trail endpoints
+router.get("/audit", verifyToken, isAdmin, adminController.getAuditTrail);
+router.post("/audit/export", verifyToken, isAdmin, adminController.exportAuditTrail);
+router.get("/audit/stats", verifyToken, isAdmin, adminController.getAuditStats);
+
+// Cleanup management endpoints
+router.post("/cleanup", verifyToken, isAdmin, adminController.triggerCleanup);
+router.get("/cleanup/stats", verifyToken, isAdmin, adminController.getCleanupStats);
+router.put("/cleanup/retention", verifyToken, isAdmin, adminController.updateRetentionPeriod);

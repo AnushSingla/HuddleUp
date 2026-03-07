@@ -52,6 +52,10 @@ const userDeleteRoutes = require("./routes/userDelete")
 initRedis();
 initQueryMonitoring();
 
+// Initialize cleanup scheduler
+const CleanupScheduler = require("./services/cleanupScheduler");
+CleanupScheduler.scheduleCleanup();
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {

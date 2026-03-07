@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { API } from '@/api';
 import PageMeta from '@/components/PageMeta';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +15,9 @@ import {
   MessageCircle,
   List,
   Calendar,
-  User
+  ArrowLeft,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -40,10 +43,13 @@ const getContentTypeColor = (type) => {
 };
 
 export default function DeletedContent() {
-  const [deletedContent, setDeletedContent] = useState({});
+  const navigate = useNavigate();
+  const [deletedContent, setDeletedContent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [restoring, setRestoring] = useState(new Set());
   const [permanentDeleting, setPermanentDeleting] = useState(new Set());
+  const [selectedItems, setSelectedItems] = useState(new Set());
+  const [bulkRestoring, setBulkRestoring] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
@@ -53,8 +59,42 @@ export default function DeletedContent() {
   const loadDeletedContent = async () => {
     try {
       setLoading(true);
-      const response = await API.get(`/user/deleted?type=${activeTab}`);
-      setDeletedContent(response.data.data);
+      const response = await API.get('/user/deleted');
+      
+      // Flatten the response data and add recovery info
+      const allContent = [];
+      Object.entries(response.data.data || {}).forEach(([type, items]) => {
+        if (Array.isArray(items)) {
+          items.forEach(item => {
+            const recoveryWindow = 30 * 24 * 60 * 60 * 1000; // 30 days
+            const deletedAt = new Date(item.deletedAt);
+            const expiresAt = new Date(deletedAt.getTime() + recoveryWindow);
+            const now = new Date();
+            const daysRemaining = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
+            
+            allContent.push({
+              ...item,
+              contentType: type.slice(0, -1), // Remove 's' from 'videos', 'posts', etc.
+              expiresAt,
+              daysRemaining: Math.max(0, daysRemaining),
+              canRestore: expiresAt > now,
+              isExpiringSoon: daysRemaining <= 7 && daysRemaining > 0
+            });
+          });
+        }
+      });
+
+      // Filter by active tab
+      let filteredContent = allContent;
+      if (activeTab !== 'all') {
+        filteredContent = allContent.filter(item => item.contentType === activeTab);
+      }
+
+      // Sort by deletion date (newest first)
+      filteredContent.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
+
+      setDeletedContent(filteredContent);
+      setSelectedItems(new Set()); // Clear selections when data changes
     } catch (error) {
       toast.error('Failed to load deleted content');
       console.error('Error loading deleted content:', error);
@@ -63,176 +103,109 @@ export default function DeletedContent() {
     }
   };
 
-  const handleRestore = async (type, id) => {
-    setRestoring(prev => new Set(prev).add(`${type}-${id}`));
+  const handleRestore = async (item) => {
+    const itemKey = `${item.contentType}-${item._id}`;
+    setRestoring(prev => new Set(prev).add(itemKey));
     
     try {
-      await API.post(`/user/restore/${type}/${id}`);
-      toast.success(`${type} restored successfully`);
+      await API.post(`/user/deleted/restore/${item.contentType}/${item._id}`);
+      toast.success(`${item.contentType} restored successfully`);
       loadDeletedContent();
     } catch (error) {
-      const errorMsg = error.response?.data?.message || 'Failed to restore content';
+      const errorMsg = error.response?.data?.error?.message || 'Failed to restore content';
       toast.error(errorMsg);
     } finally {
       setRestoring(prev => {
         const newSet = new Set(prev);
-        newSet.delete(`${type}-${id}`);
+        newSet.delete(itemKey);
         return newSet;
       });
     }
   };
 
-  const handlePermanentDelete = async (type, id) => {
-    if (!confirm(`Are you sure you want to permanently delete this ${type}? This action cannot be undone.`)) {
+  const handlePermanentDelete = async (item) => {
+    const itemKey = `${item.contentType}-${item._id}`;
+    
+    if (!confirm(`Are you sure you want to permanently delete this ${item.contentType}? This action cannot be undone.`)) {
       return;
     }
 
-    setPermanentDeleting(prev => new Set(prev).add(`${type}-${id}`));
+    setPermanentDeleting(prev => new Set(prev).add(itemKey));
     
     try {
-      await API.delete(`/user/permanent/${type}/${id}`);
-      toast.success(`${type} permanently deleted`);
+      await API.delete(`/user/deleted/permanent/${item.contentType}/${item._id}`);
+      toast.success(`${item.contentType} permanently deleted`);
       loadDeletedContent();
     } catch (error) {
-      const errorMsg = error.response?.data?.message || 'Failed to permanently delete content';
+      const errorMsg = error.response?.data?.error?.message || 'Failed to permanently delete content';
       toast.error(errorMsg);
     } finally {
       setPermanentDeleting(prev => {
         const newSet = new Set(prev);
-        newSet.delete(`${type}-${id}`);
+        newSet.delete(itemKey);
         return newSet;
       });
     }
   };
 
-  const getDaysRemaining = (deletedAt) => {
-    const deletedDate = new Date(deletedAt);
-    const expiryDate = new Date(deletedDate.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
-    const now = new Date();
-    const daysRemaining = Math.ceil((expiryDate - now) / (24 * 60 * 60 * 1000));
-    return Math.max(0, daysRemaining);
-  };
+  const handleBulkRestore = async () => {
+    if (selectedItems.size === 0) {
+      toast.error('Please select items to restore');
+      return;
+    }
 
-  const renderContentItem = (item, type) => {
-    const Icon = getContentIcon(type);
-    const daysRemaining = getDaysRemaining(item.deletedAt);
-    const canRestore = daysRemaining > 0;
-    const isRestoring = restoring.has(`${type}-${item._id}`);
-    const isPermanentDeleting = permanentDeleting.has(`${type}-${item._id}`);
-
-    return (
-      <Card key={item._id} className="bg-gray-800 border-gray-700">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4 flex-1">
-              <div className="p-3 bg-gray-700 rounded-lg">
-                <Icon className="w-6 h-6 text-gray-300" />
-              </div>
-              
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-white font-medium">
-                    {item.title || item.text || item.name || 'Untitled'}
-                  </h3>
-                  <Badge className={getContentTypeColor(type)}>
-                    {type}
-                  </Badge>
-                  {!canRestore && (
-                    <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
-                      Expired
-                    </Badge>
-                  )}
-                </div>
-                
-                <div className="space-y-1 text-sm text-gray-400">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>Deleted {formatDistanceToNow(new Date(item.deletedAt))} ago</span>
-                  </div>
-                  {item.deleteReason && (
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span>Reason: {item.deleteReason}</span>
-                    </div>
-                  )}
-                  {canRestore && (
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      <span className={daysRemaining <= 7 ? 'text-orange-400' : ''}>
-                        {daysRemaining} days remaining to restore
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              {canRestore && (
-                <Button
-                  onClick={() => handleRestore(type, item._id)}
-                  disabled={isRestoring}
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  {isRestoring ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Restoring...
-                    </>
-                  ) : (
-                    <>
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Restore
-                    </>
-                  )}
-                </Button>
-              )}
-              
-              <Button
-                onClick={() => handlePermanentDelete(type, item._id)}
-                disabled={isPermanentDeleting}
-                size="sm"
-                variant="destructive"
-              >
-                {isPermanentDeleting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Forever
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  const getAllItems = () => {
-    const allItems = [];
+    setBulkRestoring(true);
     
-    Object.entries(deletedContent).forEach(([type, data]) => {
-      if (data && data.documents) {
-        data.documents.forEach(item => {
-          allItems.push({ ...item, type });
-        });
+    try {
+      const itemsToRestore = Array.from(selectedItems).map(itemKey => {
+        const [type, id] = itemKey.split('-');
+        return { type, id };
+      });
+
+      await API.post('/user/deleted/bulk-restore', { items: itemsToRestore });
+      toast.success(`${selectedItems.size} items restored successfully`);
+      loadDeletedContent();
+    } catch (error) {
+      const errorMsg = error.response?.data?.error?.message || 'Failed to restore selected items';
+      toast.error(errorMsg);
+    } finally {
+      setBulkRestoring(false);
+    }
+  };
+
+  const toggleItemSelection = (item) => {
+    const itemKey = `${item.contentType}-${item._id}`;
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemKey)) {
+        newSet.delete(itemKey);
+      } else {
+        newSet.add(itemKey);
       }
+      return newSet;
     });
-    
-    return allItems.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
   };
 
-  const getTotalCount = () => {
-    return Object.values(deletedContent).reduce((total, data) => {
-      return total + (data?.pagination?.total || 0);
-    }, 0);
+  const toggleSelectAll = () => {
+    if (selectedItems.size === deletedContent.length) {
+      setSelectedItems(new Set());
+    } else {
+      const allItems = new Set(deletedContent.map(item => `${item.contentType}-${item._id}`));
+      setSelectedItems(allItems);
+    }
   };
+
+  const getContentTitle = (item) => {
+    return item.title || item.name || item.text || 'Untitled';
+  };
+
+  const tabs = [
+    { id: 'all', label: 'All', count: deletedContent.length },
+    { id: 'video', label: 'Videos', count: deletedContent.filter(item => item.contentType === 'video').length },
+    { id: 'post', label: 'Posts', count: deletedContent.filter(item => item.contentType === 'post').length },
+    { id: 'comment', label: 'Comments', count: deletedContent.filter(item => item.contentType === 'comment').length },
+    { id: 'playlist', label: 'Playlists', count: deletedContent.filter(item => item.contentType === 'playlist').length }
+  ];
 
   if (loading) {
     return (
@@ -242,91 +215,227 @@ export default function DeletedContent() {
     );
   }
 
-  const totalCount = getTotalCount();
-
   return (
     <div className="min-h-screen bg-gray-900 py-8">
       <PageMeta 
-        title="Deleted Content" 
-        description="Manage your deleted content and restore items within 30 days" 
+        title="Recently Deleted" 
+        description="View and restore your recently deleted content" 
       />
       
       <div className="max-w-6xl mx-auto px-4">
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Deleted Content</h1>
+          <div className="flex items-center gap-4 mb-4">
+            <Button
+              onClick={() => navigate('/profile')}
+              variant="ghost"
+              className="text-gray-400 hover:text-white"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Profile
+            </Button>
+          </div>
+          
+          <h1 className="text-3xl font-bold text-white mb-2">Recently Deleted</h1>
           <p className="text-gray-400">
-            You can restore deleted content within 30 days. After that, it will be permanently removed.
+            Items in Recently Deleted are automatically removed after 30 days. 
+            You can restore or permanently delete them before then.
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-2">
-            {[
-              { key: 'all', label: 'All', count: totalCount },
-              { key: 'videos', label: 'Videos', count: deletedContent.videos?.pagination?.total || 0 },
-              { key: 'posts', label: 'Posts', count: deletedContent.posts?.pagination?.total || 0 },
-              { key: 'comments', label: 'Comments', count: deletedContent.comments?.pagination?.total || 0 },
-              { key: 'playlists', label: 'Playlists', count: deletedContent.playlists?.pagination?.total || 0 }
-            ].map(tab => (
-              <Button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                variant={activeTab === tab.key ? "default" : "outline"}
-                className={`${
-                  activeTab === tab.key 
-                    ? 'bg-blue-600 text-white' 
-                    : 'border-gray-600 text-gray-300 hover:bg-gray-700'
-                }`}
-              >
-                {tab.label} ({tab.count})
-              </Button>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-2 mb-6">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              {tab.label} ({tab.count})
+            </button>
+          ))}
         </div>
 
-        {/* Content */}
+        {/* Bulk Actions */}
+        {deletedContent.length > 0 && (
+          <div className="flex items-center gap-4 mb-6 p-4 bg-gray-800 rounded-lg">
+            <button
+              onClick={toggleSelectAll}
+              className="flex items-center gap-2 text-gray-300 hover:text-white"
+            >
+              {selectedItems.size === deletedContent.length ? (
+                <CheckSquare className="w-4 h-4" />
+              ) : (
+                <Square className="w-4 h-4" />
+              )}
+              Select All
+            </button>
+            
+            {selectedItems.size > 0 && (
+              <Button
+                onClick={handleBulkRestore}
+                disabled={bulkRestoring}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {bulkRestoring ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Restoring...
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Restore Selected ({selectedItems.size})
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Content List */}
         <div className="space-y-4">
-          {totalCount === 0 ? (
+          {deletedContent.length === 0 ? (
             <Card className="bg-gray-800 border-gray-700">
               <CardContent className="py-12 text-center">
                 <Trash2 className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                <h3 className="text-white font-medium mb-2">No deleted content</h3>
-                <p className="text-gray-400">You don't have any deleted content to restore.</p>
+                <h3 className="text-lg font-medium text-white mb-2">No deleted content</h3>
+                <p className="text-gray-400">
+                  Items you delete will appear here and can be restored for 30 days.
+                </p>
               </CardContent>
             </Card>
           ) : (
-            <>
-              {activeTab === 'all' ? (
-                getAllItems().map(item => renderContentItem(item, item.type))
-              ) : (
-                deletedContent[activeTab]?.documents?.map(item => 
-                  renderContentItem(item, activeTab.slice(0, -1)) // Remove 's' from plural
-                ) || []
-              )}
-            </>
+            deletedContent.map((item) => {
+              const itemKey = `${item.contentType}-${item._id}`;
+              const isSelected = selectedItems.has(itemKey);
+              const isRestoring = restoring.has(itemKey);
+              const isPermanentDeleting = permanentDeleting.has(itemKey);
+              const ContentIcon = getContentIcon(item.contentType);
+              
+              return (
+                <Card 
+                  key={itemKey}
+                  className={`bg-gray-800 border-gray-700 transition-all ${
+                    isSelected ? 'ring-2 ring-blue-500' : ''
+                  }`}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      {/* Selection Checkbox */}
+                      <button
+                        onClick={() => toggleItemSelection(item)}
+                        className="mt-1 text-gray-400 hover:text-white"
+                      >
+                        {isSelected ? (
+                          <CheckSquare className="w-5 h-5" />
+                        ) : (
+                          <Square className="w-5 h-5" />
+                        )}
+                      </button>
+
+                      {/* Content Icon */}
+                      <div className="p-3 bg-gray-700 rounded-lg">
+                        <ContentIcon className="w-6 h-6 text-gray-300" />
+                      </div>
+                      
+                      {/* Content Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h3 className="text-white font-medium truncate">
+                              {getContentTitle(item)}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge className={`text-xs ${getContentTypeColor(item.contentType)}`}>
+                                {item.contentType}
+                              </Badge>
+                              {item.isExpiringSoon && (
+                                <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30 text-xs">
+                                  <AlertTriangle className="w-3 h-3 mr-1" />
+                                  Expiring Soon
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm text-gray-400">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            <span>Deleted {formatDistanceToNow(new Date(item.deletedAt))} ago</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              {item.canRestore ? (
+                                `${item.daysRemaining} days remaining`
+                              ) : (
+                                'Recovery period expired'
+                              )}
+                            </span>
+                          </div>
+                          {item.deleteReason && (
+                            <div className="text-gray-500">
+                              Reason: {item.deleteReason}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="flex items-center gap-2">
+                        {item.canRestore && (
+                          <Button
+                            onClick={() => handleRestore(item)}
+                            disabled={isRestoring}
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            {isRestoring ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                                Restoring...
+                              </>
+                            ) : (
+                              <>
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                                Restore
+                              </>
+                            )}
+                          </Button>
+                        )}
+                        
+                        <Button
+                          onClick={() => handlePermanentDelete(item)}
+                          disabled={isPermanentDeleting}
+                          size="sm"
+                          variant="destructive"
+                        >
+                          {isPermanentDeleting ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                              Deleting...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete Forever
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
-
-        {/* Info Card */}
-        <Card className="mt-8 bg-blue-900/20 border-blue-500/30">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="p-2 bg-blue-500/20 rounded-lg">
-                <AlertTriangle className="w-5 h-5 text-blue-400" />
-              </div>
-              <div>
-                <h3 className="text-white font-semibold mb-2">Important Information</h3>
-                <ul className="text-gray-300 text-sm space-y-1">
-                  <li>• Deleted content can be restored within 30 days</li>
-                  <li>• After 30 days, content is permanently removed and cannot be recovered</li>
-                  <li>• Restoring content will make it visible to other users again</li>
-                  <li>• You can permanently delete content at any time if you're sure you don't want it back</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
