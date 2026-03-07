@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Badge from "@/components/ui/badge";
 import PageMeta from "@/components/PageMeta";
+import AdminDeletedContent from "@/components/AdminDeletedContent";
 import {
     Trash2, AlertTriangle, CheckCircle, Shield, Users, Flag,
     BarChart3, Eye, Ban, MessageSquare, FileText, Video,
@@ -918,6 +919,7 @@ export default function Admin() {
         { id: 'queue', label: 'Moderation Queue', icon: Flag },
         { id: 'users', label: 'User Management', icon: Users },
         { id: 'duplicates', label: 'Duplicates', icon: Copy },
+        { id: 'deleted', label: 'Deleted Content', icon: Trash2 },
         { id: 'logs', label: 'Mod Logs', icon: ScrollText },
         { id: 'appeals', label: 'Appeals', icon: Scale },
     ];
@@ -963,6 +965,7 @@ export default function Admin() {
                     {activeTab === 'queue' && <QueueTab />}
                     {activeTab === 'users' && <UsersTab />}
                     {activeTab === 'duplicates' && <DuplicatesTab />}
+                    {activeTab === 'deleted' && <AdminDeletedContent />}
                     {activeTab === 'logs' && <LogsTab />}
                     {activeTab === 'appeals' && <AppealsTab />}
                 </div>

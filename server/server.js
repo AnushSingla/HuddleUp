@@ -47,10 +47,15 @@ const feedRoutes = require("./routes/feed")
 const playlistRoutes = require("./routes/playlist")
 const analyticsRoutes = require("./routes/analytics")
 const moderationRoutes = require("./routes/moderation")
+const userDeleteRoutes = require("./routes/userDelete")
 
 // Initialize services after environment validation
 initRedis();
 initQueryMonitoring();
+
+// Initialize cleanup scheduler
+const CleanupScheduler = require("./services/cleanupScheduler");
+CleanupScheduler.scheduleCleanup();
 
 const app = express();
 const server = http.createServer(app);
@@ -134,6 +139,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/playlists", playlistRoutes);
 app.use("/api/feed", feedRoutes);
 app.use("/api", savedRoutes);
+app.use("/api/user", userDeleteRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/api", (req, res) => {

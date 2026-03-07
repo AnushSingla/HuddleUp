@@ -26,6 +26,8 @@ import Admin from './pages/Admin';
 import LiveMatchRooms from './pages/LiveMatchRooms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
 import Analytics from './pages/Analytics';
+import Sessions from './pages/Sessions';
+import DeletedContent from './pages/DeletedContent';
 
 // Components
 import Navbar from './components/Navbar';
@@ -69,6 +71,8 @@ function AppContent() {
             <Route path="/edit-video" element={<EditVideo />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/sessions" element={<Sessions />} />
+            <Route path="/deleted-content" element={<DeletedContent />} />
             <Route path="/saved" element={<Saved />} />
             <Route path="/user/:userId" element={<PublicProfile />} />
             <Route path="/posts" element={<AllPosts />} />

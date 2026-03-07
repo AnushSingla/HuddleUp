@@ -1,4 +1,5 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
+const SoftDeleteService = require("../services/softDeleteService");
 
 const VideoSchema = new mongoose.Schema({
   title: {
@@ -88,6 +89,30 @@ const VideoSchema = new mongoose.Schema({
   },
   originalFileName: {
     type: String
+  },
+  // Soft delete fields
+  isDeleted: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  deletedAt: {
+    type: Date,
+    index: true
+  },
+  deletedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  },
+  deleteReason: {
+    type: String
+  },
+  restoredAt: {
+    type: Date
+  },
+  restoredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
   }
 })
 
@@ -97,5 +122,9 @@ VideoSchema.index({ uploadDate: -1 });
 VideoSchema.index({ title: "text", description: "text" });
 VideoSchema.index({ fileHash: 1 });
 VideoSchema.index({ "metadata.duration": 1, "metadata.fileSize": 1 });
+VideoSchema.index({ isDeleted: 1, deletedAt: -1 });
+
+// Add soft delete middleware
+SoftDeleteService.addMiddleware(VideoSchema);
 
 module.exports = mongoose.model("Video", VideoSchema)
