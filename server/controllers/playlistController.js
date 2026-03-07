@@ -187,8 +187,8 @@ exports.deletePlaylist = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    // Find and delete playlist
-    const playlist = await Playlist.findOneAndDelete({ _id: id, userId });
+    // Find playlist
+    const playlist = await Playlist.findOne({ _id: id, userId });
     
     if (!playlist) {
       return res.status(404).json({
@@ -196,6 +196,9 @@ exports.deletePlaylist = async (req, res) => {
         message: "Playlist not found"
       });
     }
+
+    // Soft delete the playlist
+    await playlist.softDelete(userId, 'User deleted');
 
     res.status(200).json({
       success: true,

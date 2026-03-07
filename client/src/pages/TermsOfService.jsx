@@ -210,7 +210,7 @@ const TermsOfService = () => {
               <h2
                 className="text-sm font-bold uppercase tracking-widest mb-4"
                 style={{
-                  color: "var(--accent)",
+                  color: "white",
                   letterSpacing: "0.2em",
                 }}
               >
@@ -340,7 +340,7 @@ const TermsOfService = () => {
                 <a
                   href="mailto:singlaanush18@gmail.com"
                   style={{
-                    color: "var(--accent)",
+                    color: "white",
                     textDecoration: "underline",
                   }}
                 >

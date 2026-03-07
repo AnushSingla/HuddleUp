@@ -75,6 +75,13 @@ router.delete(
 // Dismiss flag (admin only)
 router.post("/dismiss-flag", verifyToken, isAdmin, adminController.dismissFlag);
 
+// Soft delete management (admin only)
+router.get("/deleted", verifyToken, isAdmin, adminController.getDeletedContent);
+router.post("/restore/:type/:id", verifyToken, isAdmin, adminController.restoreContent);
+router.delete("/permanent/:type/:id", verifyToken, isAdmin, adminController.permanentlyDeleteContent);
+router.post("/bulk-restore", verifyToken, isAdmin, adminController.bulkRestoreContent);
+router.post("/cleanup", verifyToken, isAdmin, adminController.cleanupDeletedContent);
+
 // User Management (admin only)
 router.get("/users", verifyToken, isAdmin, adminController.getUsers);
 router.post("/users/:id/ban", verifyToken, isAdmin, adminController.banUser);
@@ -82,3 +89,12 @@ router.post("/users/:id/unban", verifyToken, isAdmin, adminController.unbanUser)
 router.post("/users/:id/warn", verifyToken, isAdmin, adminController.warnUser);
 
 module.exports = router;
+// Audit trail endpoints
+router.get("/audit", verifyToken, isAdmin, adminController.getAuditTrail);
+router.post("/audit/export", verifyToken, isAdmin, adminController.exportAuditTrail);
+router.get("/audit/stats", verifyToken, isAdmin, adminController.getAuditStats);
+
+// Cleanup management endpoints
+router.post("/cleanup", verifyToken, isAdmin, adminController.triggerCleanup);
+router.get("/cleanup/stats", verifyToken, isAdmin, adminController.getCleanupStats);
+router.put("/cleanup/retention", verifyToken, isAdmin, adminController.updateRetentionPeriod);

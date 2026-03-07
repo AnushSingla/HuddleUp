@@ -7,7 +7,7 @@ import { Users, Zap, Shield, Globe, TrendingUp, Heart } from "lucide-react";
 const About = () => {
   const [hoveredIdx, setHoveredIdx] = useState(null);
   const stats = [
-    { value: "10K+", label: "moments shared daily", color: "var(--accent)", icon: TrendingUp },
+    { value: "10K+", label: "moments shared daily", color: "white", icon: TrendingUp },
     { value: "25+", label: "sports from cricket to curling", color: "var(--turf-green)", icon: Globe },
     { value: "50+", label: "countries watching together", color: "var(--sun-yellow)", icon: Users },
     { value: "5K+", label: "active users online", color: "#f472b6", icon: Heart },

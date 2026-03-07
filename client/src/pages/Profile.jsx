@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { Edit2, Save, X, Lock, Users, BookMarked, Camera, Shield, Monitor } from 'lucide-react';
+import { Edit2, Save, X, Lock, Users, BookMarked, Camera, Shield, Monitor, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Profile() {
@@ -475,6 +475,30 @@ export default function Profile() {
                     >
                       <Shield size={18} />
                       Manage Sessions
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Deleted Content Management */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-white">
+                    <Trash2 size={20} className="text-blue-400" />
+                    Deleted Content
+                  </h3>
+                  <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-white font-medium">Restore deleted content</p>
+                        <p className="text-slate-400 text-sm">View and restore your deleted videos, posts, and comments within 30 days</p>
+                      </div>
+                      <Trash2 className="text-slate-400" size={24} />
+                    </div>
+                    <Button 
+                      onClick={() => navigate('/deleted-content')}
+                      className="bg-orange-600 hover:bg-orange-700 gap-2"
+                    >
+                      <Trash2 size={18} />
+                      View Deleted Content
                     </Button>
                   </div>
                 </div>

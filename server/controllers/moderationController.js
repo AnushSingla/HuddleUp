@@ -196,12 +196,30 @@ exports.resolveReport = async (req, res) => {
         const content = Model ? await Model.findById(report.contentId) : null;
 
         if (resolution === "deleted" && content) {
-            await Model.findByIdAndDelete(report.contentId);
-            // Delete associated comments if post/video
+            // Soft delete the content
+            await content.softDelete(moderatorId, reason || report.reason || 'Moderation action');
+            
+            // Soft delete associated comments if post/video
             if (report.contentType === "post") {
-                await Comment.deleteMany({ postId: report.contentId });
+                await Comment.updateMany(
+                    { postId: report.contentId, isDeleted: { $ne: true } },
+                    { 
+                        isDeleted: true,
+                        deletedAt: new Date(),
+                        deletedBy: moderatorId,
+                        deleteReason: 'Parent content deleted by moderation'
+                    }
+                );
             } else if (report.contentType === "video") {
-                await Comment.deleteMany({ videoId: report.contentId });
+                await Comment.updateMany(
+                    { videoId: report.contentId, isDeleted: { $ne: true } },
+                    { 
+                        isDeleted: true,
+                        deletedAt: new Date(),
+                        deletedBy: moderatorId,
+                        deleteReason: 'Parent content deleted by moderation'
+                    }
+                );
             }
         } else if (resolution === "approved" && content) {
             // Content is fine, remove flag

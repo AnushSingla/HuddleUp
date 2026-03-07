@@ -79,7 +79,7 @@ const Contributor = () => {
     {
       value: contributors.length,
       label: "Contributors",
-      color: "var(--accent)",
+      color: "white",
       icon: Users,
     },
     {
@@ -219,7 +219,7 @@ const Contributor = () => {
               className="flex items-center gap-2 px-5 py-3 font-semibold transition-colors"
               style={{
                 background: "var(--accent)",
-                color: "var(--text-on-accent)",
+                color: "white",
                 borderRadius: "12px",
                 opacity: loading ? 0.6 : 1,
               }}
@@ -474,7 +474,7 @@ const Contributor = () => {
                 className="inline-flex items-center gap-2 mt-8 px-8 py-4 font-bold text-lg transition-colors"
                 style={{
                   background: "var(--accent)",
-                  color: "var(--text-on-accent)",
+                  color: "white",
                   borderRadius: "16px",
                   textDecoration: "none",
                 }}
