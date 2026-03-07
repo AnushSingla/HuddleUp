@@ -242,7 +242,7 @@ export default function Home() {
                     border: 'var(--surface-info-border)',
                     color: 'var(--accent)'
                   }}>
-                  <span className="text-sm font-mono tracking-wide">THE SPORTS MOMENT PLATFORM</span>
+                  <span className="text-sm font-mono tracking-wide text-white">THE SPORTS MOMENT PLATFORM</span>
                 </div>
 
                 <h1 className="font-black mb-8"
@@ -255,7 +255,7 @@ export default function Home() {
                   }}>
                   Upload Moments.<br />
                   <span style={{ color: 'var(--turf-green)' }}>Debate the Game.</span><br />
-                  <span style={{ color: 'var(--accent)' }}>Find Your Crowd.</span>
+                  <span>Find Your Crowd.</span>
                 </h1>
 
                 <p className="text-xl max-w-2xl mx-auto mb-12"

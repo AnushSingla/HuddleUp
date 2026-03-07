@@ -170,7 +170,7 @@ const PrivacyPolicy = () => {
               <h2
                 className="text-sm font-bold uppercase tracking-widest mb-4"
                 style={{
-                  color: "var(--accent)",
+                  color: "white",
                   letterSpacing: "0.2em",
                 }}
               >
@@ -295,7 +295,7 @@ const PrivacyPolicy = () => {
                 Questions? Reach out at{" "}
                 <a
                   href="mailto:singlaanush18@gmail.com"
-                  style={{ color: "var(--accent)", textDecoration: "underline" }}
+                  style={{ color: "white", textDecoration: "underline" }}
                 >
                   singlaanush18@gmail.com
                 </a>
