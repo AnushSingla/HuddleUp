@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PageWrapper from "@/components/ui/PageWrapper";
 import PageMeta from "@/components/PageMeta";
+import SecurityUpgradeNotice from "@/components/SecurityUpgradeNotice";
 import {
   Upload,
   Users,
@@ -206,6 +207,11 @@ export default function Home() {
         description="Share game-changing sports moments, join live discussions, and connect with fans. Upload highlights and debate the play."
       />
       <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+        
+        {/* Security Upgrade Notice */}
+        <div className="container mx-auto px-6 pt-6">
+          <SecurityUpgradeNotice />
+        </div>
 
         {/* HERO - PRODUCT NARRATIVE FIRST */}
         <section className="relative w-full min-h-[85vh] flex items-center overflow-hidden">

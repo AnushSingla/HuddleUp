@@ -25,7 +25,12 @@ export default function Login() {
     setIsLoading(true);
     try {
       const res = await API.post("auth/login", form);
-      localStorage.setItem("token", res.data.token);
+      
+      // For backward compatibility, still store token in localStorage
+      if (res.data.data?.token) {
+        localStorage.setItem("token", res.data.data.token);
+      }
+      
       toast.success("Welcome back to HuddleUp!");
       navigate("/");
     } catch (err) {

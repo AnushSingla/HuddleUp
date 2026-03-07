@@ -116,13 +116,32 @@ const VideoSchema = new mongoose.Schema({
   }
 })
 
+// Core indexes for common queries
 VideoSchema.index({ postedBy: 1 });
 VideoSchema.index({ category: 1 });
 VideoSchema.index({ uploadDate: -1 });
+VideoSchema.index({ createdAt: -1 });
 VideoSchema.index({ title: "text", description: "text" });
-VideoSchema.index({ fileHash: 1 });
-VideoSchema.index({ "metadata.duration": 1, "metadata.fileSize": 1 });
-VideoSchema.index({ isDeleted: 1, deletedAt: -1 });
+
+// Performance indexes for search and filtering
+VideoSchema.index({ title: 1 }); // For title-based searches
+VideoSchema.index({ hashtags: 1 }); // For hashtag searches
+VideoSchema.index({ views: -1 }); // For sorting by views
+VideoSchema.index({ processingStatus: 1 }); // For filtering by processing status
+
+// Compound indexes for common query combinations
+VideoSchema.index({ category: 1, createdAt: -1 }); // Category + time sorting
+VideoSchema.index({ category: 1, views: -1 }); // Category + popularity
+VideoSchema.index({ postedBy: 1, createdAt: -1 }); // User videos + time
+VideoSchema.index({ postedBy: 1, category: 1 }); // User videos by category
+VideoSchema.index({ isDeleted: 1, createdAt: -1 }); // Active content by time
+VideoSchema.index({ isDeleted: 1, category: 1 }); // Active content by category
+
+// Specialized indexes
+VideoSchema.index({ fileHash: 1 }); // For duplicate detection
+VideoSchema.index({ "metadata.duration": 1, "metadata.fileSize": 1 }); // For metadata queries
+VideoSchema.index({ isDeleted: 1, deletedAt: -1 }); // For soft delete queries
+VideoSchema.index({ flagged: 1 }); // For content moderation
 
 // Add soft delete middleware
 SoftDeleteService.addMiddleware(VideoSchema);

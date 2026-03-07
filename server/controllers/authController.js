@@ -6,6 +6,7 @@ const nodemailer = require("nodemailer");
 const { getJWTSecret } = require("../utils/validateEnv");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
+const authService = require("../services/authService");
 
 exports.register = ResponseHandler.asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
@@ -80,15 +81,19 @@ exports.login = ResponseHandler.asyncHandler(async (req, res) => {
             );
         }
         
-        // Use safe JWT secret with proper error handling
         try {
-            const jwtSecret = getJWTSecret();
-            const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "1d" });
+            // Generate secure token pair
+            const deviceInfo = authService.extractDeviceInfo(req);
+            const { accessToken, refreshToken } = await authService.generateTokenPair(user._id, deviceInfo);
+            
+            // Set secure HTTP-only cookies
+            authService.setAuthCookies(res, accessToken, refreshToken);
             
             logger.info('User logged in successfully', { 
                 userId: user._id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                deviceInfo: deviceInfo.userAgent
             });
             
             return ResponseHandler.success(res, {
@@ -96,12 +101,13 @@ exports.login = ResponseHandler.asyncHandler(async (req, res) => {
                     id: user._id,
                     username: user.username, 
                     email: user.email 
-                }, 
-                token 
+                },
+                // For backward compatibility during migration, also return token
+                token: accessToken
             }, 'Login successful');
-        } catch (jwtError) {
-            logger.error('JWT signing error during login', { 
-                error: jwtError.message,
+        } catch (authError) {
+            logger.error('Authentication service error during login', { 
+                error: authError.message,
                 userId: user._id
             });
             return ResponseHandler.error(
@@ -295,3 +301,219 @@ exports.resetPassword = async (req, res) => {
         return res.status(500).json({ message: "Something went wrong. Please try again." });
     }
 };
+
+// Secure logout
+exports.logout = ResponseHandler.asyncHandler(async (req, res) => {
+    try {
+        const refreshToken = req.cookies?.refreshToken;
+        
+        if (refreshToken) {
+            // Revoke the refresh token
+            await authService.revokeRefreshToken(refreshToken);
+            logger.info('User logged out', { 
+                userId: req.user?.id,
+                ip: req.ip 
+            });
+        }
+        
+        // Clear authentication cookies
+        authService.clearAuthCookies(res);
+        
+        return ResponseHandler.success(res, null, 'Logged out successfully');
+    } catch (error) {
+        logger.error('Logout error', { 
+            error: error.message,
+            userId: req.user?.id 
+        });
+        
+        // Still clear cookies even if there's an error
+        authService.clearAuthCookies(res);
+        
+        return ResponseHandler.success(res, null, 'Logged out successfully');
+    }
+});
+
+// Global logout (all devices)
+exports.logoutAll = ResponseHandler.asyncHandler(async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        // Revoke all refresh tokens for the user
+        const revokedCount = await authService.revokeAllUserTokens(userId);
+        
+        // Clear current cookies
+        authService.clearAuthCookies(res);
+        
+        logger.info('User logged out from all devices', { 
+            userId,
+            revokedTokens: revokedCount,
+            ip: req.ip 
+        });
+        
+        return ResponseHandler.success(res, 
+            { revokedSessions: revokedCount }, 
+            'Logged out from all devices successfully'
+        );
+    } catch (error) {
+        logger.error('Global logout error', { 
+            error: error.message,
+            userId: req.user?.id 
+        });
+        
+        // Still clear current cookies
+        authService.clearAuthCookies(res);
+        
+        return ResponseHandler.error(
+            res,
+            ERROR_CODES.INTERNAL_ERROR,
+            'Logout failed. Please try again.',
+            500
+        );
+    }
+});
+
+// Refresh token endpoint
+exports.refreshToken = ResponseHandler.asyncHandler(async (req, res) => {
+    try {
+        const refreshToken = req.cookies?.refreshToken;
+        
+        if (!refreshToken) {
+            return ResponseHandler.error(
+                res,
+                ERROR_CODES.UNAUTHORIZED,
+                'Refresh token not provided',
+                401
+            );
+        }
+        
+        const deviceInfo = authService.extractDeviceInfo(req);
+        const result = await authService.refreshTokenPair(refreshToken, deviceInfo);
+        
+        // Set new cookies
+        authService.setAuthCookies(res, result.accessToken, result.refreshToken);
+        
+        logger.info('Token refreshed successfully', { 
+            userId: result.user.id,
+            ip: req.ip 
+        });
+        
+        return ResponseHandler.success(res, {
+            user: result.user,
+            // For backward compatibility
+            token: result.accessToken
+        }, 'Token refreshed successfully');
+    } catch (error) {
+        logger.warn('Token refresh failed', { 
+            error: error.message,
+            ip: req.ip 
+        });
+        
+        // Clear invalid cookies
+        authService.clearAuthCookies(res);
+        
+        if (error.message === 'INVALID_REFRESH_TOKEN' || error.message === 'REFRESH_TOKEN_EXPIRED') {
+            return ResponseHandler.error(
+                res,
+                ERROR_CODES.UNAUTHORIZED,
+                'Session expired. Please log in again.',
+                401
+            );
+        }
+        
+        return ResponseHandler.error(
+            res,
+            ERROR_CODES.INTERNAL_ERROR,
+            'Token refresh failed. Please try again.',
+            500
+        );
+    }
+});
+
+// Get user sessions
+exports.getSessions = ResponseHandler.asyncHandler(async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const currentRefreshToken = req.cookies?.refreshToken;
+        
+        const sessions = await authService.getUserSessions(userId);
+        
+        // Mark current session if we have the refresh token
+        if (currentRefreshToken) {
+            const RefreshToken = require("../models/RefreshToken");
+            const currentToken = await RefreshToken.findOne({ 
+                token: currentRefreshToken,
+                isRevoked: false 
+            });
+            
+            if (currentToken) {
+                const currentSession = sessions.find(s => s.id.toString() === currentToken._id.toString());
+                if (currentSession) {
+                    currentSession.isCurrent = true;
+                }
+            }
+        }
+        
+        return ResponseHandler.success(res, { sessions }, 'Sessions retrieved successfully');
+    } catch (error) {
+        logger.error('Error fetching user sessions', { 
+            error: error.message,
+            userId: req.user?.id 
+        });
+        
+        return ResponseHandler.error(
+            res,
+            ERROR_CODES.INTERNAL_ERROR,
+            'Failed to fetch sessions',
+            500
+        );
+    }
+});
+
+// Revoke specific session
+exports.revokeSession = ResponseHandler.asyncHandler(async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const userId = req.user.id;
+        
+        const RefreshToken = require("../models/RefreshToken");
+        const result = await RefreshToken.findOneAndUpdate(
+            { 
+                _id: sessionId,
+                userId: userId,
+                isRevoked: false 
+            },
+            { isRevoked: true },
+            { new: true }
+        );
+        
+        if (!result) {
+            return ResponseHandler.error(
+                res,
+                ERROR_CODES.NOT_FOUND,
+                'Session not found',
+                404
+            );
+        }
+        
+        logger.info('Session revoked', { 
+            sessionId,
+            userId,
+            ip: req.ip 
+        });
+        
+        return ResponseHandler.success(res, null, 'Session revoked successfully');
+    } catch (error) {
+        logger.error('Error revoking session', { 
+            error: error.message,
+            sessionId: req.params.sessionId,
+            userId: req.user?.id 
+        });
+        
+        return ResponseHandler.error(
+            res,
+            ERROR_CODES.INTERNAL_ERROR,
+            'Failed to revoke session',
+            500
+        );
+    }
+});
