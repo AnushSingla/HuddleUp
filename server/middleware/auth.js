@@ -9,25 +9,28 @@ const verifyToken = (req, res, next) => {
     return res.sendStatus(200);
   }
 
+  // Try to get token from Authorization header first, then from cookies
+  let token = null;
+  
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    logger.warn('Authentication failed - missing or invalid authorization header', {
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.split(" ")[1];
+  } else if (req.cookies && req.cookies.accessToken) {
+    // Check for HTTP-only cookie
+    token = req.cookies.accessToken;
+  }
+
+  if (!token) {
+    logger.warn('Authentication failed - no token found in header or cookies', {
       method: req.method,
       url: req.url,
       ip: req.ip,
-      userAgent: req.get('User-Agent')
+      userAgent: req.get('User-Agent'),
+      hasAuthHeader: !!authHeader,
+      hasCookies: !!req.cookies,
+      cookieKeys: req.cookies ? Object.keys(req.cookies) : []
     });
     return ResponseHandler.unauthorized(res);
-  }
-
-  const token = authHeader.split(" ")[1];
-  if (!token) {
-    logger.warn('Authentication failed - missing token', {
-      method: req.method,
-      url: req.url,
-      ip: req.ip
-    });
-    return ResponseHandler.unauthorized(res, 'Invalid authentication format');
   }
 
   try {
@@ -39,7 +42,8 @@ const verifyToken = (req, res, next) => {
     logger.debug('Token verified successfully', {
       userId: decoded.id,
       method: req.method,
-      url: req.url
+      url: req.url,
+      tokenSource: authHeader ? 'header' : 'cookie'
     });
     
     next();
@@ -48,7 +52,8 @@ const verifyToken = (req, res, next) => {
       error: error.message,
       method: req.method,
       url: req.url,
-      ip: req.ip
+      ip: req.ip,
+      tokenSource: authHeader ? 'header' : 'cookie'
     });
     
     if (error.message.includes('JWT_SECRET')) {
