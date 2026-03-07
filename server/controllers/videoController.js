@@ -239,13 +239,15 @@ exports.deleteVideo = ResponseHandler.asyncHandler(async (req, res) => {
     return ResponseHandler.forbidden(res, 'You can only delete your own videos');
   }
 
-  await Video.findByIdAndDelete(videoId);
+  // Soft delete the video
+  await video.softDelete(userId, 'User deleted');
+  
   await Promise.all([
     deleteCachePattern("feed:*"),
     invalidateQueryCache("video:*"),
   ]);
 
-  logger.info('Video deleted successfully', {
+  logger.info('Video soft deleted successfully', {
     videoId,
     userId,
     title: video.title

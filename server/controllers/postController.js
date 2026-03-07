@@ -147,7 +147,9 @@ exports.deletePost = async (req, res) => {
       return ResponseHandler.forbidden(res, "Not Allowed To Delete");
     }
 
-    await Post.findByIdAndDelete(postId);
+    // Soft delete the post
+    await post.softDelete(userId, 'User deleted');
+    
     await Promise.all([
       deleteCachePattern("feed:*"),
       invalidateQueryCache("post:*"),

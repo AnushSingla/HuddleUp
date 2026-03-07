@@ -308,7 +308,8 @@ exports.deleteComment = async (req, res) => {
 
     const { videoId, postId } = comment;
 
-    await Comment.findByIdAndDelete(commentId);
+    // Soft delete the comment
+    await comment.softDelete(userId, 'User deleted');
 
     await invalidateQueryCache([
       `comments:nested:*`,

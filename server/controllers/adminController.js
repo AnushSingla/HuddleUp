@@ -124,55 +124,94 @@ exports.flagComment = async (req, res) => {
     }
 };
 
-// Delete a post (admin only)
+// Delete a post (admin only) - soft delete
 exports.deletePost = async (req, res) => {
     try {
         const { id } = req.params;
+        const { permanent = false, reason = 'Admin deleted' } = req.body;
 
-        const post = await Post.findByIdAndDelete(id);
+        const post = await Post.findById(id);
         if (!post) {
             return ResponseHandler.notFound(res, "Post not found");
         }
 
-        // Also delete associated comments
-        await Comment.deleteMany({ postId: id });
-
-        res.json({ message: "Post deleted successfully" });
+        if (permanent) {
+            // Permanent delete - also permanently delete associated comments
+            await Comment.deleteMany({ postId: id });
+            await Post.findByIdAndDelete(id);
+            res.json({ message: "Post permanently deleted" });
+        } else {
+            // Soft delete - also soft delete associated comments
+            await post.softDelete(req.user.id, reason);
+            await Comment.updateMany(
+                { postId: id, isDeleted: { $ne: true } },
+                { 
+                    isDeleted: true,
+                    deletedAt: new Date(),
+                    deletedBy: req.user.id,
+                    deleteReason: 'Parent post deleted by admin'
+                }
+            );
+            res.json({ message: "Post deleted successfully" });
+        }
     } catch (error) {
         res.status(500).json({ message: "Error deleting post", error: error.message });
     }
 };
 
-// Delete a video (admin only)
+// Delete a video (admin only) - soft delete
 exports.deleteVideo = async (req, res) => {
     try {
         const { id } = req.params;
+        const { permanent = false, reason = 'Admin deleted' } = req.body;
 
-        const video = await Video.findByIdAndDelete(id);
+        const video = await Video.findById(id);
         if (!video) {
             return ResponseHandler.notFound(res, "Video not found");
         }
 
-        // Also delete associated comments
-        await Comment.deleteMany({ videoId: id });
-
-        res.json({ message: "Video deleted successfully" });
+        if (permanent) {
+            // Permanent delete - also permanently delete associated comments
+            await Comment.deleteMany({ videoId: id });
+            await Video.findByIdAndDelete(id);
+            res.json({ message: "Video permanently deleted" });
+        } else {
+            // Soft delete - also soft delete associated comments
+            await video.softDelete(req.user.id, reason);
+            await Comment.updateMany(
+                { videoId: id, isDeleted: { $ne: true } },
+                { 
+                    isDeleted: true,
+                    deletedAt: new Date(),
+                    deletedBy: req.user.id,
+                    deleteReason: 'Parent video deleted by admin'
+                }
+            );
+            res.json({ message: "Video deleted successfully" });
+        }
     } catch (error) {
         res.status(500).json({ message: "Error deleting video", error: error.message });
     }
 };
 
-// Delete a comment (admin only)
+// Delete a comment (admin only) - soft delete
 exports.deleteComment = async (req, res) => {
     try {
         const { id } = req.params;
+        const { permanent = false, reason = 'Admin deleted' } = req.body;
 
-        const comment = await Comment.findByIdAndDelete(id);
+        const comment = await Comment.findById(id);
         if (!comment) {
             return ResponseHandler.notFound(res, "Comment not found");
         }
 
-        res.json({ message: "Comment deleted successfully" });
+        if (permanent) {
+            await Comment.findByIdAndDelete(id);
+            res.json({ message: "Comment permanently deleted" });
+        } else {
+            await comment.softDelete(req.user.id, reason);
+            res.json({ message: "Comment deleted successfully" });
+        }
     } catch (error) {
         res.status(500).json({ message: "Error deleting comment", error: error.message });
     }
@@ -413,5 +452,284 @@ exports.warnUser = async (req, res) => {
         res.json({ message: `Warning issued to ${user.username}. Total warnings: ${user.warnings.length}` });
     } catch (error) {
         res.status(500).json({ message: "Error warning user", error: error.message });
+    }
+};
+
+// Get soft deleted content (admin only)
+exports.getDeletedContent = async (req, res) => {
+    try {
+        const { 
+            type = 'all', 
+            page = 1, 
+            limit = 20, 
+            sortBy = 'deletedAt',
+            sortOrder = -1,
+            deletedBy = null,
+            dateFrom = null,
+            dateTo = null
+        } = req.query;
+
+        const options = {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            sortBy,
+            sortOrder: parseInt(sortOrder),
+            deletedBy,
+            dateFrom,
+            dateTo
+        };
+
+        let results = {};
+
+        if (type === 'all' || type === 'videos') {
+            const SoftDeleteService = require("../services/softDeleteService");
+            const videoResults = await SoftDeleteService.getDeleted(Video, options);
+            results.videos = videoResults;
+        }
+
+        if (type === 'all' || type === 'posts') {
+            const SoftDeleteService = require("../services/softDeleteService");
+            const postResults = await SoftDeleteService.getDeleted(Post, options);
+            results.posts = postResults;
+        }
+
+        if (type === 'all' || type === 'comments') {
+            const SoftDeleteService = require("../services/softDeleteService");
+            const commentResults = await SoftDeleteService.getDeleted(Comment, options);
+            results.comments = commentResults;
+        }
+
+        if (type === 'all' || type === 'playlists') {
+            const SoftDeleteService = require("../services/softDeleteService");
+            const playlistResults = await SoftDeleteService.getDeleted(Playlist, options);
+            results.playlists = playlistResults;
+        }
+
+        res.json({
+            success: true,
+            data: results
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false,
+            message: "Error fetching deleted content", 
+            error: error.message 
+        });
+    }
+};
+
+// Restore soft deleted content (admin only)
+exports.restoreContent = async (req, res) => {
+    try {
+        const { type, id } = req.params;
+        const adminId = req.user.id;
+
+        let model;
+        switch (type) {
+            case 'video':
+                model = Video;
+                break;
+            case 'post':
+                model = Post;
+                break;
+            case 'comment':
+                model = Comment;
+                break;
+            case 'playlist':
+                model = Playlist;
+                break;
+            default:
+                return res.status(400).json({ 
+                    success: false,
+                    message: "Invalid content type" 
+                });
+        }
+
+        const SoftDeleteService = require("../services/softDeleteService");
+        const restoredContent = await SoftDeleteService.restore(model, id, adminId);
+
+        res.json({
+            success: true,
+            message: `${type} restored successfully`,
+            data: restoredContent
+        });
+    } catch (error) {
+        if (error.message === 'Document not found') {
+            return res.status(404).json({ 
+                success: false,
+                message: "Content not found" 
+            });
+        }
+        res.status(500).json({ 
+            success: false,
+            message: "Error restoring content", 
+            error: error.message 
+        });
+    }
+};
+
+// Permanently delete soft deleted content (admin only)
+exports.permanentlyDeleteContent = async (req, res) => {
+    try {
+        const { type, id } = req.params;
+        const adminId = req.user.id;
+
+        let model;
+        switch (type) {
+            case 'video':
+                model = Video;
+                break;
+            case 'post':
+                model = Post;
+                break;
+            case 'comment':
+                model = Comment;
+                break;
+            case 'playlist':
+                model = Playlist;
+                break;
+            default:
+                return res.status(400).json({ 
+                    success: false,
+                    message: "Invalid content type" 
+                });
+        }
+
+        const SoftDeleteService = require("../services/softDeleteService");
+        const deletedContent = await SoftDeleteService.permanentDelete(model, id, adminId);
+
+        // If it's a video or post, also permanently delete associated comments
+        if (type === 'video') {
+            await Comment.deleteMany({ videoId: id });
+        } else if (type === 'post') {
+            await Comment.deleteMany({ postId: id });
+        }
+
+        res.json({
+            success: true,
+            message: `${type} permanently deleted`,
+            data: deletedContent
+        });
+    } catch (error) {
+        if (error.message === 'Document not found') {
+            return res.status(404).json({ 
+                success: false,
+                message: "Content not found" 
+            });
+        }
+        res.status(500).json({ 
+            success: false,
+            message: "Error permanently deleting content", 
+            error: error.message 
+        });
+    }
+};
+
+// Bulk restore soft deleted content (admin only)
+exports.bulkRestoreContent = async (req, res) => {
+    try {
+        const { items } = req.body; // Array of { type, id }
+        const adminId = req.user.id;
+
+        if (!Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ 
+                success: false,
+                message: "Items array is required" 
+            });
+        }
+
+        const results = [];
+        const SoftDeleteService = require("../services/softDeleteService");
+
+        for (const item of items) {
+            try {
+                let model;
+                switch (item.type) {
+                    case 'video':
+                        model = Video;
+                        break;
+                    case 'post':
+                        model = Post;
+                        break;
+                    case 'comment':
+                        model = Comment;
+                        break;
+                    case 'playlist':
+                        model = Playlist;
+                        break;
+                    default:
+                        results.push({
+                            id: item.id,
+                            type: item.type,
+                            success: false,
+                            error: 'Invalid content type'
+                        });
+                        continue;
+                }
+
+                await SoftDeleteService.restore(model, item.id, adminId);
+                results.push({
+                    id: item.id,
+                    type: item.type,
+                    success: true
+                });
+            } catch (error) {
+                results.push({
+                    id: item.id,
+                    type: item.type,
+                    success: false,
+                    error: error.message
+                });
+            }
+        }
+
+        const successCount = results.filter(r => r.success).length;
+        const failureCount = results.filter(r => !r.success).length;
+
+        res.json({
+            success: true,
+            message: `Bulk restore completed: ${successCount} successful, ${failureCount} failed`,
+            results
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false,
+            message: "Error in bulk restore", 
+            error: error.message 
+        });
+    }
+};
+
+// Clean up old soft deleted content (admin only)
+exports.cleanupDeletedContent = async (req, res) => {
+    try {
+        const { retentionDays = 30 } = req.body;
+        const SoftDeleteService = require("../services/softDeleteService");
+
+        const results = await Promise.all([
+            SoftDeleteService.cleanup(Video, retentionDays),
+            SoftDeleteService.cleanup(Post, retentionDays),
+            SoftDeleteService.cleanup(Comment, retentionDays),
+            SoftDeleteService.cleanup(Playlist, retentionDays)
+        ]);
+
+        const totalCleaned = results.reduce((sum, count) => sum + count, 0);
+
+        res.json({
+            success: true,
+            message: `Cleanup completed: ${totalCleaned} items permanently deleted`,
+            details: {
+                videos: results[0],
+                posts: results[1],
+                comments: results[2],
+                playlists: results[3]
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false,
+            message: "Error in cleanup", 
+            error: error.message 
+        });
     }
 };

@@ -75,6 +75,13 @@ router.delete(
 // Dismiss flag (admin only)
 router.post("/dismiss-flag", verifyToken, isAdmin, adminController.dismissFlag);
 
+// Soft delete management (admin only)
+router.get("/deleted", verifyToken, isAdmin, adminController.getDeletedContent);
+router.post("/restore/:type/:id", verifyToken, isAdmin, adminController.restoreContent);
+router.delete("/permanent/:type/:id", verifyToken, isAdmin, adminController.permanentlyDeleteContent);
+router.post("/bulk-restore", verifyToken, isAdmin, adminController.bulkRestoreContent);
+router.post("/cleanup", verifyToken, isAdmin, adminController.cleanupDeletedContent);
+
 // User Management (admin only)
 router.get("/users", verifyToken, isAdmin, adminController.getUsers);
 router.post("/users/:id/ban", verifyToken, isAdmin, adminController.banUser);
