@@ -32,6 +32,7 @@ const {
   passwordResetLimiter,
   adminLimiter
 } = require("./middleware/rateLimit");
+const { apiLimiter: apiLimiterNew } = require("./middleware/rateLimiter");
 const { videoQueue } = require("./services/videoQueue");
 const authRoutes = require("./routes/auth")
 const videoRoutes = require("./routes/video")
@@ -103,12 +104,21 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => { });
 });
 
+// CORS configuration from environment variables
+const corsOrigins = process.env.CORS_ORIGIN 
+  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+  : ["https://huddle-up-beta.vercel.app", "http://localhost:5173", "http://localhost:5174"];
+
 app.use(cors({
-  origin: ["https://huddle-up-beta.vercel.app", "http://localhost:5173", "http://localhost:5174"],
+  origin: corsOrigins,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
+
+// Apply general rate limiting to all API routes
+app.use("/api", apiLimiter);
+app.use("/api", apiLimiterNew);
 
 app.use(express.json());
 app.use("/api/auth", authRoutes)
@@ -164,8 +174,10 @@ const connectDB = async () => {
   }
 };
 
+const PORT = process.env.PORT || 5000;
+
 connectDB()
-  .then(() => server.listen(5000, () => console.log("Server is running at port 5000 (with Socket.IO)")))
+  .then(() => server.listen(PORT, () => console.log(`Server is running at port ${PORT} (with Socket.IO)`)))
   .catch(err => console.log(err))
 
 // Graceful shutdown handling
