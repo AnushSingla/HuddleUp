@@ -9,18 +9,29 @@ const Appeal = require("../models/Appeal");
 const SoftDeleteService = require("../services/softDeleteService");
 const AuditLogger = require("../services/auditLogger");
 const CleanupScheduler = require("../services/cleanupScheduler");
+const PaginationHelper = require("../utils/paginationHelper");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 // Get all flagged posts
 exports.getFlaggedPosts = async (req, res) => {
     try {
-        const posts = await Post.find({ flagged: true })
-            .populate('postedBy', 'username email')
-            .populate('flaggedBy', 'username')
-            .sort({ createdAt: -1 });
+        const paginationParams = PaginationHelper.getPaginationParams(req.query);
+        
+        const result = await PaginationHelper.executePaginatedQuery(
+            Post,
+            { flagged: true },
+            {
+                populate: [
+                    { path: 'postedBy', select: 'username email' },
+                    { path: 'flaggedBy', select: 'username' }
+                ],
+                sort: { createdAt: -1 }
+            },
+            paginationParams
+        );
 
-        res.json(posts);
+        res.json(result);
     } catch (error) {
         res.status(500).json({ message: "Error fetching flagged posts", error: error.message });
     }
@@ -29,12 +40,22 @@ exports.getFlaggedPosts = async (req, res) => {
 // Get all flagged videos
 exports.getFlaggedVideos = async (req, res) => {
     try {
-        const videos = await Video.find({ flagged: true })
-            .populate('postedBy', 'username email')
-            .populate('flaggedBy', 'username')
-            .sort({ createdAt: -1 });
+        const paginationParams = PaginationHelper.getPaginationParams(req.query);
+        
+        const result = await PaginationHelper.executePaginatedQuery(
+            Video,
+            { flagged: true },
+            {
+                populate: [
+                    { path: 'postedBy', select: 'username email' },
+                    { path: 'flaggedBy', select: 'username' }
+                ],
+                sort: { createdAt: -1 }
+            },
+            paginationParams
+        );
 
-        res.json(videos);
+        res.json(result);
     } catch (error) {
         res.status(500).json({ message: "Error fetching flagged videos", error: error.message });
     }
@@ -43,14 +64,24 @@ exports.getFlaggedVideos = async (req, res) => {
 // Get all flagged comments
 exports.getFlaggedComments = async (req, res) => {
     try {
-        const comments = await Comment.find({ flagged: true })
-            .populate('userId', 'username email')
-            .populate('flaggedBy', 'username')
-            .populate('videoId', 'title')
-            .populate('postId', 'title')
-            .sort({ createdAt: -1 });
+        const paginationParams = PaginationHelper.getPaginationParams(req.query);
+        
+        const result = await PaginationHelper.executePaginatedQuery(
+            Comment,
+            { flagged: true },
+            {
+                populate: [
+                    { path: 'userId', select: 'username email' },
+                    { path: 'flaggedBy', select: 'username' },
+                    { path: 'videoId', select: 'title' },
+                    { path: 'postId', select: 'title' }
+                ],
+                sort: { createdAt: -1 }
+            },
+            paginationParams
+        );
 
-        res.json(comments);
+        res.json(result);
     } catch (error) {
         res.status(500).json({ message: "Error fetching flagged comments", error: error.message });
     }
