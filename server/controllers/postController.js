@@ -194,6 +194,26 @@ exports.updatePost = async (req, res) => {
     if (typeof content === "string") post.content = content;
     if (typeof category === "string") post.category = category;
 
+    // Re-run content filter on the updated fields
+    const filterResult = filterMultipleFields({ title: post.title, content: post.content });
+    post.flagged = filterResult.flagged;
+    post.flagReason = filterResult.flagged ? filterResult.reasons.join('; ') : '';
+
+    // Auto-create report if content is flagged
+    if (filterResult.flagged) {
+      await Report.create({
+        reportedBy: req.user.id,
+        contentType: 'post',
+        contentId: post._id,
+        reason: 'spam',
+        description: `Auto-flagged on edit: ${filterResult.reasons.join('; ')}`,
+        status: 'pending',
+        priority: filterResult.severity === 'high' ? 'high' : 'medium',
+        contentSnapshot: { title: post.title, content: post.content, author: req.user.id }
+      });
+      logger.warn(`Post ${post._id} flagged on edit: ${filterResult.reasons.join('; ')}`);
+    }
+
     const updatedPost = await post.save();
     const populatedPost = await updatedPost.populate("postedBy", "username");
     await Promise.all([
