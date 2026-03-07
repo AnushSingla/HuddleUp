@@ -123,10 +123,10 @@ exports.getUserProfile = async (req, res) => {
         const user = await User.findById(userId).select("-password").populate("friends").populate("friendRequests").populate("sentRequests");
 
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return ResponseHandler.notFound(res, "User");
         }
 
-        res.status(200).json({
+        return ResponseHandler.success(res, {
             user: {
                 _id: user._id,
                 username: user.username,
@@ -137,9 +137,9 @@ exports.getUserProfile = async (req, res) => {
                 followersCount: user.friendRequests.length,
                 followingCount: user.sentRequests.length
             }
-        });
+        }, "Profile retrieved successfully");
     } catch (err) {
-        res.status(500).json({ message: "Error fetching profile", error: err.message });
+        return ResponseHandler.handleError(err, req, res, "Error fetching profile");
     }
 }
 
@@ -153,14 +153,14 @@ exports.updateUserProfile = async (req, res) => {
         if (username) {
             const existingUsername = await User.findOne({ username, _id: { $ne: userId } });
             if (existingUsername) {
-                return res.status(400).json({ message: "Username already exists" });
+                return ResponseHandler.error(res, ERROR_CODES.ALREADY_EXISTS, "Username already exists", 409);
             }
         }
 
         if (email) {
             const existingEmail = await User.findOne({ email, _id: { $ne: userId } });
             if (existingEmail) {
-                return res.status(400).json({ message: "Email already exists" });
+                return ResponseHandler.error(res, ERROR_CODES.ALREADY_EXISTS, "Email already exists", 409);
             }
         }
 
@@ -187,7 +187,7 @@ exports.updatePassword = async (req, res) => {
         const { currentPassword, newPassword } = req.body;
 
         if (!currentPassword || !newPassword) {
-            return res.status(400).json({ message: "Current password and new password are required" });
+            return ResponseHandler.error(res, ERROR_CODES.MISSING_REQUIRED_FIELD, "Current password and new password are required", 400);
         }
 
         const user = await User.findById(userId);
@@ -195,7 +195,7 @@ exports.updatePassword = async (req, res) => {
         // Verify current password
         const isValid = await bcrypt.compare(currentPassword, user.password);
         if (!isValid) {
-            return res.status(401).json({ message: "Current password is incorrect" });
+            return ResponseHandler.error(res, ERROR_CODES.UNAUTHORIZED, "Current password is incorrect", 401);
         }
 
         // Hash and save new password
@@ -203,9 +203,9 @@ exports.updatePassword = async (req, res) => {
         user.password = hashedPassword;
         await user.save();
 
-        res.status(200).json({ message: "Password updated successfully" });
+        return ResponseHandler.success(res, null, "Password updated successfully");
     } catch (err) {
-        res.status(500).json({ message: "Error updating password", error: err.message });
+        return ResponseHandler.handleError(err, req, res, "Error updating password");
     }
 }
 

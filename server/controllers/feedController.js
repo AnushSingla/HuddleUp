@@ -4,6 +4,8 @@ const {
     getForYouFeed,
     getFollowingFeed,
 } = require("../services/optimizedFeedService");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 const VALID_TYPES = ["latest", "trending", "for-you", "following"];
 
@@ -11,7 +13,7 @@ exports.getFeed = async (req, res) => {
     try {
         const { type } = req.params;
         if (!VALID_TYPES.includes(type)) {
-            return res.status(400).json({ message: `Invalid feed type. Use: ${VALID_TYPES.join(", ")}` });
+            return ResponseHandler.error(res, ERROR_CODES.VALIDATION_ERROR, `Invalid feed type. Use: ${VALID_TYPES.join(", ")}`, 400);
         }
 
         const cursor = req.query.cursor || null;
@@ -31,14 +33,14 @@ exports.getFeed = async (req, res) => {
 
             case "for-you":
                 if (!req.user?.id) {
-                    return res.status(401).json({ message: "Login required for personalized feed" });
+                    return ResponseHandler.unauthorized(res, "Login required for personalized feed");
                 }
                 result = await getForYouFeed(req.user.id, cursor, limit, category);
                 break;
 
             case "following":
                 if (!req.user?.id) {
-                    return res.status(401).json({ message: "Login required for following feed" });
+                    return ResponseHandler.unauthorized(res, "Login required for following feed");
                 }
                 result = await getFollowingFeed(req.user.id, cursor, limit, category);
                 break;
@@ -46,7 +48,7 @@ exports.getFeed = async (req, res) => {
 
         res.json(result);
     } catch (err) {
-        console.error("Feed error:", err);
-        res.status(500).json({ message: "Error loading feed", error: err.message });
+        logger.error("Feed error", { feedType: req.params.type, error: err.message, userId: req.user?.id });
+        return ResponseHandler.handleError(err, req, res, "Error loading feed");
     }
 };
