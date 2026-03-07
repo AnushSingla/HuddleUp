@@ -72,6 +72,7 @@ const UserSchema = new mongoose.Schema({
     resetPasswordExpires: { type: Date },
 }, { timestamps: true })
 
-module.exports = mongoose.model("User", UserSchema)
-
+// Text index must be defined before model compilation
 UserSchema.index({ username: "text", bio: "text" });
+
+module.exports = mongoose.model("User", UserSchema)
