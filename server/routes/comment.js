@@ -4,8 +4,9 @@ const {createComment,getAllComments,getAllPostComments, deleteComment,likeVideo,
 const { verifyToken} = require("../middleware/auth");
 const { commentValidator } = require("../middleware/validation");
 const { commentLimiter } = require("../middleware/rateLimit");
+const { commentLimiter: commentLimiterNew } = require("../middleware/rateLimiter");
 
-router.post("/comments", verifyToken, commentLimiter, commentValidator, createComment);
+router.post("/comments", verifyToken, commentLimiter, commentLimiterNew, commentValidator, createComment);
 router.get("/comments/:videoId",getAllComments);
 router.get("/comments/post/:postId", getAllPostComments);
 router.delete("/comments/:commentId", verifyToken, deleteComment);

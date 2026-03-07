@@ -32,6 +32,7 @@ const {
   passwordResetLimiter,
   adminLimiter
 } = require("./middleware/rateLimit");
+const { apiLimiter: apiLimiterNew } = require("./middleware/rateLimiter");
 const { videoQueue } = require("./services/videoQueue");
 const authRoutes = require("./routes/auth")
 const videoRoutes = require("./routes/video")
@@ -114,6 +115,10 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
+
+// Apply general rate limiting to all API routes
+app.use("/api", apiLimiter);
+app.use("/api", apiLimiterNew);
 
 app.use(express.json());
 app.use("/api/auth", authRoutes)

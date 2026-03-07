@@ -4,9 +4,10 @@ const { createPost, getAllPosts, likePost, deletePost, updatePost } = require(".
 const { verifyToken } = require("../middleware/auth");
 const { postValidator } = require("../middleware/validation");
 const { postCreationLimiter } = require("../middleware/rateLimit");
+const { uploadLimiter } = require("../middleware/rateLimiter");
 
 // Create & read posts
-router.post("/posts", verifyToken, postCreationLimiter, postValidator, createPost);
+router.post("/posts", verifyToken, uploadLimiter, postCreationLimiter, postValidator, createPost);
 router.get("/posts", getAllPosts);
 
 // Interactions
