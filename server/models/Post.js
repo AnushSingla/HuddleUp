@@ -66,14 +66,28 @@ const postSchema = new mongoose.Schema({
     }
 });
 
+// Core indexes for common queries
 postSchema.index({ postedBy: 1 });
 postSchema.index({ category: 1 });
 postSchema.index({ createdAt: -1 });
-postSchema.index({ createdAt: -1, _id: -1 });
-postSchema.index({ category: 1, createdAt: -1 });
-postSchema.index({ postedBy: 1, createdAt: -1 });
 postSchema.index({ title: "text", content: "text" });
-postSchema.index({ isDeleted: 1, deletedAt: -1 });
+
+// Performance indexes for search and filtering
+postSchema.index({ title: 1 }); // For title-based searches
+postSchema.index({ views: -1 }); // For sorting by views
+
+// Compound indexes for common query combinations
+postSchema.index({ createdAt: -1, _id: -1 }); // For pagination
+postSchema.index({ category: 1, createdAt: -1 }); // Category + time sorting
+postSchema.index({ category: 1, views: -1 }); // Category + popularity
+postSchema.index({ postedBy: 1, createdAt: -1 }); // User posts + time
+postSchema.index({ postedBy: 1, category: 1 }); // User posts by category
+postSchema.index({ isDeleted: 1, createdAt: -1 }); // Active content by time
+postSchema.index({ isDeleted: 1, category: 1 }); // Active content by category
+
+// Specialized indexes
+postSchema.index({ isDeleted: 1, deletedAt: -1 }); // For soft delete queries
+postSchema.index({ flagged: 1 }); // For content moderation
 
 // Add soft delete middleware
 SoftDeleteService.addMiddleware(postSchema);
