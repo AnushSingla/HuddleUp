@@ -1,14 +1,19 @@
 const User = require("../models/User");
 const mongoose = require("mongoose");
+const PaginationHelper = require("../utils/paginationHelper");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 exports.getAllUsers = async (req, res) => {
   try {
     const currentUserId = req.user.id;
+    const { page = 1, limit = 20 } = req.query;
+    const pageNum = parseInt(page);
+    const limitNum = Math.min(parseInt(limit), 100);
+    const skip = (pageNum - 1) * limitNum;
 
-    // Use aggregation to get users with friend status in one query
-    const usersWithStatus = await User.aggregate([
+    // Use aggregation to get users with friend status in one query (N+1 optimization + pagination)
+    const pipeline = [
       { $match: { _id: { $ne: new mongoose.Types.ObjectId(currentUserId) } } },
       {
         $lookup: {
@@ -36,12 +41,29 @@ exports.getAllUsers = async (req, res) => {
           hasRequestFrom: { $ifNull: ['$friendStatus.hasRequestFrom', false] },
           hasSentRequestTo: { $ifNull: ['$friendStatus.hasSentRequestTo', false] }
         }
-      }
+      },
+      { $sort: { username: 1 } },
+      { $skip: skip },
+      { $limit: limitNum }
+    ];
+
+    const [users, total] = await Promise.all([
+      User.aggregate(pipeline),
+      User.countDocuments({ _id: { $ne: currentUserId } })
     ]);
 
-    res.json(usersWithStatus);
+    res.json({
+      users,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+        hasNext: pageNum * limitNum < total,
+        hasPrev: pageNum > 1
+      }
+    });
   } catch (err) {
-    // Removed console.error - use logger instead
     return ResponseHandler.handleError(err, req, res, "Failed to fetch users");
   }
 };
