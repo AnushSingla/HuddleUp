@@ -3,10 +3,10 @@ const router = express.Router();
 const adminController = require("../controllers/adminController");
 const { verifyToken, requireAdmin } = require("../middleware/auth");
 
-// Check admin status
+// Check admin status (any authenticated user can check)
 router.get("/check-admin", verifyToken, adminController.checkAdminStatus);
 
-// Get admin statistics
+// Admin-only routes
 router.get("/stats", verifyToken, requireAdmin, adminController.getAdminStats);
 
 // Get flagged content
@@ -81,5 +81,6 @@ router.get("/audit/stats", verifyToken, requireAdmin, adminController.getAuditSt
 // Cleanup management endpoints
 router.post("/cleanup/trigger", verifyToken, requireAdmin, adminController.triggerCleanup);
 router.get("/cleanup/stats", verifyToken, requireAdmin, adminController.getCleanupStats);
+router.put("/cleanup/retention", verifyToken, requireAdmin, adminController.updateRetentionPeriod);
 
 module.exports = router;
