@@ -289,17 +289,17 @@ exports.updateVideo = async (req, res) => {
     const { title, description, category } = req.body;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: User not authenticated" });
+      return ResponseHandler.unauthorized(res, "User not authenticated");
     }
 
     const video = await Video.findById(videoId);
 
     if (!video) {
-      return res.status(404).json({ message: "Video not found" });
+      return ResponseHandler.notFound(res, "Video");
     }
 
     if (!video.postedBy || video.postedBy.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "Not Allowed To Edit" });
+      return ResponseHandler.forbidden(res, "You can only edit your own videos");
     }
 
     if (typeof title === "string") video.title = title;
@@ -332,7 +332,7 @@ exports.getProcessingStatus = async (req, res) => {
     );
 
     if (!video) {
-      return res.status(404).json({ message: "Video not found" });
+      return ResponseHandler.notFound(res, "Video");
     }
 
     res.json({
@@ -343,8 +343,8 @@ exports.getProcessingStatus = async (req, res) => {
       jobId: video.jobId,
     });
   } catch (err) {
-    console.error("Error fetching processing status:", err);
-    res.status(500).json({ message: "Error fetching status", error: err.message });
+    logger.error("Error fetching processing status", { videoId: req.params.id, error: err.message });
+    return ResponseHandler.handleError(err, req, res, "Error fetching processing status");
   }
 };
 

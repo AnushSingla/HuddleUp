@@ -27,16 +27,15 @@ const addVideo = async (req, res) => {
     const userId = req.user.id;
     const { videoId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(videoId))
-      return res.status(400).json({ message: "Invalid video id" });
+      return ResponseHandler.error(res, ERROR_CODES.INVALID_INPUT, "Invalid video ID format", 400);
     const user = await User.findByIdAndUpdate(
       userId,
       { $addToSet: { savedVideos: videoId } },
       { new: true }
     ).select("savedVideos");
-    if (!user) return ResponseHandler.notFound(res, "User not found");
+    if (!user) return ResponseHandler.notFound(res, "User");
     return res.json({ saved: true, savedVideos: user.savedVideos });
   } catch (err) {
-    // Removed console.error - use logger instead
     return ResponseHandler.handleError(err, req, res, "Failed to save video");
   }
 };
@@ -46,16 +45,15 @@ const removeVideo = async (req, res) => {
     const userId = req.user.id;
     const { videoId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(videoId))
-      return res.status(400).json({ message: "Invalid video id" });
+      return ResponseHandler.error(res, ERROR_CODES.INVALID_INPUT, "Invalid video ID format", 400);
     const user = await User.findByIdAndUpdate(
       userId,
       { $pull: { savedVideos: videoId } },
       { new: true }
     ).select("savedVideos");
-    if (!user) return ResponseHandler.notFound(res, "User not found");
+    if (!user) return ResponseHandler.notFound(res, "User");
     return res.json({ saved: false, savedVideos: user.savedVideos });
   } catch (err) {
-    // Removed console.error - use logger instead
     return ResponseHandler.handleError(err, req, res, "Failed to unsave video");
   }
 };
@@ -65,16 +63,15 @@ const addPost = async (req, res) => {
     const userId = req.user.id;
     const { postId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(postId))
-      return res.status(400).json({ message: "Invalid post id" });
+      return ResponseHandler.error(res, ERROR_CODES.INVALID_INPUT, "Invalid post ID format", 400);
     const user = await User.findByIdAndUpdate(
       userId,
       { $addToSet: { savedPosts: postId } },
       { new: true }
     ).select("savedPosts");
-    if (!user) return ResponseHandler.notFound(res, "User not found");
+    if (!user) return ResponseHandler.notFound(res, "User");
     return res.json({ saved: true, savedPosts: user.savedPosts });
   } catch (err) {
-    // Removed console.error - use logger instead
     return ResponseHandler.handleError(err, req, res, "Failed to save post");
   }
 };
@@ -84,16 +81,15 @@ const removePost = async (req, res) => {
     const userId = req.user.id;
     const { postId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(postId))
-      return res.status(400).json({ message: "Invalid post id" });
+      return ResponseHandler.error(res, ERROR_CODES.INVALID_INPUT, "Invalid post ID format", 400);
     const user = await User.findByIdAndUpdate(
       userId,
       { $pull: { savedPosts: postId } },
       { new: true }
     ).select("savedPosts");
-    if (!user) return ResponseHandler.notFound(res, "User not found");
+    if (!user) return ResponseHandler.notFound(res, "User");
     return res.json({ saved: false, savedPosts: user.savedPosts });
   } catch (err) {
-    // Removed console.error - use logger instead
     return ResponseHandler.handleError(err, req, res, "Failed to unsave post");
   }
 };

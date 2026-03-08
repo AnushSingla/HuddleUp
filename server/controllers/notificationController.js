@@ -26,7 +26,7 @@ exports.getNotifications = async (req, res) => {
 
     res.json(notifications);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching notifications" });
+    return ResponseHandler.handleError(error, req, res, "Error fetching notifications");
   }
 };
 
@@ -45,7 +45,7 @@ exports.getUnreadCount = async (req, res) => {
     });
     res.json({ unreadCount: count });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching unread count" });
+    return ResponseHandler.handleError(error, req, res, "Error fetching unread count");
   }
 };
 
@@ -58,13 +58,13 @@ exports.markAsRead = async (req, res) => {
       recipient: req.user.id,
     });
     if (!notification) {
-      return ResponseHandler.notFound(res, "Notification not found");
+      return ResponseHandler.notFound(res, "Notification");
     }
     notification.isRead = true;
     await notification.save();
-    res.json({ message: "Notification marked as read", notification });
+    return ResponseHandler.success(res, { notification }, "Notification marked as read");
   } catch (error) {
-    res.status(500).json({ message: "Error updating notification" });
+    return ResponseHandler.handleError(error, req, res, "Error updating notification");
   }
 };
 
@@ -76,13 +76,13 @@ exports.markAsReadLegacy = async (req, res) => {
       recipient: req.user.id,
     });
     if (!notification) {
-      return ResponseHandler.notFound(res, "Notification not found");
+      return ResponseHandler.notFound(res, "Notification");
     }
     notification.isRead = true;
     await notification.save();
-    res.json({ message: "Notification marked as read" });
+    return ResponseHandler.success(res, null, "Notification marked as read");
   } catch (error) {
-    res.status(500).json({ message: "Error updating notification" });
+    return ResponseHandler.handleError(error, req, res, "Error updating notification");
   }
 };
 
@@ -93,9 +93,9 @@ exports.markAllAsRead = async (req, res) => {
       { recipient: req.user.id, isRead: false },
       { $set: { isRead: true } }
     );
-    res.json({ message: "All notifications marked as read" });
+    return ResponseHandler.success(res, null, "All notifications marked as read");
   } catch (error) {
-    res.status(500).json({ message: "Error updating notifications" });
+    return ResponseHandler.handleError(error, req, res, "Error updating notifications");
   }
 };
 
@@ -108,11 +108,11 @@ exports.deleteNotification = async (req, res) => {
       recipient: req.user.id,
     });
     if (!deleted) {
-      return ResponseHandler.notFound(res, "Notification not found");
+      return ResponseHandler.notFound(res, "Notification");
     }
-    res.json({ message: "Notification deleted" });
+    return ResponseHandler.success(res, null, "Notification deleted successfully");
   } catch (error) {
-    res.status(500).json({ message: "Error deleting notification" });
+    return ResponseHandler.handleError(error, req, res, "Error deleting notification");
   }
 };
 
@@ -120,8 +120,8 @@ exports.deleteNotification = async (req, res) => {
 exports.clearAll = async (req, res) => {
   try {
     await Notification.deleteMany({ recipient: req.user.id });
-    res.json({ message: "All notifications cleared" });
+    return ResponseHandler.success(res, null, "All notifications cleared successfully");
   } catch (error) {
-    res.status(500).json({ message: "Error clearing notifications" });
+    return ResponseHandler.handleError(error, req, res, "Error clearing notifications");
   }
 };

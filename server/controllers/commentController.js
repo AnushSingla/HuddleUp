@@ -204,7 +204,7 @@ exports.getAllComments = async (req, res) => {
     const videoId = req.params.videoId;
 
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
-      return res.status(400).json({ message: "Invalid videoId format" });
+      return ResponseHandler.error(res, ERROR_CODES.INVALID_INPUT, "Invalid video ID format", 400);
     }
 
     const comments = await getNestedComments(videoId, null);
@@ -220,7 +220,7 @@ exports.getAllPostComments = async (req, res) => {
 
   try {
     if (!mongoose.Types.ObjectId.isValid(postId)) {
-      return res.status(400).json({ message: "Invalid postId format" });
+      return ResponseHandler.error(res, ERROR_CODES.INVALID_INPUT, "Invalid post ID format", 400);
     }
 
     const comments = await getNestedComments(null, postId);
@@ -325,9 +325,9 @@ exports.deleteComment = async (req, res) => {
       });
     }
 
-    res.status(200).json({ message: "Comment deleted successfully" });
+    return ResponseHandler.success(res, null, "Comment deleted successfully");
   } catch (err) {
-    return ResponseHandler.handleError(err, req, res, "Server error");
+    return ResponseHandler.handleError(err, req, res, "Error deleting comment");
   }
 };
 
