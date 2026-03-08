@@ -74,13 +74,14 @@ router.post("/users/:id/ban", verifyToken, verifyAdmin, adminController.banUser)
 router.post("/users/:id/unban", verifyToken, verifyAdmin, adminController.unbanUser);
 router.post("/users/:id/warn", verifyToken, verifyAdmin, adminController.warnUser);
 
-module.exports = router;
 // Audit trail endpoints
 router.get("/audit", verifyToken, verifyAdmin, adminController.getAuditTrail);
 router.post("/audit/export", verifyToken, verifyAdmin, adminController.exportAuditTrail);
 router.get("/audit/stats", verifyToken, verifyAdmin, adminController.getAuditStats);
 
 // Cleanup management endpoints
-router.post("/cleanup", verifyToken, verifyAdmin, adminController.triggerCleanup);
+router.post("/cleanup/trigger", verifyToken, verifyAdmin, adminController.triggerCleanup);
 router.get("/cleanup/stats", verifyToken, verifyAdmin, adminController.getCleanupStats);
 router.put("/cleanup/retention", verifyToken, verifyAdmin, adminController.updateRetentionPeriod);
+
+module.exports = router;
