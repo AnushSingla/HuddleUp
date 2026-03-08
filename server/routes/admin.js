@@ -80,7 +80,7 @@ router.post("/audit/export", verifyToken, verifyAdmin, adminController.exportAud
 router.get("/audit/stats", verifyToken, verifyAdmin, adminController.getAuditStats);
 
 // Cleanup management endpoints
-router.post("/cleanup", verifyToken, verifyAdmin, adminController.triggerCleanup);
+router.post("/cleanup/trigger", verifyToken, verifyAdmin, adminController.triggerCleanup);
 router.get("/cleanup/stats", verifyToken, verifyAdmin, adminController.getCleanupStats);
 router.put("/cleanup/retention", verifyToken, verifyAdmin, adminController.updateRetentionPeriod);
 
