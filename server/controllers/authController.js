@@ -133,22 +133,6 @@ exports.login = ResponseHandler.asyncHandler(async (req, res) => {
         return ResponseHandler.handleError(error, req, res, 'User login');
     }
 });
-        } catch (jwtError) {
-            logger.error('JWT signing error during login', { 
-                error: jwtError.message,
-                userId: user._id
-            });
-            return ResponseHandler.error(
-                res,
-                ERROR_CODES.SERVICE_UNAVAILABLE,
-                "Authentication service temporarily unavailable. Please try again later.",
-                503
-            );
-        }
-    } catch (error) {
-        return ResponseHandler.handleError(error, req, res, 'User login');
-    }
-});
 
 // Get user profile
 exports.getUserProfile = async (req, res) => {
