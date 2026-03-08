@@ -23,7 +23,17 @@ export default function Navbar() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [open, setOpen] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [username, setUsername] = useState("User");
+
+  // ── Search state ──────────────────────────────────────
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggLoading, setSuggLoading] = useState(false);
+  const searchInputRef = useRef(null);
+  const debounceTimerRef = useRef(null);
   const { friendRequests } = useNotifications();
   const {
     notifications: activityNotifications,
