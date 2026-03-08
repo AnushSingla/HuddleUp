@@ -1,4 +1,5 @@
 const Video = require("../models/Video");
+const mongoose = require("mongoose");
 const { deleteCachePattern } = require("../utils/cache");
 const { invalidateQueryCache } = require("../utils/queryCache");
 const { addVideoToQueue } = require("../services/videoQueue");
@@ -220,16 +221,39 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
 
 exports.getAllVideos = async (req, res) => {
   try {
-    const filter = {};
-    if (req.query.postedBy) filter.postedBy = req.query.postedBy;
-    const sortParam = (req.query.sort || "newest").toLowerCase();
+    // Pagination parameters with strict limits
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100); // Max 100 videos per request
+    const page = Math.max(parseInt(req.query.page) || 1, 1); // Minimum page 1
+    const skip = (page - 1) * limit;
 
-    // sort=likes requires aggregation to sort by likes array length
+    // Validate pagination parameters
+    if (isNaN(limit) || isNaN(page) || limit < 1 || page < 1) {
+      return ResponseHandler.error(res, ERROR_CODES.VALIDATION_ERROR, "Invalid pagination parameters", 400);
+    }
+
+    const filter = { isDeleted: { $ne: true } }; // Only active videos
+    if (req.query.postedBy) {
+      if (!mongoose.Types.ObjectId.isValid(req.query.postedBy)) {
+        return ResponseHandler.error(res, ERROR_CODES.INVALID_INPUT, "Invalid user ID format", 400);
+      }
+      filter.postedBy = req.query.postedBy;
+    }
+
+    const sortParam = (req.query.sort || "newest").toLowerCase();
+    const validSortOptions = ["newest", "oldest", "views", "likes"];
+    
+    if (!validSortOptions.includes(sortParam)) {
+      return ResponseHandler.error(res, ERROR_CODES.VALIDATION_ERROR, `Invalid sort parameter. Use: ${validSortOptions.join(", ")}`, 400);
+    }
+
+    // Handle likes sorting with aggregation (with pagination)
     if (sortParam === "likes") {
       const pipeline = [
         { $match: filter },
         { $addFields: { likesCount: { $size: { $ifNull: ["$likes", []] } } } },
-        { $sort: { likesCount: -1 } },
+        { $sort: { likesCount: -1, createdAt: -1 } }, // Secondary sort for consistency
+        { $skip: skip },
+        { $limit: limit },
         { $lookup: { from: "users", localField: "postedBy", foreignField: "_id", as: "postedByDoc" } },
         { $unwind: { path: "$postedByDoc", preserveNullAndEmptyArrays: true } },
         {
@@ -242,21 +266,71 @@ exports.getAllVideos = async (req, res) => {
         },
         { $project: { postedByDoc: 0 } },
       ];
-      const videos = await Video.aggregate(pipeline);
-      return res.status(200).json(videos);
+
+      // Get total count for pagination metadata
+      const totalCountPipeline = [
+        { $match: filter },
+        { $count: "total" }
+      ];
+
+      const [videos, totalResult] = await Promise.all([
+        Video.aggregate(pipeline),
+        Video.aggregate(totalCountPipeline)
+      ]);
+
+      const total = totalResult[0]?.total || 0;
+      const totalPages = Math.ceil(total / limit);
+
+      return ResponseHandler.success(res, {
+        videos,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      }, "Videos retrieved successfully");
     }
 
-    let sortOption = { createdAt: -1 };
-    if (sortParam === "views") sortOption = { views: -1 };
-    // default "newest" or any other value: sort by createdAt desc
+    // Standard sorting with pagination
+    let sortOption = { createdAt: -1, _id: -1 }; // Add _id for consistent pagination
+    if (sortParam === "views") sortOption = { views: -1, createdAt: -1 };
+    else if (sortParam === "oldest") sortOption = { createdAt: 1, _id: 1 };
 
-    const videos = await Video.find(filter)
-      .populate("postedBy", "username _id")
-      .sort(sortOption);
-    res.status(200).json(videos);
+    // Execute query with pagination and get total count
+    const [videos, total] = await Promise.all([
+      Video.find(filter)
+        .populate("postedBy", "username _id")
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit)
+        .lean(), // Use lean() for better performance
+      Video.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return ResponseHandler.success(res, {
+      videos,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
+    }, "Videos retrieved successfully");
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error fetching videos" });
+    logger.error("Error fetching videos", { 
+      error: err.message, 
+      query: req.query,
+      ip: req.ip 
+    });
+    return ResponseHandler.handleError(err, req, res, "Error fetching videos");
   }
 };
 

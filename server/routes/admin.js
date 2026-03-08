@@ -1,19 +1,18 @@
 const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
-const { verifyToken } = require("../middleware/auth");
-const { verifyAdmin } = require("../middleware/adminAuth");
+const { verifyToken, requireAdmin } = require("../middleware/auth");
 
 // Check admin status (any authenticated user can check)
 router.get("/check-admin", verifyToken, adminController.checkAdminStatus);
 
 // Admin-only routes
-router.get("/stats", verifyToken, verifyAdmin, adminController.getAdminStats);
+router.get("/stats", verifyToken, requireAdmin, adminController.getAdminStats);
 
 // Get flagged content
-router.get("/flagged/posts", verifyToken, verifyAdmin, adminController.getFlaggedPosts);
-router.get("/flagged/videos", verifyToken, verifyAdmin, adminController.getFlaggedVideos);
-router.get("/flagged/comments", verifyToken, verifyAdmin, adminController.getFlaggedComments);
+router.get("/flagged/posts", verifyToken, requireAdmin, adminController.getFlaggedPosts);
+router.get("/flagged/videos", verifyToken, requireAdmin, adminController.getFlaggedVideos);
+router.get("/flagged/comments", verifyToken, requireAdmin, adminController.getFlaggedComments);
 
 // Flag content (available to all users)
 router.post("/flag/post", verifyToken, adminController.flagPost);
@@ -24,7 +23,7 @@ router.post("/flag/comment", verifyToken, adminController.flagComment);
 router.delete(
     "/posts/:postId",
     verifyToken,
-    verifyAdmin,
+    requireAdmin,
     (req, res, next) => {
         // Maintain backward compatibility: ensure req.params.id is set
         if (!req.params.id && req.params.postId) {
@@ -36,7 +35,7 @@ router.delete(
 router.delete(
     "/videos/:videoId",
     verifyToken,
-    verifyAdmin,
+    requireAdmin,
     (req, res, next) => {
         // Maintain backward compatibility: ensure req.params.id is set
         if (!req.params.id && req.params.videoId) {
@@ -48,7 +47,7 @@ router.delete(
 router.delete(
     "/comments/:commentId",
     verifyToken,
-    verifyAdmin,
+    requireAdmin,
     (req, res, next) => {
         // Maintain backward compatibility: ensure req.params.id is set
         if (!req.params.id && req.params.commentId) {
@@ -59,28 +58,29 @@ router.delete(
 );
 
 // Dismiss flag (admin only)
-router.post("/dismiss-flag", verifyToken, verifyAdmin, adminController.dismissFlag);
+router.post("/dismiss-flag", verifyToken, requireAdmin, adminController.dismissFlag);
 
 // Soft delete management (admin only)
-router.get("/deleted", verifyToken, verifyAdmin, adminController.getDeletedContent);
-router.post("/restore/:type/:id", verifyToken, verifyAdmin, adminController.restoreContent);
-router.delete("/permanent/:type/:id", verifyToken, verifyAdmin, adminController.permanentlyDeleteContent);
-router.post("/bulk-restore", verifyToken, verifyAdmin, adminController.bulkRestoreContent);
-router.post("/cleanup", verifyToken, verifyAdmin, adminController.cleanupDeletedContent);
+router.get("/deleted", verifyToken, requireAdmin, adminController.getDeletedContent);
+router.post("/restore/:type/:id", verifyToken, requireAdmin, adminController.restoreContent);
+router.delete("/permanent/:type/:id", verifyToken, requireAdmin, adminController.permanentlyDeleteContent);
+router.post("/bulk-restore", verifyToken, requireAdmin, adminController.bulkRestoreContent);
+router.post("/cleanup", verifyToken, requireAdmin, adminController.cleanupDeletedContent);
 
 // User Management (admin only)
-router.get("/users", verifyToken, verifyAdmin, adminController.getUsers);
-router.post("/users/:id/ban", verifyToken, verifyAdmin, adminController.banUser);
-router.post("/users/:id/unban", verifyToken, verifyAdmin, adminController.unbanUser);
-router.post("/users/:id/warn", verifyToken, verifyAdmin, adminController.warnUser);
+router.get("/users", verifyToken, requireAdmin, adminController.getUsers);
+router.post("/users/:id/ban", verifyToken, requireAdmin, adminController.banUser);
+router.post("/users/:id/unban", verifyToken, requireAdmin, adminController.unbanUser);
+router.post("/users/:id/warn", verifyToken, requireAdmin, adminController.warnUser);
 
-module.exports = router;
 // Audit trail endpoints
-router.get("/audit", verifyToken, verifyAdmin, adminController.getAuditTrail);
-router.post("/audit/export", verifyToken, verifyAdmin, adminController.exportAuditTrail);
-router.get("/audit/stats", verifyToken, verifyAdmin, adminController.getAuditStats);
+router.get("/audit", verifyToken, requireAdmin, adminController.getAuditTrail);
+router.post("/audit/export", verifyToken, requireAdmin, adminController.exportAuditTrail);
+router.get("/audit/stats", verifyToken, requireAdmin, adminController.getAuditStats);
 
 // Cleanup management endpoints
-router.post("/cleanup", verifyToken, verifyAdmin, adminController.triggerCleanup);
-router.get("/cleanup/stats", verifyToken, verifyAdmin, adminController.getCleanupStats);
-router.put("/cleanup/retention", verifyToken, verifyAdmin, adminController.updateRetentionPeriod);
+router.post("/cleanup/trigger", verifyToken, requireAdmin, adminController.triggerCleanup);
+router.get("/cleanup/stats", verifyToken, requireAdmin, adminController.getCleanupStats);
+router.put("/cleanup/retention", verifyToken, requireAdmin, adminController.updateRetentionPeriod);
+
+module.exports = router;

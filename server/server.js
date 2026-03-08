@@ -61,6 +61,10 @@ initQueryMonitoring();
 const CleanupScheduler = require("./services/cleanupScheduler");
 CleanupScheduler.scheduleCleanup();
 
+// Initialize token cleanup scheduler
+const { scheduleTokenCleanup } = require("./services/tokenCleanupScheduler");
+scheduleTokenCleanup();
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -224,7 +228,8 @@ const gracefulShutdown = async (signal) => {
   logger.info(`\n${signal} received. Starting graceful shutdown...`);
 
   try {
-    // Close Socket.IO first to disconnect all clients and release socket references
+    // CRITICAL: Close Socket.IO first to disconnect all clients and release socket references
+    // This prevents resource leaks and ensures clients receive proper disconnect events
     if (io) {
       logger.info('Closing Socket.IO server...');
       await new Promise((resolve) => {
