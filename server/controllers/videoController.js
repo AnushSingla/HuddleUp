@@ -52,7 +52,7 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
         originalname: req.file.originalname
       },
       req.user.id,
-      {} // Empty metadata object since video hasn't been processed yet
+      req.videoMetadata || {} // Use metadata from validation if available
     );
 
     // Handle exact duplicates
@@ -108,7 +108,20 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
       );
     }
 
-    // Create video record with duplicate detection data
+    // Enhanced metadata from validation
+    const enhancedMetadata = {
+      fileSize: req.file.size,
+      originalFileName: req.file.originalname,
+      ...(req.videoMetadata || {}),
+      uploadValidation: {
+        signatureValidated: true,
+        metadataValidated: !!req.videoMetadata,
+        securityScanned: !!req.securityAnalysis,
+        uploadTimestamp: new Date()
+      }
+    };
+
+    // Create video record with enhanced metadata
     const newVideo = new Video({
       title,
       description,
@@ -120,9 +133,7 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
       fileHash: duplicateResult.fileHash,
       originalFileSize: req.file.size,
       originalFileName: req.file.originalname,
-      metadata: {
-        fileSize: req.file.size
-      }
+      metadata: enhancedMetadata
     });
 
     await newVideo.save();
@@ -139,19 +150,26 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
       invalidateQueryCache("video:*"),
     ]);
 
-    logger.info('Video uploaded successfully', {
+    logger.info('Video uploaded successfully with enhanced validation', {
       videoId: newVideo._id,
       userId: req.user.id,
       title: newVideo.title,
       jobId,
       fileHash: duplicateResult.fileHash,
-      duplicateStatus: duplicateResult.type
+      duplicateStatus: duplicateResult.type,
+      metadata: req.videoMetadata ? 'validated' : 'pending',
+      securityScan: req.securityAnalysis ? 'completed' : 'skipped'
     });
 
     return ResponseHandler.success(res, {
       video: newVideo,
       jobId,
-      duplicateStatus: duplicateResult.type
+      duplicateStatus: duplicateResult.type,
+      validation: {
+        fileValidated: true,
+        metadataExtracted: !!req.videoMetadata,
+        securityScanned: !!req.securityAnalysis
+      }
     }, "Video uploaded and processing started", 201);
 
   } catch (error) {
