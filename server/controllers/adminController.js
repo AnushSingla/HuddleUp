@@ -8,6 +8,7 @@ const ModerationLog = require("../models/ModerationLog");
 const Appeal = require("../models/Appeal");
 const SoftDeleteService = require("../services/softDeleteService");
 const AuditLogger = require("../services/auditLogger");
+const { clearUserRoleCache } = require("../middleware/auth");
 const CleanupScheduler = require("../services/cleanupScheduler");
 const PaginationHelper = require("../utils/paginationHelper");
 const logger = require("../utils/logger");
@@ -404,6 +405,9 @@ exports.banUser = async (req, res) => {
         user.suspensionCount = (user.suspensionCount || 0) + 1;
         await user.save();
 
+        // Clear role cache for this user
+        clearUserRoleCache(id);
+
         // Log the action
         await ModerationLog.create({
             moderator: adminId,
@@ -440,6 +444,9 @@ exports.unbanUser = async (req, res) => {
         user.bannedAt = null;
         user.bannedUntil = null;
         await user.save();
+
+        // Clear role cache for this user
+        clearUserRoleCache(id);
 
         await ModerationLog.create({
             moderator: adminId,

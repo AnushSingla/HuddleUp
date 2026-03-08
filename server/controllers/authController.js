@@ -6,6 +6,7 @@ const nodemailer = require("nodemailer");
 const { getJWTSecret } = require("../utils/validateEnv");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
+const { clearUserRoleCache } = require("../middleware/auth");
 
 exports.register = ResponseHandler.asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
