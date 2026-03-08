@@ -50,6 +50,12 @@ const search = async (req, res) => {
 
     return res.json(results);
   } catch (err) {
+    // Handle validation errors specifically
+    if (err.message.includes('Search query')) {
+      logger.warn('Invalid search query', { error: err.message, query: req.query.q });
+      return ResponseHandler.error(res, ERROR_CODES.VALIDATION_ERROR, err.message, 400);
+    }
+    
     logger.error('Search operation failed', { error: err.message, query: req.query });
     return ResponseHandler.error(res, ERROR_CODES.INTERNAL_ERROR, "Search failed", 500);
   }
@@ -67,7 +73,13 @@ const suggestions = async (req, res) => {
     const results = await getAutocompleteSuggestions(query);
     return res.json(results);
   } catch (err) {
-    // Removed console.error - use logger instead
+    // Handle validation errors
+    if (err.message.includes('Search query')) {
+      logger.warn('Invalid autocomplete query', { error: err.message, query: req.query.q });
+      return res.json([]);
+    }
+    
+    logger.error('Autocomplete failed', { error: err.message });
     return res.status(500).json([]);
   }
 };
