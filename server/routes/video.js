@@ -9,27 +9,12 @@ const {
   getDuplicateStats,
   getDuplicateGroups
 } = require("../controllers/videoController");
-const { verifyToken } = require("../middleware/auth");
+const { verifyToken, requireAdmin } = require("../middleware/auth");
 const { videoValidator } = require("../middleware/validation");
 const { upload, validateUploadedFile, cleanupOnError, getUploadLimits } = require("../middleware/multer");
 const { advancedFileSecurityValidator, logSecurityAnalysis } = require("../middleware/fileSecurityValidator");
 const { videoUploadLimiter, videoListingLimiter } = require("../middleware/rateLimit");
 const { uploadLimiter } = require("../middleware/rateLimiter");
-
-// Middleware to check if user is admin
-const isAdmin = async (req, res, next) => {
-    try {
-        const User = require("../models/User");
-        const user = await User.findById(req.user.id);
-
-        if (!user || !user.isAdmin) {
-            return res.status(403).json({ message: "Access denied. Admin only." });
-        }
-        next();
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-};
 
 // Get upload requirements and limits
 router.get("/upload/limits", verifyToken, (req, res) => {
@@ -67,7 +52,7 @@ router.put("/videos/:id", verifyToken, videoValidator, updateVideo);
 router.delete("/videos/:id", verifyToken, deleteVideo);
 
 // Duplicate detection endpoints (admin only)
-router.get("/duplicates/stats", verifyToken, isAdmin, getDuplicateStats);
-router.get("/duplicates/groups", verifyToken, isAdmin, getDuplicateGroups);
+router.get("/duplicates/stats", verifyToken, requireAdmin, getDuplicateStats);
+router.get("/duplicates/groups", verifyToken, requireAdmin, getDuplicateGroups);
 
 module.exports = router

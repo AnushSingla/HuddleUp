@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const { getJWTSecret } = require("../utils/validateEnv");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
+const { clearUserRoleCache } = require("../middleware/auth");
 const tokenService = require("../services/tokenService");
 const { sendWelcomeEmail } = require("../services/emailService");
 
