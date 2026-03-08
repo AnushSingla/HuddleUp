@@ -2,11 +2,12 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const { getJWTSecret } = require("../utils/validateEnv");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
-const authService = require("../services/authService");
+const { clearUserRoleCache } = require("../middleware/auth");
+const tokenService = require("../services/tokenService");
+const { sendWelcomeEmail } = require("../services/emailService");
 
 exports.register = ResponseHandler.asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
@@ -27,6 +28,15 @@ exports.register = ResponseHandler.asyncHandler(async (req, res) => {
             userId: newUser._id,
             username: newUser.username,
             email: newUser.email
+        });
+
+        // Send welcome email asynchronously (don't wait for it)
+        sendWelcomeEmail(email, username).catch((error) => {
+            logger.error('Error sending welcome email', { 
+                userId: newUser._id,
+                email,
+                error: error.message 
+            });
         });
 
         return ResponseHandler.success(res, 
@@ -81,19 +91,21 @@ exports.login = ResponseHandler.asyncHandler(async (req, res) => {
             );
         }
         
+        // Generate access and refresh tokens
         try {
-            // Generate secure token pair
-            const deviceInfo = authService.extractDeviceInfo(req);
-            const { accessToken, refreshToken } = await authService.generateTokenPair(user._id, deviceInfo);
-
-            // Set secure HTTP-only cookies
-            authService.setAuthCookies(res, accessToken, refreshToken);
-
+            const ipAddress = req.ip || req.connection.remoteAddress;
+            const userAgent = req.get('User-Agent') || 'Unknown';
+            
+            const tokens = await tokenService.generateTokenPair(
+                user._id,
+                ipAddress,
+                userAgent
+            );
+            
             logger.info('User logged in successfully', { 
                 userId: user._id,
                 username: user.username,
-                email: user.email,
-                deviceInfo: deviceInfo.userAgent
+                email: user.email
             });
             
             return ResponseHandler.success(res, {
@@ -101,13 +113,14 @@ exports.login = ResponseHandler.asyncHandler(async (req, res) => {
                     id: user._id,
                     username: user.username, 
                     email: user.email 
-                },
-                // For backward compatibility during migration, also return token
-                token: accessToken
+                }, 
+                accessToken: tokens.accessToken,
+                refreshToken: tokens.refreshToken,
+                expiresIn: tokens.expiresIn
             }, 'Login successful');
-        } catch (authError) {
-            logger.error('Authentication service error during login', { 
-                error: authError.message,
+        } catch (jwtError) {
+            logger.error('Token generation error during login', { 
+                error: jwtError.message,
                 userId: user._id
             });
             return ResponseHandler.error(
@@ -209,7 +222,11 @@ exports.updatePassword = async (req, res) => {
         user.password = hashedPassword;
         await user.save();
 
-        return ResponseHandler.success(res, null, "Password updated successfully");
+        // Revoke all refresh tokens for security
+        await tokenService.revokeAllUserTokens(userId, 'Password changed');
+        logger.info('All sessions revoked after password change', { userId });
+
+        return ResponseHandler.success(res, null, "Password updated successfully. Please log in again.");
     } catch (err) {
         return ResponseHandler.handleError(err, req, res, "Error updating password");
     }
@@ -302,168 +319,125 @@ exports.resetPassword = async (req, res) => {
     }
 };
 
-// Secure logout
+// Logout user and clear HTTP-only cookie
 exports.logout = ResponseHandler.asyncHandler(async (req, res) => {
     try {
-        const refreshToken = req.cookies?.refreshToken;
-        
-        if (refreshToken) {
-            // Revoke the refresh token
-            await authService.revokeRefreshToken(refreshToken);
-            logger.info('User logged out', { 
-                userId: req.user?.id,
-                ip: req.ip 
-            });
-        }
-        
-        // Clear authentication cookies
-        authService.clearAuthCookies(res);
-        
-        return ResponseHandler.success(res, null, 'Logged out successfully');
-    } catch (error) {
-        logger.error('Logout error', { 
-            error: error.message,
-            userId: req.user?.id 
+        // Clear the HTTP-only cookie
+        res.clearCookie('accessToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/'
         });
         
-        // Still clear cookies even if there's an error
-        authService.clearAuthCookies(res);
+        logger.info('User logged out successfully', { 
+            userId: req.user?.id,
+            ip: req.ip
+        });
         
-        return ResponseHandler.success(res, null, 'Logged out successfully');
+        return ResponseHandler.success(res, null, "Logged out successfully");
+    } catch (err) {
+        return ResponseHandler.handleError(err, req, res, "Logout failed");
     }
 });
 
-// Global logout (all devices)
-exports.logoutAll = ResponseHandler.asyncHandler(async (req, res) => {
-    try {
-        const userId = req.user.id;
-        
-        // Revoke all refresh tokens for the user
-        const revokedCount = await authService.revokeAllUserTokens(userId);
-        
-        // Clear current cookies
-        authService.clearAuthCookies(res);
-        
-        logger.info('User logged out from all devices', { 
-            userId,
-            revokedTokens: revokedCount,
-            ip: req.ip 
-        });
-        
-        return ResponseHandler.success(res, 
-            { revokedSessions: revokedCount }, 
-            'Logged out from all devices successfully'
-        );
-    } catch (error) {
-        logger.error('Global logout error', { 
-            error: error.message,
-            userId: req.user?.id 
-        });
-        
-        // Still clear current cookies
-        authService.clearAuthCookies(res);
-        
+
+// Refresh access token using refresh token
+exports.refreshToken = ResponseHandler.asyncHandler(async (req, res) => {
+    const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
         return ResponseHandler.error(
             res,
-            ERROR_CODES.INTERNAL_ERROR,
-            'Logout failed. Please try again.',
-            500
+            ERROR_CODES.VALIDATION_ERROR,
+            'Refresh token is required',
+            400
         );
     }
-});
-
-// Refresh token endpoint
-exports.refreshToken = ResponseHandler.asyncHandler(async (req, res) => {
+    
     try {
-        const refreshToken = req.cookies?.refreshToken;
+        // Verify refresh token
+        const { userId } = await tokenService.verifyRefreshToken(refreshToken);
         
-        if (!refreshToken) {
-            return ResponseHandler.error(
-                res,
-                ERROR_CODES.UNAUTHORIZED,
-                'Refresh token not provided',
-                401
-            );
-        }
+        // Generate new access token
+        const accessToken = tokenService.generateAccessToken(userId);
         
-        const deviceInfo = authService.extractDeviceInfo(req);
-        const result = await authService.refreshTokenPair(refreshToken, deviceInfo);
-        
-        // Set new cookies
-        authService.setAuthCookies(res, result.accessToken, result.refreshToken);
-        
-        logger.info('Token refreshed successfully', { 
-            userId: result.user.id,
-            ip: req.ip 
-        });
+        logger.info('Access token refreshed', { userId });
         
         return ResponseHandler.success(res, {
-            user: result.user,
-            // For backward compatibility
-            token: result.accessToken
+            accessToken,
+            expiresIn: 900 // 15 minutes
         }, 'Token refreshed successfully');
     } catch (error) {
-        logger.warn('Token refresh failed', { 
-            error: error.message,
-            ip: req.ip 
-        });
+        logger.warn('Token refresh failed', { error: error.message });
+        return ResponseHandler.error(
+            res,
+            ERROR_CODES.UNAUTHORIZED,
+            'Invalid or expired refresh token',
+            401
+        );
+    }
+});
+
+// Logout - revoke refresh token
+exports.logout = ResponseHandler.asyncHandler(async (req, res) => {
+    const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
+        return ResponseHandler.success(res, null, 'Logged out successfully');
+    }
+    
+    try {
+        await tokenService.revokeRefreshToken(refreshToken, 'User logout');
+        logger.info('User logged out', { userId: req.user?.id });
         
-        // Clear invalid cookies
-        authService.clearAuthCookies(res);
+        return ResponseHandler.success(res, null, 'Logged out successfully');
+    } catch (error) {
+        logger.error('Logout error', { error: error.message });
+        // Still return success even if revocation fails
+        return ResponseHandler.success(res, null, 'Logged out successfully');
+    }
+});
+
+// Logout from all devices - revoke all refresh tokens
+exports.logoutAll = ResponseHandler.asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    
+    try {
+        const count = await tokenService.revokeAllUserTokens(userId, 'Logout from all devices');
+        logger.info('User logged out from all devices', { userId, sessionsRevoked: count });
         
-        if (error.message === 'INVALID_REFRESH_TOKEN' || error.message === 'REFRESH_TOKEN_EXPIRED') {
-            return ResponseHandler.error(
-                res,
-                ERROR_CODES.UNAUTHORIZED,
-                'Session expired. Please log in again.',
-                401
-            );
-        }
-        
+        return ResponseHandler.success(res, {
+            sessionsRevoked: count
+        }, 'Logged out from all devices successfully');
+    } catch (error) {
+        logger.error('Logout all error', { userId, error: error.message });
         return ResponseHandler.error(
             res,
             ERROR_CODES.INTERNAL_ERROR,
-            'Token refresh failed. Please try again.',
+            'Error logging out from all devices',
             500
         );
     }
 });
 
-// Get user sessions
-exports.getSessions = ResponseHandler.asyncHandler(async (req, res) => {
+// Get active sessions
+exports.getActiveSessions = ResponseHandler.asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    
     try {
-        const userId = req.user.id;
-        const currentRefreshToken = req.cookies?.refreshToken;
+        const sessions = await tokenService.getUserActiveSessions(userId);
         
-        const sessions = await authService.getUserSessions(userId);
-        
-        // Mark current session if we have the refresh token
-        if (currentRefreshToken) {
-            const RefreshToken = require("../models/RefreshToken");
-            const currentToken = await RefreshToken.findOne({ 
-                token: currentRefreshToken,
-                isRevoked: false 
-            });
-            
-            if (currentToken) {
-                const currentSession = sessions.find(s => s.id.toString() === currentToken._id.toString());
-                if (currentSession) {
-                    currentSession.isCurrent = true;
-                }
-            }
-        }
-        
-        return ResponseHandler.success(res, { sessions }, 'Sessions retrieved successfully');
+        return ResponseHandler.success(res, {
+            sessions,
+            count: sessions.length
+        }, 'Active sessions retrieved successfully');
     } catch (error) {
-        logger.error('Error fetching user sessions', { 
-            error: error.message,
-            userId: req.user?.id 
-        });
-        
+        logger.error('Get sessions error', { userId, error: error.message });
         return ResponseHandler.error(
             res,
             ERROR_CODES.INTERNAL_ERROR,
-            'Failed to fetch sessions',
+            'Error retrieving sessions',
             500
         );
     }
@@ -471,22 +445,25 @@ exports.getSessions = ResponseHandler.asyncHandler(async (req, res) => {
 
 // Revoke specific session
 exports.revokeSession = ResponseHandler.asyncHandler(async (req, res) => {
-    try {
-        const { sessionId } = req.params;
-        const userId = req.user.id;
-        
-        const RefreshToken = require("../models/RefreshToken");
-        const result = await RefreshToken.findOneAndUpdate(
-            { 
-                _id: sessionId,
-                userId: userId,
-                isRevoked: false 
-            },
-            { isRevoked: true },
-            { new: true }
+    const { refreshToken } = req.body;
+    const userId = req.user.id;
+    
+    if (!refreshToken) {
+        return ResponseHandler.error(
+            res,
+            ERROR_CODES.VALIDATION_ERROR,
+            'Refresh token is required',
+            400
         );
+    }
+    
+    try {
+        const revoked = await tokenService.revokeRefreshToken(refreshToken, 'Session revoked by user');
         
-        if (!result) {
+        if (revoked) {
+            logger.info('Session revoked', { userId });
+            return ResponseHandler.success(res, null, 'Session revoked successfully');
+        } else {
             return ResponseHandler.error(
                 res,
                 ERROR_CODES.NOT_FOUND,
@@ -494,26 +471,14 @@ exports.revokeSession = ResponseHandler.asyncHandler(async (req, res) => {
                 404
             );
         }
-        
-        logger.info('Session revoked', { 
-            sessionId,
-            userId,
-            ip: req.ip 
-        });
-        
-        return ResponseHandler.success(res, null, 'Session revoked successfully');
     } catch (error) {
-        logger.error('Error revoking session', { 
-            error: error.message,
-            sessionId: req.params.sessionId,
-            userId: req.user?.id 
-        });
-        
+        logger.error('Revoke session error', { userId, error: error.message });
         return ResponseHandler.error(
             res,
             ERROR_CODES.INTERNAL_ERROR,
-            'Failed to revoke session',
+            'Error revoking session',
             500
         );
     }
 });
+

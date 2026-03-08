@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 
-const Badge = ({ children, variant = 'default', className }) => {
+export const Badge = ({ children, variant = 'default', className }) => {
   const baseStyles =
     'inline-flex items-center rounded-full px-3 py-1 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2';
 

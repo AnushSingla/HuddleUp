@@ -2,77 +2,67 @@ import axios from 'axios';
 
 export const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true, // Enable cookies
+  withCredentials: true,
 });
 
-// Token refresh interceptor
-let isRefreshing = false;
-let failedQueue = [];
+// Retry configuration
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
 
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
+// Helper function to check if error is retryable
+const isRetryableError = (error) => {
+  if (!error.response) {
+    // Network errors (no response received)
+    return true;
+  }
   
-  failedQueue = [];
+  const status = error.response.status;
+  // Retry on 5xx server errors and 429 (rate limit)
+  return status >= 500 || status === 429;
 };
 
+// Helper function to calculate exponential backoff delay
+const getRetryDelay = (retryCount) => {
+  return INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
+};
+
+// Helper function to delay execution
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 API.interceptors.request.use((config) => {
-  // For backward compatibility, still check localStorage
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // Initialize retry count
+  config.retryCount = config.retryCount || 0;
+  
   return config;
 });
 
+// Response interceptor for retry logic
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then(() => {
-          return API(originalRequest);
-        }).catch(err => {
-          return Promise.reject(err);
-        });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        const response = await API.post('/auth/refresh');
-        
-        // Update localStorage for backward compatibility
-        if (response.data.data?.token) {
-          localStorage.setItem('token', response.data.data.token);
-        }
-        
-        processQueue(null, response.data.data?.token);
-        return API(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        
-        // Clear localStorage and redirect to login
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-        
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+    const config = error.config;
+    
+    // Check if we should retry
+    if (!config || config.retryCount >= MAX_RETRIES || !isRetryableError(error)) {
+      return Promise.reject(error);
     }
-
-    return Promise.reject(error);
+    
+    // Increment retry count
+    config.retryCount += 1;
+    
+    // Calculate delay with exponential backoff
+    const retryDelay = getRetryDelay(config.retryCount - 1);
+    
+    // Wait before retrying
+    await delay(retryDelay);
+    
+    // Retry the request
+    return API(config);
   }
 );
 
@@ -91,3 +81,4 @@ export const searchContent = ({ q, type = "all", page = 1, limit = 10, sortBy = 
 
 export const fetchSuggestions = (q) =>
   API.get("/search/suggestions", { params: { q } }).then((r) => r.data);
+
