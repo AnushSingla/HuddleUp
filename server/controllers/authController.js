@@ -2,10 +2,10 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const { getJWTSecret } = require("../utils/validateEnv");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
+const { sendWelcomeEmail } = require("../services/emailService");
 
 exports.register = ResponseHandler.asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
@@ -26,6 +26,15 @@ exports.register = ResponseHandler.asyncHandler(async (req, res) => {
             userId: newUser._id,
             username: newUser.username,
             email: newUser.email
+        });
+
+        // Send welcome email asynchronously (don't wait for it)
+        sendWelcomeEmail(email, username).catch((error) => {
+            logger.error('Error sending welcome email', { 
+                userId: newUser._id,
+                email,
+                error: error.message 
+            });
         });
 
         return ResponseHandler.success(res, 
