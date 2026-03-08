@@ -10,11 +10,14 @@ const path = require('path');
 // Load environment variables first
 dotenv.config();
 
+// Import logger early for environment validation
+const logger = require("./utils/logger");
+
 // Validate environment variables before starting the server
 const { validateEnvironment } = require("./utils/validateEnv");
 if (!validateEnvironment()) {
-  console.error('\n❌ Server startup failed due to environment variable errors.');
-  console.error('Please fix the above issues and restart the server.\n');
+  logger.error('Server startup failed due to environment variable errors.');
+  logger.error('Please fix the above issues and restart the server.');
   process.exit(1);
 }
 const { initRedis } = require("./config/redis");
@@ -76,7 +79,7 @@ const getSocketConnectionCount = () => (io.sockets?.sockets?.size ?? 0);
 io.on("connection", (socket) => {
   const count = getSocketConnectionCount();
   if (count % 50 === 0 || count <= 5) {
-    console.log(`[Socket] Client connected. Active connections: ${count}`);
+    logger.info(`[Socket] Client connected. Active connections: ${count}`);
   }
 
   socket.on("join_match", (matchId) => {
@@ -126,12 +129,12 @@ io.on("connection", (socket) => {
     socket.removeAllListeners();
     const remaining = getSocketConnectionCount();
     if (remaining % 50 === 0 || remaining <= 5) {
-      console.log(`[Socket] Client disconnected (${reason}). Active connections: ${remaining}`);
+      logger.info(`[Socket] Client disconnected (${reason}). Active connections: ${remaining}`);
     }
   });
 
   socket.on("error", (err) => {
-    console.error("[Socket] Error:", err?.message || err);
+    logger.error("[Socket] Error:", { error: err?.message || err });
     socket.removeAllListeners();
   });
 });
@@ -184,7 +187,7 @@ app.use(errorHandler);
 const connectDB = async () => {
   try {
     const mongoUrl = process.env.MONGO_URL;
-    console.log("Attempting to connect to MongoDB...");
+    logger.info("Attempting to connect to MongoDB...");
 
     await mongoose.connect(mongoUrl, {
       serverSelectionTimeoutMS: 30000,
@@ -197,14 +200,14 @@ const connectDB = async () => {
       readPreference: 'secondaryPreferred',
       compressors: ['zlib'],
     });
-    console.log("✅ MongoDB connected successfully");
+    logger.info("✅ MongoDB connected successfully");
   } catch (error) {
-    console.error("❌ MongoDB connection error:", error.message);
+    logger.error("❌ MongoDB connection error:", { error: error.message });
     if (error.name === 'MongoNetworkError') {
-      console.error("Network error - Check:");
-      console.error("1. Internet connection");
-      console.error("2. MongoDB Atlas Network Access (IP whitelist)");
-      console.error("3. Connection string format");
+      logger.error("Network error - Check:");
+      logger.error("1. Internet connection");
+      logger.error("2. MongoDB Atlas Network Access (IP whitelist)");
+      logger.error("3. Connection string format");
     }
     process.exit(1);
   }
@@ -213,57 +216,57 @@ const connectDB = async () => {
 const PORT = process.env.PORT || 5000;
 
 connectDB()
-  .then(() => server.listen(PORT, () => console.log(`Server is running at port ${PORT} (with Socket.IO)`)))
-  .catch(err => console.log(err))
+  .then(() => server.listen(PORT, () => logger.info(`Server is running at port ${PORT} (with Socket.IO)`)))
+  .catch(err => logger.error("Server startup error:", { error: err }))
 
 // Graceful shutdown handling
 const gracefulShutdown = async (signal) => {
-  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  logger.info(`\n${signal} received. Starting graceful shutdown...`);
 
   try {
     // Close Socket.IO first to disconnect all clients and release socket references
     if (io) {
-      console.log('Closing Socket.IO server...');
+      logger.info('Closing Socket.IO server...');
       await new Promise((resolve) => {
         io.close(() => {
-          console.log('✅ Socket.IO server closed');
+          logger.info('✅ Socket.IO server closed');
           resolve();
         });
       });
     }
 
     // Close HTTP server
-    console.log('Closing HTTP server...');
+    logger.info('Closing HTTP server...');
     await new Promise((resolve, reject) => {
       server.close((err) => {
         if (err) reject(err);
         else resolve();
       });
     });
-    console.log('✅ HTTP server closed');
+    logger.info('✅ HTTP server closed');
 
     // Close video queue
     if (videoQueue) {
-      console.log('Closing video queue...');
+      logger.info('Closing video queue...');
       await videoQueue.close();
-      console.log('✅ Video queue closed');
+      logger.info('✅ Video queue closed');
     }
 
     // Close Redis connection
     const { closeRedis } = require("./config/redis");
-    console.log('Closing Redis connection...');
+    logger.info('Closing Redis connection...');
     await closeRedis();
-    console.log('✅ Redis connection closed');
+    logger.info('✅ Redis connection closed');
 
     // Close MongoDB connection
-    console.log('Closing MongoDB connection...');
+    logger.info('Closing MongoDB connection...');
     await mongoose.connection.close();
-    console.log('✅ MongoDB connection closed');
+    logger.info('✅ MongoDB connection closed');
 
-    console.log('✅ Graceful shutdown completed');
+    logger.info('✅ Graceful shutdown completed');
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error during graceful shutdown:', error);
+    logger.error('❌ Error during graceful shutdown:', { error });
     process.exit(1);
   }
 };
@@ -275,12 +278,12 @@ process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2')); // For nodemon
 
 // Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
+  logger.error('❌ Uncaught Exception:', { error });
   gracefulShutdown('UNCAUGHT_EXCEPTION');
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  logger.error('❌ Unhandled Rejection at:', { promise, reason });
   gracefulShutdown('UNHANDLED_REJECTION');
 });
 

@@ -4,13 +4,14 @@ const { uploadToCloudinary } = require("../services/cloudinaryService");
 const Video = require("../models/Video");
 const fs = require("fs").promises;
 const path = require("path");
+const logger = require("../utils/logger");
 
 // Process video jobs from the queue
 videoQueue.process(async (job) => {
   const { videoId, filePath } = job.data;
 
   try {
-    console.log(`🎬 Processing video ${videoId}...`);
+    logger.info(`🎬 Processing video ${videoId}...`);
 
     // Update status to processing
     await Video.findByIdAndUpdate(videoId, {
@@ -20,7 +21,7 @@ videoQueue.process(async (job) => {
     await job.progress(10);
 
     // Step 1: Process video with FFmpeg
-    console.log(`📹 Running FFmpeg processing...`);
+    logger.info(`📹 Running FFmpeg processing...`);
     const processedFiles = await processVideo(filePath, (progress) => {
       job.progress(10 + progress * 0.5); // 10-60%
     });
@@ -30,7 +31,7 @@ videoQueue.process(async (job) => {
     });
 
     // Step 2: Upload to Cloudinary
-    console.log(`☁️ Uploading to Cloudinary...`);
+    logger.info(`☁️ Uploading to Cloudinary...`);
     const uploadResults = await uploadToCloudinary(
       processedFiles,
       videoId,
@@ -44,7 +45,7 @@ videoQueue.process(async (job) => {
     });
 
     // Step 3: Update database with results
-    console.log(`💾 Updating database...`);
+    logger.info(`💾 Updating database...`);
     await Video.findByIdAndUpdate(videoId, {
       videoVersions: uploadResults.videoVersions,
       thumbnails: uploadResults.thumbnails,
@@ -55,15 +56,15 @@ videoQueue.process(async (job) => {
     });
 
     // Step 4: Cleanup temp files
-    console.log(`🧹 Cleaning up temp files...`);
+    logger.info(`🧹 Cleaning up temp files...`);
     await cleanupFiles([filePath, ...processedFiles.allFiles]);
 
     await job.progress(100);
-    console.log(`✅ Video ${videoId} processed successfully!`);
+    logger.info(`✅ Video ${videoId} processed successfully!`);
 
     return { success: true, videoId };
   } catch (error) {
-    console.error(`❌ Error processing video ${videoId}:`, error);
+    logger.error(`❌ Error processing video ${videoId}:`, { error, videoId });
 
     // Update status to failed
     await Video.findByIdAndUpdate(videoId, {
@@ -75,7 +76,7 @@ videoQueue.process(async (job) => {
     try {
       await cleanupFiles([filePath]);
     } catch (cleanupError) {
-      console.error("Cleanup error:", cleanupError);
+      logger.error("Cleanup error:", { error: cleanupError });
     }
 
     throw error;
@@ -87,10 +88,10 @@ async function cleanupFiles(filePaths) {
   for (const filePath of filePaths) {
     try {
       await fs.unlink(filePath);
-      console.log(`🗑️ Deleted: ${filePath}`);
+      logger.info(`🗑️ Deleted: ${filePath}`);
     } catch (err) {
       if (err.code !== "ENOENT") {
-        console.error(`Failed to delete ${filePath}:`, err);
+        logger.error(`Failed to delete ${filePath}:`, { error: err });
       }
     }
   }
@@ -98,17 +99,17 @@ async function cleanupFiles(filePaths) {
 
 // Event listeners
 videoQueue.on("completed", (job, result) => {
-  console.log(`✅ Job ${job.id} completed:`, result);
+  logger.info(`✅ Job ${job.id} completed:`, { result });
 });
 
 videoQueue.on("failed", (job, err) => {
-  console.error(`❌ Job ${job.id} failed:`, err.message);
+  logger.error(`❌ Job ${job.id} failed:`, { error: err.message, jobId: job.id });
 });
 
 videoQueue.on("progress", (job, progress) => {
-  console.log(`📊 Job ${job.id} progress: ${progress}%`);
+  logger.info(`📊 Job ${job.id} progress: ${progress}%`);
 });
 
-console.log("🎥 Video processor worker started");
+logger.info("🎥 Video processor worker started");
 
 module.exports = { videoQueue };
