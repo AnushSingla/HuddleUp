@@ -123,6 +123,9 @@ app.use(cors({
   credentials: true
 }));
 
+// Parse cookies for authentication
+app.use(cookieParser());
+
 // Apply general rate limiting to all API routes
 app.use("/api", apiLimiter);
 app.use("/api", apiLimiterNew);

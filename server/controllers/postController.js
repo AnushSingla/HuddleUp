@@ -174,7 +174,7 @@ exports.deletePost = async (req, res) => {
       invalidateQueryCache("post:*"),
     ]);
     
-    res.status(200).json({ message: "Post deleted" });
+    return ResponseHandler.success(res, null, "Post deleted successfully");
 
   } catch (err) {
     // Removed console.error - use logger instead

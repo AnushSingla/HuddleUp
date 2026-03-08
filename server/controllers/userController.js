@@ -9,7 +9,7 @@ exports.getPublicProfile = async (req, res) => {
     const raw = req.params.identifier;
     const identifier = typeof raw === "string" ? raw.trim() : raw;
     if (!identifier) {
-      return res.status(400).json({ message: "User identifier required" });
+      return ResponseHandler.error(res, ERROR_CODES.VALIDATION_ERROR, "User identifier required", 400);
     }
 
     let user;

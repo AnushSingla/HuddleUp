@@ -14,13 +14,12 @@ const verifyToken = async (req, res, next) => {
     let token = null;
     let isFromCookie = false;
 
-    // First, try to get token from cookies (new secure method)
+    // Prefer secure HTTP-only cookies for auth
     if (req.cookies && req.cookies.accessToken) {
       token = req.cookies.accessToken;
       isFromCookie = true;
-    } 
-    // Fallback to Authorization header (for backward compatibility during migration)
-    else if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+    } else if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+      // Fallback to Authorization header for backward compatibility
       token = req.headers.authorization.split(" ")[1];
       isFromCookie = false;
     }
@@ -53,7 +52,7 @@ const verifyToken = async (req, res, next) => {
       return next();
     } catch (error) {
       // If access token is expired and we have cookies, try to refresh
-      if (error.message === 'ACCESS_TOKEN_EXPIRED' && isFromCookie && req.cookies.refreshToken) {
+      if (error.message === 'ACCESS_TOKEN_EXPIRED' && isFromCookie && req.cookies?.refreshToken) {
         try {
           logger.info('Access token expired, attempting refresh', {
             userId: req.user?.id,
@@ -151,7 +150,8 @@ const verifyToken = async (req, res, next) => {
       error: error.message,
       method: req.method,
       url: req.url,
-      ip: req.ip
+      ip: req.ip,
+      authMethod: req.authMethod
     });
     
     return ResponseHandler.error(
