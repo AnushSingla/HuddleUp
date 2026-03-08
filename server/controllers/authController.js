@@ -85,6 +85,15 @@ exports.login = ResponseHandler.asyncHandler(async (req, res) => {
             const jwtSecret = getJWTSecret();
             const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "1d" });
             
+            // Set HTTP-only cookie for secure authentication
+            res.cookie('accessToken', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production', // Only use HTTPS in production
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Cross-site for production
+                maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+                path: '/'
+            });
+            
             logger.info('User logged in successfully', { 
                 userId: user._id,
                 username: user.username,
@@ -282,16 +291,38 @@ exports.resetPassword = async (req, res) => {
             resetPasswordExpires: { $gt: new Date() },
         });
         if (!user) {
-            return res.status(400).json({ message: "Invalid or expired reset link. Please request a new one." });
+            return ResponseHandler.error(res, ERROR_CODES.VALIDATION_ERROR, "Invalid or expired reset link. Please request a new one.", 400);
         }
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
         await user.save();
-        return res.status(200).json({ message: "Password reset successfully. You can now sign in." });
+        return ResponseHandler.success(res, null, "Password reset successfully. You can now sign in.");
     } catch (err) {
-        console.error("resetPassword error:", err);
-        return res.status(500).json({ message: "Something went wrong. Please try again." });
+        logger.error("resetPassword error", { error: err.message });
+        return ResponseHandler.handleError(err, req, res, "Password reset failed");
     }
 };
+
+// Logout user and clear HTTP-only cookie
+exports.logout = ResponseHandler.asyncHandler(async (req, res) => {
+    try {
+        // Clear the HTTP-only cookie
+        res.clearCookie('accessToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/'
+        });
+        
+        logger.info('User logged out successfully', { 
+            userId: req.user?.id,
+            ip: req.ip
+        });
+        
+        return ResponseHandler.success(res, null, "Logged out successfully");
+    } catch (err) {
+        return ResponseHandler.handleError(err, req, res, "Logout failed");
+    }
+});

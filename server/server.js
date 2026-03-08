@@ -4,6 +4,7 @@ const { Server } = require("socket.io");
 const mongoose = require("mongoose")
 const dotenv = require("dotenv")
 const cors = require("cors")
+const cookieParser = require("cookie-parser")
 const path = require('path');
 
 // Load environment variables first
@@ -120,6 +121,9 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
+
+// Parse cookies for authentication
+app.use(cookieParser());
 
 // Apply general rate limiting to all API routes
 app.use("/api", apiLimiter);
