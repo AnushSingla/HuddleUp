@@ -59,6 +59,10 @@ initQueryMonitoring();
 const CleanupScheduler = require("./services/cleanupScheduler");
 CleanupScheduler.scheduleCleanup();
 
+// Initialize token cleanup scheduler
+const { scheduleTokenCleanup } = require("./services/tokenCleanupScheduler");
+scheduleTokenCleanup();
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -71,7 +75,15 @@ const io = new Server(server, {
 
 setIO(io);
 
+// Socket connection count for monitoring
+const getSocketConnectionCount = () => (io.sockets?.sockets?.size ?? 0);
+
 io.on("connection", (socket) => {
+  const count = getSocketConnectionCount();
+  if (count % 50 === 0 || count <= 5) {
+    console.log(`[Socket] Client connected. Active connections: ${count}`);
+  }
+
   socket.on("join_match", (matchId) => {
     socket.join(`match_${matchId}`);
   });
@@ -108,7 +120,25 @@ io.on("connection", (socket) => {
     socket.leave("feed_room");
   });
 
-  socket.on("disconnect", () => { });
+  socket.on("disconnect", (reason) => {
+    // Explicitly leave all rooms to release references
+    const rooms = Array.from(socket.rooms || []);
+    for (const room of rooms) {
+      if (room !== socket.id) {
+        socket.leave(room);
+      }
+    }
+    socket.removeAllListeners();
+    const remaining = getSocketConnectionCount();
+    if (remaining % 50 === 0 || remaining <= 5) {
+      console.log(`[Socket] Client disconnected (${reason}). Active connections: ${remaining}`);
+    }
+  });
+
+  socket.on("error", (err) => {
+    console.error("[Socket] Error:", err?.message || err);
+    socket.removeAllListeners();
+  });
 });
 
 // CORS configuration from environment variables
@@ -198,6 +228,18 @@ const gracefulShutdown = async (signal) => {
   console.log(`\n${signal} received. Starting graceful shutdown...`);
 
   try {
+    // CRITICAL: Close Socket.IO first to disconnect all clients and release socket references
+    // This prevents resource leaks and ensures clients receive proper disconnect events
+    if (io) {
+      console.log('Closing Socket.IO server...');
+      await new Promise((resolve) => {
+        io.close(() => {
+          console.log('✅ Socket.IO server closed');
+          resolve();
+        });
+      });
+    }
+
     // Close HTTP server
     console.log('Closing HTTP server...');
     await new Promise((resolve, reject) => {

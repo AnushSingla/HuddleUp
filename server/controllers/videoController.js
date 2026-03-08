@@ -1,8 +1,10 @@
 const Video = require("../models/Video");
+const mongoose = require("mongoose");
 const { deleteCachePattern } = require("../utils/cache");
 const { invalidateQueryCache } = require("../utils/queryCache");
 const { addVideoToQueue } = require("../services/videoQueue");
 const { detectDuplicates, getDuplicateStats } = require("../services/duplicateDetectionService");
+const uploadLockService = require("../services/uploadLockService");
 const path = require("path");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
@@ -17,10 +19,12 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
     return ResponseHandler.unauthorized(res);
   }
 
+  const userId = req.user.id;
   const { title, description, category, ignoreDuplicates } = req.body;
+
   if (!req.file) {
     logger.warn('Video creation failed - no file uploaded', {
-      userId: req.user.id,
+      userId,
       title,
       category
     });
@@ -33,7 +37,7 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
   }
 
   logger.info('Video upload started', {
-    userId: req.user.id,
+    userId,
     title,
     category,
     filename: req.file.filename,
@@ -43,7 +47,14 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
   const videoUrl = `/uploads/${req.file.filename}`;
   const inputPath = path.join(__dirname, "..", "uploads", req.file.filename);
 
+  let lockAcquired = false;
+  let newVideo;
+
   try {
+    // Acquire per-user upload lock to prevent concurrent uploads
+    await uploadLockService.acquireUploadLock(userId);
+    lockAcquired = true;
+
     // Perform duplicate detection
     const duplicateResult = await detectDuplicates(
       inputPath,
@@ -51,14 +62,14 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
         size: req.file.size,
         originalname: req.file.originalname
       },
-      req.user.id,
+      userId,
       req.videoMetadata || {} // Use metadata from validation if available
     );
 
     // Handle exact duplicates
     if (duplicateResult.isDuplicate && duplicateResult.type === 'exact') {
       logger.warn('Exact duplicate detected, rejecting upload', {
-        userId: req.user.id,
+        userId,
         filename: req.file.filename,
         duplicateVideoId: duplicateResult.duplicate._id
       });
@@ -83,7 +94,7 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
     // Handle potential duplicates
     if (duplicateResult.type === 'potential' && !ignoreDuplicates) {
       logger.info('Potential duplicates detected, requesting user confirmation', {
-        userId: req.user.id,
+        userId,
         filename: req.file.filename,
         potentialCount: duplicateResult.potentialDuplicates.length
       });
@@ -121,24 +132,28 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
       }
     };
 
-    // Create video record with enhanced metadata
-    const newVideo = new Video({
-      title,
-      description,
-      category,
-      videoUrl,
-      postedBy: req.user.id,
-      processingStatus: "pending",
-      processingProgress: 0,
-      fileHash: duplicateResult.fileHash,
-      originalFileSize: req.file.size,
-      originalFileName: req.file.originalname,
-      metadata: enhancedMetadata
+    // Create video record with enhanced metadata in a transaction when supported
+    await TransactionHelper.withTransactionIfSupported(async (session) => {
+      const sessionOpt = session ? { session } : {};
+
+      newVideo = new Video({
+        title,
+        description,
+        category,
+        videoUrl,
+        postedBy: userId,
+        processingStatus: "pending",
+        processingProgress: 0,
+        fileHash: duplicateResult.fileHash,
+        originalFileSize: req.file.size,
+        originalFileName: req.file.originalname,
+        metadata: enhancedMetadata
+      });
+
+      await newVideo.save(sessionOpt);
     });
 
-    await newVideo.save();
-
-    const jobId = await addVideoToQueue(newVideo._id.toString(), inputPath, req.user.id);
+    const jobId = await addVideoToQueue(newVideo._id.toString(), inputPath, userId);
     
     await Video.findByIdAndUpdate(newVideo._id, {
       jobId,
@@ -152,7 +167,7 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
 
     logger.info('Video uploaded successfully with enhanced validation', {
       videoId: newVideo._id,
-      userId: req.user.id,
+      userId,
       title: newVideo.title,
       jobId,
       fileHash: duplicateResult.fileHash,
@@ -173,8 +188,20 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
     }, "Video uploaded and processing started", 201);
 
   } catch (error) {
+    if (error.code === "UPLOAD_IN_PROGRESS" || error.message === "UPLOAD_IN_PROGRESS") {
+      logger.warn('Concurrent video upload attempt blocked', {
+        userId,
+        filename: req.file?.filename
+      });
+
+      return ResponseHandler.conflict(
+        res,
+        "Another video upload is already in progress for this account. Please wait for it to finish before starting a new upload."
+      );
+    }
+
     logger.error('Error during video upload with duplicate detection', {
-      userId: req.user.id,
+      userId,
       filename: req.file.filename,
       error: error.message
     });
@@ -185,21 +212,48 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
       'Error processing video upload',
       500
     );
+  } finally {
+    if (lockAcquired) {
+      await uploadLockService.releaseUploadLock(userId);
+    }
   }
 });
 
 exports.getAllVideos = async (req, res) => {
   try {
-    const filter = {};
-    if (req.query.postedBy) filter.postedBy = req.query.postedBy;
-    const sortParam = (req.query.sort || "newest").toLowerCase();
+    // Pagination parameters with strict limits
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100); // Max 100 videos per request
+    const page = Math.max(parseInt(req.query.page) || 1, 1); // Minimum page 1
+    const skip = (page - 1) * limit;
 
-    // sort=likes requires aggregation to sort by likes array length
+    // Validate pagination parameters
+    if (isNaN(limit) || isNaN(page) || limit < 1 || page < 1) {
+      return ResponseHandler.error(res, ERROR_CODES.VALIDATION_ERROR, "Invalid pagination parameters", 400);
+    }
+
+    const filter = { isDeleted: { $ne: true } }; // Only active videos
+    if (req.query.postedBy) {
+      if (!mongoose.Types.ObjectId.isValid(req.query.postedBy)) {
+        return ResponseHandler.error(res, ERROR_CODES.INVALID_INPUT, "Invalid user ID format", 400);
+      }
+      filter.postedBy = req.query.postedBy;
+    }
+
+    const sortParam = (req.query.sort || "newest").toLowerCase();
+    const validSortOptions = ["newest", "oldest", "views", "likes"];
+    
+    if (!validSortOptions.includes(sortParam)) {
+      return ResponseHandler.error(res, ERROR_CODES.VALIDATION_ERROR, `Invalid sort parameter. Use: ${validSortOptions.join(", ")}`, 400);
+    }
+
+    // Handle likes sorting with aggregation (with pagination)
     if (sortParam === "likes") {
       const pipeline = [
         { $match: filter },
         { $addFields: { likesCount: { $size: { $ifNull: ["$likes", []] } } } },
-        { $sort: { likesCount: -1 } },
+        { $sort: { likesCount: -1, createdAt: -1 } }, // Secondary sort for consistency
+        { $skip: skip },
+        { $limit: limit },
         { $lookup: { from: "users", localField: "postedBy", foreignField: "_id", as: "postedByDoc" } },
         { $unwind: { path: "$postedByDoc", preserveNullAndEmptyArrays: true } },
         {
@@ -212,21 +266,71 @@ exports.getAllVideos = async (req, res) => {
         },
         { $project: { postedByDoc: 0 } },
       ];
-      const videos = await Video.aggregate(pipeline);
-      return res.status(200).json(videos);
+
+      // Get total count for pagination metadata
+      const totalCountPipeline = [
+        { $match: filter },
+        { $count: "total" }
+      ];
+
+      const [videos, totalResult] = await Promise.all([
+        Video.aggregate(pipeline),
+        Video.aggregate(totalCountPipeline)
+      ]);
+
+      const total = totalResult[0]?.total || 0;
+      const totalPages = Math.ceil(total / limit);
+
+      return ResponseHandler.success(res, {
+        videos,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      }, "Videos retrieved successfully");
     }
 
-    let sortOption = { createdAt: -1 };
-    if (sortParam === "views") sortOption = { views: -1 };
-    // default "newest" or any other value: sort by createdAt desc
+    // Standard sorting with pagination
+    let sortOption = { createdAt: -1, _id: -1 }; // Add _id for consistent pagination
+    if (sortParam === "views") sortOption = { views: -1, createdAt: -1 };
+    else if (sortParam === "oldest") sortOption = { createdAt: 1, _id: 1 };
 
-    const videos = await Video.find(filter)
-      .populate("postedBy", "username _id")
-      .sort(sortOption);
-    res.status(200).json(videos);
+    // Execute query with pagination and get total count
+    const [videos, total] = await Promise.all([
+      Video.find(filter)
+        .populate("postedBy", "username _id")
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit)
+        .lean(), // Use lean() for better performance
+      Video.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return ResponseHandler.success(res, {
+      videos,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
+    }, "Videos retrieved successfully");
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error fetching videos" });
+    logger.error("Error fetching videos", { 
+      error: err.message, 
+      query: req.query,
+      ip: req.ip 
+    });
+    return ResponseHandler.handleError(err, req, res, "Error fetching videos");
   }
 };
 

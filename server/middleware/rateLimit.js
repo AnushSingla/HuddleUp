@@ -245,11 +245,36 @@ const adminLimiter = rateLimit({
     }
 });
 
+/**
+ * Video listing limiter - 60 requests per minute
+ * Applied to getAllVideos endpoint to prevent DoS attacks
+ */
+const videoListingLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    store: createStore("video_listing"),
+    keyGenerator: (req) => {
+        return getUserId(req) || ipKeyGenerator(req.ip);
+    },
+    message: { status: 429, message: "Too many video listing requests." },
+    skip: () => isDev,
+    handler: (req, res) => {
+        res.status(429).json({
+            status: 429,
+            message: "Video listing rate limit exceeded. Please wait before requesting more videos.",
+            retryAfter: req.rateLimit.resetTime
+        });
+    }
+});
+
 module.exports = {
     apiLimiter,
     authLimiter,
     feedLimiter,
     videoUploadLimiter,
+    videoListingLimiter,
     searchLimiter,
     commentLimiter,
     postCreationLimiter,

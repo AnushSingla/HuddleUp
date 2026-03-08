@@ -2,17 +2,79 @@ const Video = require("../models/Video");
 const Post = require("../models/Post");
 const User = require("../models/User");
 const { getRedisClient, isRedisReady } = require("../config/redis");
+const logger = require("../utils/logger");
 
 const CACHE_TTL = 300;
+const MAX_QUERY_LENGTH = 100;
+
+/**
+ * Escape special regex characters to prevent ReDoS and injection attacks
+ * @param {string} string - User input to sanitize
+ * @returns {string} - Sanitized string safe for regex
+ */
+const escapeRegex = (string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
+/**
+ * Validate search query for security
+ * @param {string} query - Search query to validate
+ * @throws {Error} - If query is invalid
+ */
+const validateSearchQuery = (query) => {
+  if (!query || typeof query !== 'string') {
+    throw new Error('Search query must be a non-empty string');
+  }
+  
+  if (query.length > MAX_QUERY_LENGTH) {
+    throw new Error(`Search query too long (max ${MAX_QUERY_LENGTH} characters)`);
+  }
+  
+  // Log suspicious patterns
+  const suspiciousPatterns = [
+    /\(\w\+\)\+/,  // ReDoS pattern like (a+)+
+    /\.\*/,         // Wildcard pattern
+    /\[\^/,         // Character class negation
+    /\{[\d,]+\}/    // Quantifier patterns
+  ];
+  
+  for (const pattern of suspiciousPatterns) {
+    if (pattern.test(query)) {
+      logger.warn('Suspicious search pattern detected', {
+        query,
+        pattern: pattern.toString()
+      });
+    }
+  }
+};
 
 const getCacheKey = (query, type, sortBy, page, limit) => {
   return `search:${query}:${type}:${sortBy}:${page}:${limit}`;
 };
 
 const performSearch = async (query, type, sortBy, page, limit, filters = {}) => {
+  // Validate query for security
+  try {
+    validateSearchQuery(query);
+  } catch (error) {
+    logger.warn('Invalid search query', { query, error: error.message });
+    throw error;
+  }
+  
   const skip = (page - 1) * limit;
   const results = {};
-  const regex = new RegExp(query, "i");
+  
+  // ✅ SANITIZE user input before creating regex
+  const sanitizedQuery = escapeRegex(query.trim());
+  const regex = new RegExp(sanitizedQuery, "i");
+  
+  logger.debug('Search query sanitized', {
+    original: query,
+    sanitized: sanitizedQuery,
+    type,
+    page,
+    limit
+  });
 
   if (type === "all" || type === "videos") {
     // Build optimized filter to use indexes effectively
@@ -197,7 +259,16 @@ const setCachedResults = async (cacheKey, data) => {
 };
 
 const getAutocompleteSuggestions = async (query) => {
-  const regex = new RegExp("^" + query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+  // Validate and sanitize query
+  try {
+    validateSearchQuery(query);
+  } catch (error) {
+    logger.warn('Invalid autocomplete query', { query, error: error.message });
+    return [];
+  }
+  
+  const sanitizedQuery = escapeRegex(query.trim());
+  const regex = new RegExp("^" + sanitizedQuery, "i");
 
   const [videoTitles, usernames] = await Promise.all([
     Video.find({ 
