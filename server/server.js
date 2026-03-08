@@ -58,6 +58,10 @@ initQueryMonitoring();
 const CleanupScheduler = require("./services/cleanupScheduler");
 CleanupScheduler.scheduleCleanup();
 
+// Initialize token cleanup scheduler
+const { scheduleTokenCleanup } = require("./services/tokenCleanupScheduler");
+scheduleTokenCleanup();
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
