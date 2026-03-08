@@ -81,3 +81,4 @@ export const searchContent = ({ q, type = "all", page = 1, limit = 10, sortBy = 
 
 export const fetchSuggestions = (q) =>
   API.get("/search/suggestions", { params: { q } }).then((r) => r.data);
+

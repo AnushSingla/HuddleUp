@@ -25,6 +25,7 @@ const { setIO, emitFeedEvent } = require("./socketEmitter");
 const { getContentRoom } = require("./socketRegistry");
 const { initQueryMonitoring, queryPerformanceMiddleware } = require("./middleware/queryMonitor");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
+const { csrfProtection } = require("./middleware/csrf");
 const {
   apiLimiter,
   authLimiter,
@@ -163,6 +164,8 @@ app.use("/api", apiLimiter);
 app.use("/api", apiLimiterNew);
 
 app.use(express.json());
+app.use(cookieParser());
+app.use(csrfProtection);
 app.use("/api/auth", authRoutes)
 app.use("/api", videoRoutes)
 app.use("/api", commentRoutes)

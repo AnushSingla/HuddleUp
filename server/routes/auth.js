@@ -43,3 +43,4 @@ router.get("/profile", verifyToken, getUserProfile);
 router.put("/profile", verifyToken, profileUpdateValidator, updateUserProfile);
 
 module.exports = router;
+

@@ -93,3 +93,4 @@ RefreshTokenSchema.statics.getUserActiveSessions = async function(userId) {
 };
 
 module.exports = mongoose.model("RefreshToken", RefreshTokenSchema);
+

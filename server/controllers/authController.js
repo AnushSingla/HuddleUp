@@ -481,3 +481,4 @@ exports.revokeSession = ResponseHandler.asyncHandler(async (req, res) => {
         );
     }
 });
+

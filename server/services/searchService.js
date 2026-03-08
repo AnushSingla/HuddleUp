@@ -77,9 +77,11 @@ const performSearch = async (query, type, sortBy, page, limit, filters = {}) => 
   });
 
   if (type === "all" || type === "videos") {
+    // Build optimized filter to use indexes effectively
     const filter = {
       flagged: false,
       processingStatus: "completed",
+      isDeleted: false, // Ensure we only get active content
       $or: [
         { title: regex },
         { description: regex },
@@ -88,8 +90,15 @@ const performSearch = async (query, type, sortBy, page, limit, filters = {}) => 
       ]
     };
 
+    // Apply category filter first for better index usage
     if (filters.category && filters.category !== "all") {
       filter.category = filters.category;
+      // Remove category from $or when we have a specific category filter
+      filter.$or = [
+        { title: regex },
+        { description: regex },
+        { hashtags: regex }
+      ];
     }
 
     if (filters.dateFrom) {
@@ -100,10 +109,15 @@ const performSearch = async (query, type, sortBy, page, limit, filters = {}) => 
       filter.views = { $gte: parseInt(filters.minViews) };
     }
 
+    // Optimize sort to use compound indexes
     let sort = { createdAt: -1 };
-    if (sortBy === "views") sort = { views: -1 };
-    else if (sortBy === "date") sort = { uploadDate: -1 };
-    else if (sortBy === "popularity") sort = { views: -1, createdAt: -1 };
+    if (sortBy === "views") {
+      sort = { views: -1, createdAt: -1 }; // Use compound index
+    } else if (sortBy === "date") {
+      sort = { uploadDate: -1, _id: -1 }; // Add _id for consistent pagination
+    } else if (sortBy === "popularity") {
+      sort = { views: -1, createdAt: -1 };
+    }
 
     const [videos, videoTotal] = await Promise.all([
       Video.find(filter)
@@ -120,8 +134,10 @@ const performSearch = async (query, type, sortBy, page, limit, filters = {}) => 
   }
 
   if (type === "all" || type === "posts") {
+    // Build optimized filter to use indexes effectively
     const filter = {
       flagged: false,
+      isDeleted: false, // Ensure we only get active content
       $or: [
         { title: regex },
         { content: regex },
@@ -129,8 +145,14 @@ const performSearch = async (query, type, sortBy, page, limit, filters = {}) => 
       ]
     };
 
+    // Apply category filter first for better index usage
     if (filters.category && filters.category !== "all") {
       filter.category = filters.category;
+      // Remove category from $or when we have a specific category filter
+      filter.$or = [
+        { title: regex },
+        { content: regex }
+      ];
     }
 
     if (filters.dateFrom) {
@@ -141,9 +163,13 @@ const performSearch = async (query, type, sortBy, page, limit, filters = {}) => 
       filter.views = { $gte: parseInt(filters.minViews) };
     }
 
-    let sort = { createdAt: -1 };
-    if (sortBy === "views") sort = { views: -1 };
-    else if (sortBy === "popularity") sort = { views: -1, createdAt: -1 };
+    // Optimize sort to use compound indexes
+    let sort = { createdAt: -1, _id: -1 }; // Use compound index for pagination
+    if (sortBy === "views") {
+      sort = { views: -1, createdAt: -1 };
+    } else if (sortBy === "popularity") {
+      sort = { views: -1, createdAt: -1 };
+    }
 
     const [posts, postTotal] = await Promise.all([
       Post.find(filter)
@@ -170,6 +196,7 @@ const performSearch = async (query, type, sortBy, page, limit, filters = {}) => 
     const [users, userTotal] = await Promise.all([
       User.find(filter)
         .select("username bio createdAt")
+        .sort({ createdAt: -1 }) // Add consistent sorting
         .skip(type === "all" ? 0 : skip)
         .limit(type === "all" ? 6 : limit)
         .lean(),
@@ -181,8 +208,16 @@ const performSearch = async (query, type, sortBy, page, limit, filters = {}) => 
   }
 
   if (type === "all" || type === "hashtags") {
+    // Optimize hashtag aggregation with better matching
     const hashtags = await Video.aggregate([
-      { $match: { flagged: false, processingStatus: "completed" } },
+      { 
+        $match: { 
+          flagged: false, 
+          processingStatus: "completed",
+          isDeleted: false,
+          hashtags: regex // Use index on hashtags field
+        } 
+      },
       { $unwind: "$hashtags" },
       { $match: { hashtags: regex } },
       {
@@ -236,12 +271,19 @@ const getAutocompleteSuggestions = async (query) => {
   const regex = new RegExp("^" + sanitizedQuery, "i");
 
   const [videoTitles, usernames] = await Promise.all([
-    Video.find({ title: regex, flagged: false, processingStatus: "completed" })
+    Video.find({ 
+      title: regex, 
+      flagged: false, 
+      processingStatus: "completed",
+      isDeleted: false // Only active content
+    })
       .select("title")
+      .sort({ views: -1 }) // Sort by popularity for better suggestions
       .limit(5)
       .lean(),
     User.find({ username: regex })
       .select("username")
+      .sort({ createdAt: -1 }) // Sort by recency
       .limit(5)
       .lean()
   ]);
@@ -270,7 +312,14 @@ const getTrendingSearches = async () => {
   if (cached) return cached;
 
   const trending = await Video.aggregate([
-    { $match: { flagged: false, processingStatus: "completed" } },
+    { 
+      $match: { 
+        flagged: false, 
+        processingStatus: "completed",
+        isDeleted: false, // Only active content
+        hashtags: { $exists: true, $ne: [] } // Only videos with hashtags
+      } 
+    },
     { $unwind: "$hashtags" },
     { $group: { _id: "$hashtags", count: { $sum: 1 } } },
     { $sort: { count: -1 } },

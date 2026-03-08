@@ -8,6 +8,8 @@
     "dev": "nodemon server.js",
     "test": "jest --forceExit --detectOpenHandles",
     "add-indexes": "node scripts/addIndexes.js",
+    "create-indexes": "node scripts/createIndexes.js",
+    "analyze-performance": "node scripts/analyzeQueryPerformance.js",
     "test-upload-validation": "node scripts/testUploadValidation.js"
   },
   "keywords": [],
