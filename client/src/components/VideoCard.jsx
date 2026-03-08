@@ -1,18 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import Badge from '@/components/ui/badge';
+import ShareMenu from '@/components/ui/ShareMenu';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Play, Calendar, User, Eye, Trash2, Pencil, Share2, Clock } from 'lucide-react';
+import { Play, Calendar, User, Eye, Trash2, Pencil, Share2, Link2, Clock, Bookmark, Flag, X } from 'lucide-react';
 import { API } from '@/api';
 import { getUserId, getToken } from '@/utils/auth';
-import { getShareUrl, shareLink } from '@/utils/share';
+import { getShareUrl, shareLink, copyLinkToClipboard } from '@/utils/share';
 
-const VideoCard = ({ video, onPlay, onDelete }) => {
+const VideoCard = ({ video, onPlay, onDelete, isSaved = false, onSaveToggle }) => {
   const navigate = useNavigate();
   const userId = getUserId();
   const videoOwnerId = video?.postedBy?._id || video?.postedBy;
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('spam');
+  const [reportDescription, setReportDescription] = useState('');
 
   const handleEdit = () => {
     navigate('/edit-video', { state: { video } });
@@ -26,6 +30,17 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
       url,
       video.title || 'Video on HuddleUp',
       video.description?.slice(0, 100) || '',
+      (msg) => toast.success(msg),
+      (msg) => toast.error(msg)
+    );
+  };
+
+  const handleCopyLink = (e) => {
+    e.stopPropagation();
+    if (!videoId) return;
+    const url = getShareUrl('video', videoId);
+    copyLinkToClipboard(
+      url,
       (msg) => toast.success(msg),
       (msg) => toast.error(msg)
     );
@@ -50,6 +65,26 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
     }
   };
 
+  const handleReport = async (e) => {
+    e?.stopPropagation?.();
+    const token = getToken();
+    if (!token) { toast.error('Please login to report content'); return; }
+    try {
+      await API.post('/moderation/report', {
+        contentType: 'video',
+        contentId: videoId,
+        reason: reportReason,
+        description: reportDescription
+      });
+      toast.success('Report submitted. Our moderators will review it.');
+      setShowReportModal(false);
+      setReportReason('spam');
+      setReportDescription('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit report');
+    }
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return isNaN(date) ? 'Unknown Date' : date.toLocaleDateString('en-US', {
@@ -70,13 +105,13 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
 
   const getCategoryStyle = (category) => {
     switch (category?.trim()) {
-      case 'UNHEARD STORIES': 
+      case 'UNHEARD STORIES':
         return { bg: 'rgba(0, 230, 118, 0.15)', color: 'var(--accent-success)', border: 'rgba(0, 230, 118, 0.3)' };
-      case 'MATCH ANALYSIS': 
+      case 'MATCH ANALYSIS':
         return { bg: 'rgba(108, 92, 231, 0.15)', color: 'var(--accent)', border: 'rgba(108, 92, 231, 0.3)' };
-      case 'SPORTS AROUND THE GLOBE': 
+      case 'SPORTS AROUND THE GLOBE':
         return { bg: 'rgba(0, 212, 255, 0.15)', color: 'var(--accent-2)', border: 'rgba(0, 212, 255, 0.3)' };
-      default: 
+      default:
         return { bg: 'var(--bg-surface)', color: 'var(--text-sub)', border: 'var(--border-subtle)' };
     }
   };
@@ -84,7 +119,7 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
   const categoryStyle = getCategoryStyle(video.category);
 
   return (
-    <div 
+    <div
       className="group cursor-pointer hover-lift"
       onClick={() => onPlay(video)}
       style={{
@@ -156,7 +191,7 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
         )}
 
         {/* Dark overlay on hover */}
-        <div 
+        <div
           className="absolute inset-0 transition-opacity duration-300"
           style={{
             background: 'rgba(0, 0, 0, 0.3)',
@@ -168,7 +203,7 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
 
         {/* Play Button - Center */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div 
+          <div
             className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110"
             style={{
               background: 'rgba(255, 255, 255, 0.2)',
@@ -182,7 +217,7 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
 
         {/* Category Badge - Top Left */}
         <div className="absolute top-3 left-3">
-          <span 
+          <span
             className="px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 backdrop-blur-md"
             style={{
               background: categoryStyle.bg,
@@ -196,7 +231,7 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
         </div>
 
         {/* Watch Now overlay - Bottom, appears on hover */}
-        <div 
+        <div
           className="absolute bottom-0 left-0 right-0 p-4 transition-all duration-300"
           style={{
             background: 'linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%)',
@@ -233,7 +268,7 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
       {/* Content Section */}
       <div className="p-4">
         {/* Title */}
-        <h3 
+        <h3
           className="font-bold mb-2 line-clamp-2 group-hover:text-gradient-accent transition-all"
           style={{
             fontSize: 'var(--text-base)',
@@ -246,7 +281,7 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
 
         {/* Description */}
         {video.description && (
-          <p 
+          <p
             className="mb-3 line-clamp-2"
             style={{
               fontSize: 'var(--text-sm)',
@@ -260,7 +295,15 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
 
         {/* Meta Info */}
         <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+          <div
+            className="flex items-center gap-2 text-xs cursor-pointer hover:underline"
+            style={{ color: 'var(--text-muted)' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              const slug = video.postedBy?.username || videoOwnerId;
+              if (slug) navigate(`/user/${encodeURIComponent(slug)}`);
+            }}
+          >
             <User className="w-3.5 h-3.5" />
             <span>{video.postedBy?.username || "Unknown"}</span>
           </div>
@@ -290,12 +333,33 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
             <Eye className="w-4 h-4" />
             Watch
           </button>
-          
+
+          {onSaveToggle && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSaveToggle(videoId);
+              }}
+              className="p-2 rounded-lg transition-all"
+              style={{
+                border: '1px solid var(--border-subtle)',
+                color: isSaved ? 'var(--accent)' : 'var(--text-sub)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent)';
+                e.currentTarget.style.color = 'var(--accent)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                e.currentTarget.style.color = isSaved ? 'var(--accent)' : 'var(--text-sub)';
+              }}
+              title={isSaved ? 'Unsave' : 'Save for later'}
+            >
+              <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+            </button>
+          )}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleShare();
-            }}
+            onClick={handleCopyLink}
             className="p-2 rounded-lg transition-all"
             style={{
               border: '1px solid var(--border-subtle)',
@@ -309,12 +373,79 @@ const VideoCard = ({ video, onPlay, onDelete }) => {
               e.currentTarget.style.borderColor = 'var(--border-subtle)';
               e.currentTarget.style.color = 'var(--text-sub)';
             }}
-            title="Share video"
+            title="Copy link"
           >
-            <Share2 className="w-4 h-4" />
+            <Link2 className="w-4 h-4" />
           </button>
+
+          <ShareMenu
+            url={getShareUrl('video', videoId)}
+            title={video.title}
+            description={video.description}
+          />
+
+          {videoOwnerId !== userId && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowReportModal(true);
+              }}
+              className="p-2 rounded-lg transition-all"
+              style={{
+                border: '1px solid var(--border-subtle)',
+                color: 'var(--text-sub)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent-danger)';
+                e.currentTarget.style.color = 'var(--accent-danger)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                e.currentTarget.style.color = 'var(--text-sub)';
+              }}
+              title="Report video"
+            >
+              <Flag className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowReportModal(false)}>
+          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Flag className="w-5 h-5 text-red-400" /> Report Video
+              </h3>
+              <button onClick={() => setShowReportModal(false)} className="text-zinc-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <select value={reportReason} onChange={e => setReportReason(e.target.value)}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-sm text-white mb-3 outline-none focus:border-red-500">
+              <option value="spam">Spam</option>
+              <option value="harassment">Harassment</option>
+              <option value="hate_speech">Hate Speech</option>
+              <option value="nudity">Nudity</option>
+              <option value="violence">Violence</option>
+              <option value="misinformation">Misinformation</option>
+              <option value="other">Other</option>
+            </select>
+            <textarea value={reportDescription} onChange={e => setReportDescription(e.target.value)}
+              placeholder="Describe the issue (optional)..."
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-sm text-white placeholder-zinc-500 mb-4 resize-none outline-none focus:border-red-500"
+              rows={2} />
+            <div className="flex gap-2">
+              <button onClick={() => setShowReportModal(false)}
+                className="flex-1 py-2.5 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white text-sm transition-colors">Cancel</button>
+              <button onClick={handleReport}
+                className="flex-1 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors">Submit Report</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

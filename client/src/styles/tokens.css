@@ -29,13 +29,13 @@
   /* ═══════════════════════════════════════════════════ */
   
   /* PANEL - Upload Studio, Settings, Creation Areas */
-  --surface-panel-bg: linear-gradient(135deg, #141824 0%, #1D2235 100%);
+  --surface-panel-bg: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   --surface-panel-border: 1px solid var(--border-medium);
   --surface-panel-radius: var(--r-lg);
-  --surface-panel-shadow: var(--elev-3);
+  --surface-panel-shadow: var(--elev-2);
   
   /* RAIL - Discovery, Navigation, Filtering */
-  --surface-rail-bg: rgba(20, 24, 36, 0.6);
+  --surface-rail-bg: rgba(248, 250, 252, 0.8);
   --surface-rail-border: 1px solid var(--border-subtle);
   --surface-rail-radius: var(--r-md);
   --surface-rail-shadow: var(--elev-1);
@@ -53,16 +53,16 @@
   --surface-hero-accent: var(--accent-glow);
   
   /* INFO BLOCK - About, Explainer Sections */
-  --surface-info-bg: rgba(0, 229, 255, 0.03);
+  --surface-info-bg: rgba(99, 102, 241, 0.04);
   --surface-info-border: 1px solid var(--border-subtle);
   --surface-info-radius: var(--r-xl);
-  --surface-info-shadow: inset 0 1px 3px rgba(0, 229, 255, 0.1);
+  --surface-info-shadow: inset 0 1px 3px rgba(99, 102, 241, 0.08);
   
   /* SYSTEM BAR - Navbar, Status, Alerts */
-  --surface-bar-bg: rgba(11, 13, 26, 0.9);
+  --surface-bar-bg: rgba(255, 255, 255, 0.9);
   --surface-bar-border: 1px solid var(--border-subtle);
   --surface-bar-backdrop: blur(16px);
-  --surface-bar-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --surface-bar-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
 
   /* ═══════════════════════════════════════════════════ */
   /* RADIUS SCALE - Mixed hierarchy for visual interest */
@@ -80,16 +80,16 @@
   /* Sports-inspired palette for motion, energy, impact */
   /* ═══════════════════════════════════════════════════ */
   
-  /* Deep Midnight - Stadium Night Feel */
-  --bg-primary: #0B0D1A;
-  --bg-surface: #141824;
-  --bg-elevated: #1D2235;
-  --bg-overlay: rgba(11, 13, 26, 0.95);
+  /* Background - Light by default, dark via .dark */
+  --bg-primary: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f1f5f9;
+  --bg-overlay: rgba(255, 255, 255, 0.95);
   
-  /* Electric Accent - Ball Energy (Motion + Impact) */
-  --accent: #00E5FF;
-  --accent-hover: #00D1EA;
-  --accent-glow: rgba(0, 229, 255, 0.3);
+  /* Electric Accent - readable teal for light mode */
+  --accent: #0891b2;
+  --accent-hover: #0e7490;
+  --accent-glow: rgba(8, 145, 178, 0.2);
   
   /* Turf Green - Field Realism (Grounding) */
   --turf-green: #1BE87C;
@@ -118,18 +118,20 @@
   --accent-warning: var(--sun-yellow);
   --accent-danger: var(--clay-red);
   
-  /* Text - High Contrast for Motion */
-  --text-main: var(--ice-white);
-  --text-sub: #94A3B8;
-  --text-muted: #64748B;
-  --text-on-accent: #0B0D1A;
+  /* Text - Theme-aware */
+  --text-main: #0f172a;
+  --text-sub: #475569;
+  --text-muted: #64748b;
+  --text-on-accent: #0f172a;
   --text-energy: var(--accent);
+  /* Heading color (darker in light mode, bright in dark mode) */
+  --heading-color: #071033;
   
-  /* Borders - Kinetic Layers */
-  --border-subtle: rgba(0, 229, 255, 0.08);
-  --border-medium: rgba(0, 229, 255, 0.15);
-  --border-strong: rgba(0, 229, 255, 0.25);
-  --border-field: rgba(27, 232, 124, 0.2);
+  /* Borders - Light mode */
+  --border-subtle: rgba(15, 23, 42, 0.07);
+  --border-medium: rgba(15, 23, 42, 0.12);
+  --border-strong: rgba(15, 23, 42, 0.20);
+  --border-field: rgba(27, 232, 124, 0.25);
 
   /* ═══════════════════════════════════════════════════ */
   /* TYPOGRAPHY SCALE - Hierarchy through contrast */
@@ -234,19 +236,66 @@
   /* ═══════════════════════════════════════════════════ */
   
   /* Tier 0 - Environment: Background space */
-  --tier-0-bg: radial-gradient(circle at 20% 30%, #0f172a, #020617);
+  --tier-0-bg: radial-gradient(135deg, #dbeafe 0%, #ede9fe 55%, #fce7f3 100%);
   
   /* Tier 1 - Content: Information layer */
-  --tier-1-bg: #0B1220;
-  --tier-1-border: inset 0 0 0 1px rgba(255,255,255,0.03);
+  --tier-1-bg: #ffffff;
+  --tier-1-border: inset 0 0 0 1px rgba(15,23,42,0.06);
   
   /* Tier 2 - Interactive: Action layer */
-  --tier-2-bg: #111827;
-  --tier-2-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  --tier-2-bg: #f8fafc;
+  --tier-2-shadow: 0 4px 20px rgba(15,23,42,0.08), 0 0 0 1px rgba(15,23,42,0.05);
   
   /* Tier 3 - Focused: Hover state */
-  --tier-3-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  --tier-3-shadow: 0 12px 40px rgba(15,23,42,0.15);
   --tier-3-lift: -3px;
+}
+
+/* ═══════════════════════════════════════════════════ */
+/* DARK MODE OVERRIDES - Restore night/stadium palette */
+/* ═══════════════════════════════════════════════════ */
+.dark {
+  /* Accents */
+  --accent: #00E5FF;
+  --accent-hover: #00D1EA;
+  --accent-glow: rgba(0, 229, 255, 0.3);
+
+  /* Backgrounds */
+  --bg-primary: #0B0D1A;
+  --bg-surface: #141824;
+  --bg-elevated: #1D2235;
+  --bg-overlay: rgba(11, 13, 26, 0.95);
+
+  /* Text */
+  --text-main: var(--ice-white);
+  --text-sub: #94A3B8;
+  --text-muted: #64748B;
+  --text-on-accent: #0B0D1A;
+  /* Heading color in dark mode */
+  --heading-color: var(--ice-white);
+
+  /* Borders */
+  --border-subtle: rgba(0, 229, 255, 0.08);
+  --border-medium: rgba(0, 229, 255, 0.15);
+  --border-strong: rgba(0, 229, 255, 0.25);
+  --border-field: rgba(27, 232, 124, 0.2);
+
+  /* Surfaces */
+  --surface-panel-bg: linear-gradient(135deg, #141824 0%, #1D2235 100%);
+  --surface-panel-shadow: var(--elev-3);
+  --surface-rail-bg: rgba(20, 24, 36, 0.6);
+  --surface-bar-bg: rgba(11, 13, 26, 0.9);
+  --surface-bar-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --surface-info-bg: rgba(0, 229, 255, 0.03);
+  --surface-info-shadow: inset 0 1px 3px rgba(0, 229, 255, 0.1);
+
+  /* Tiers */
+  --tier-0-bg: radial-gradient(circle at 20% 30%, #0f172a, #020617);
+  --tier-1-bg: #0B1220;
+  --tier-1-border: inset 0 0 0 1px rgba(255,255,255,0.03);
+  --tier-2-bg: #111827;
+  --tier-2-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  --tier-3-shadow: 0 12px 40px rgba(0,0,0,0.6);
 }
 
 /* ═══════════════════════════════════════════════════ */

@@ -1,15 +1,83 @@
 const User = require("../models/User");
+const mongoose = require("mongoose");
+const PaginationHelper = require("../utils/paginationHelper");
+const logger = require("../utils/logger");
+const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 exports.getAllUsers = async (req, res) => {
   try {
-    console.log("🔒 Authenticated user ID:", req.user.id);
+    const currentUserId = req.user.id;
+    const { page = 1, limit = 20 } = req.query;
+    const pageNum = parseInt(page);
+    const limitNum = Math.min(parseInt(limit), 100);
+    const skip = (pageNum - 1) * limitNum;
 
-    const users = await User.find({ _id: { $ne: req.user.id } }).select("username");
-    console.log("📦 Users fetched:", users.length);
-    res.json(users);
+    // Use aggregation to get users with friend status in one query (N+1 optimization + pagination)
+    const pipeline = [
+      { $match: { _id: { $ne: new mongoose.Types.ObjectId(currentUserId) } } },
+      {
+        $lookup: {
+          from: 'users',
+          let: { userId: '$_id' },
+          pipeline: [
+            { $match: { _id: new mongoose.Types.ObjectId(currentUserId) } },
+            {
+              $project: {
+                isFriend: { $in: ['$$userId', '$friends'] },
+                hasRequestFrom: { $in: ['$$userId', '$friendRequests'] },
+                hasSentRequestTo: { $in: ['$$userId', '$sentRequests'] }
+              }
+            }
+          ],
+          as: 'friendStatus'
+        }
+      },
+      { $unwind: { path: '$friendStatus', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          username: 1,
+          isFriend: { $ifNull: ['$friendStatus.isFriend', false] },
+          hasRequestFrom: { $ifNull: ['$friendStatus.hasRequestFrom', false] },
+          hasSentRequestTo: { $ifNull: ['$friendStatus.hasSentRequestTo', false] }
+        }
+      },
+      { $sort: { username: 1 } },
+      { $skip: skip },
+      { $limit: limitNum }
+    ];
+
+    const [users, total] = await Promise.all([
+      User.aggregate(pipeline),
+      User.countDocuments({ _id: { $ne: currentUserId } })
+    ]);
+
+    res.json({
+      users,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+        hasNext: pageNum * limitNum < total,
+        hasPrev: pageNum > 1
+      }
+    });
+    const paginationParams = PaginationHelper.getPaginationParams(req.query);
+    
+    const result = await PaginationHelper.executePaginatedQuery(
+      User,
+      { _id: { $ne: req.user.id } },
+      {
+        select: 'username',
+        sort: { username: 1 }
+      },
+      paginationParams
+    );
+    
+    res.json(result);
   } catch (err) {
-    console.error("🔥 Failed to fetch users:", err);
-    res.status(500).json({ message: "Failed to fetch users", error: err.message });
+    return ResponseHandler.handleError(err, req, res, "Failed to fetch users");
   }
 };
 
@@ -18,7 +86,7 @@ exports.getFriends = async (req, res) => {
     // Replace this with real friend fetching logic from DB
     const userId = req.user.id;
     const user = await User.findById(userId).populate("friends");
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return ResponseHandler.notFound(res, "User not found");
 
     res.json(user.friends);
   } catch (err) {
@@ -27,6 +95,8 @@ exports.getFriends = async (req, res) => {
 };
 
 
+const TransactionHelper = require("../utils/transactionHelper");
+
 exports.sendFriendRequest = async (req, res) => {
   const toId = req.params.id;
   const fromId = req.user.id;
@@ -34,26 +104,38 @@ exports.sendFriendRequest = async (req, res) => {
   try {
     if (fromId === toId) return res.status(400).json({ message: "Can't send request to yourself" });
 
-    const receiver = await User.findById(toId);
-    const sender = await User.findById(fromId);
-    if (!receiver || !sender) return res.status(404).json({ message: "User not found" });
+    // Use transaction to ensure atomicity
+    await TransactionHelper.withTransactionIfSupported(async (session) => {
+      const sessionOpt = session ? { session } : {};
 
-    if (receiver.friendRequests.includes(fromId)) {
-      return res.status(400).json({ message: "Friend request already sent" });
-    }
+      const receiver = await User.findById(toId, null, sessionOpt);
+      const sender = await User.findById(fromId, null, sessionOpt);
+      if (!receiver || !sender) {
+        throw new Error("User not found");
+      }
 
-    // Add request to receiver
-    receiver.friendRequests.push(fromId);
-    await receiver.save();
+      if (receiver.friendRequests.includes(fromId)) {
+        throw new Error("Friend request already sent");
+      }
 
-    // ✅ Also add to sender's sentRequests
-    sender.sentRequests.push(toId);
-    await sender.save();
+      // Add request to receiver
+      receiver.friendRequests.push(fromId);
+      await receiver.save(sessionOpt);
+
+      // Add to sender's sentRequests
+      sender.sentRequests.push(toId);
+      await sender.save(sessionOpt);
+    });
 
     res.status(200).json({ message: "Friend request sent" });
   } catch (err) {
-    console.error("❌ Error sending request:", err);
-    res.status(500).json({ message: "Failed to send friend request", error: err.message });
+    if (err.message === "User not found") {
+      return ResponseHandler.notFound(res, "User not found");
+    }
+    if (err.message === "Friend request already sent") {
+      return res.status(400).json({ message: err.message });
+    }
+    return ResponseHandler.handleError(err, req, res, "Failed to send friend request");
   }
 };
 
@@ -64,7 +146,7 @@ exports.getFriendRequests = async (req, res) => {
     const user = await User.findById(req.user.id).populate("friendRequests", "username")
     res.json(user.friendRequests);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to get friend requests', error: err.message });
+    return ResponseHandler.handleError(err, req, res, "Failed to get friend requests");
   }
 }
 
@@ -73,7 +155,7 @@ exports.getSentRequests = async (req, res) => {
     const user = await User.findById(req.user.id).populate("sentRequests", "username");
     res.json(user.sentRequests);
   } catch (err) {
-    res.status(500).json({ message: "Failed to get sent requests", error: err.message });
+    return ResponseHandler.handleError(err, req, res, "Failed to get sent requests");
   }
 };
 
@@ -83,30 +165,43 @@ exports.acceptFriendRequests = async (req, res) => {
   const requesterId = req.params.id;
 
   try {
-    const user = await User.findById(userId);
-    const requester = await User.findById(requesterId);
-    if (!user || !requester) return res.status(404).json({ message: "User not found" });
+    // Use transaction to ensure atomicity
+    await TransactionHelper.withTransactionIfSupported(async (session) => {
+      const sessionOpt = session ? { session } : {};
 
-    if (!user.friendRequests.includes(requesterId)) {
-      return res.status(400).json({ message: "No such friend request" });
-    }
+      const user = await User.findById(userId, null, sessionOpt);
+      const requester = await User.findById(requesterId, null, sessionOpt);
+      if (!user || !requester) {
+        throw new Error("User not found");
+      }
 
-    // Add each other as friends
-    user.friends.push(requesterId);
-    requester.friends.push(userId);
+      if (!user.friendRequests.includes(requesterId)) {
+        throw new Error("No such friend request");
+      }
 
-    // Remove from receiver's request list
-    user.friendRequests = user.friendRequests.filter(id => id.toString() !== requesterId);
+      // Add each other as friends
+      user.friends.push(requesterId);
+      requester.friends.push(userId);
 
-    // ✅ Remove from sender's sentRequests list
-    requester.sentRequests = requester.sentRequests.filter(id => id.toString() !== userId);
+      // Remove from receiver's request list
+      user.friendRequests = user.friendRequests.filter(id => id.toString() !== requesterId);
 
-    await user.save();
-    await requester.save();
+      // Remove from sender's sentRequests list
+      requester.sentRequests = requester.sentRequests.filter(id => id.toString() !== userId);
+
+      await user.save(sessionOpt);
+      await requester.save(sessionOpt);
+    });
 
     res.status(200).json({ message: "Friend request accepted" });
   } catch (err) {
-    res.status(500).json({ message: "Failed to accept friend request", error: err.message });
+    if (err.message === "User not found") {
+      return ResponseHandler.notFound(res, "User not found");
+    }
+    if (err.message === "No such friend request") {
+      return res.status(400).json({ message: err.message });
+    }
+    return ResponseHandler.handleError(err, req, res, "Failed to accept friend request");
   }
 };
 
@@ -117,7 +212,7 @@ exports.declineFriendRequest = async (req, res) => {
   try {
     const user = await User.findById(userId);
     const requester = await User.findById(requesterId);
-    if (!user || !requester) return res.status(404).json({ message: "User not found" });
+    if (!user || !requester) return ResponseHandler.notFound(res, "User not found");
 
     // Remove from receiver's (current user) request list
     user.friendRequests = user.friendRequests.filter(id => id.toString() !== requesterId);
@@ -130,6 +225,6 @@ exports.declineFriendRequest = async (req, res) => {
 
     res.status(200).json({ message: "Friend request declined" });
   } catch (err) {
-    res.status(500).json({ message: "Failed to decline friend request", error: err.message });
+    return ResponseHandler.handleError(err, req, res, "Failed to decline friend request");
   }
 };

@@ -13,9 +13,21 @@ import EditVideo from './pages/EditVideo';
 import Friends from './pages/Friends';
 import Contact from './pages/Contact';
 import About from './pages/About';
+import Profile from './pages/Profile';
+import PublicProfile from './pages/PublicProfile';
 import Feedback from './pages/Feedback';
-import NotFound from './pages/404';
-
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Contributor from './pages/Contributor';
+import TermsOfService from './pages/TermsOfService';
+import Saved from './pages/Saved';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import Admin from './pages/Admin';
+import LiveMatchRooms from './pages/LiveMatchRooms';
+import CommunityGuidelines from './pages/CommunityGuidelines';
+import Analytics from './pages/Analytics';
+import Sessions from './pages/Sessions';
+import DeletedContent from './pages/DeletedContent';
 
 // Components
 import Navbar from './components/Navbar';
@@ -23,20 +35,23 @@ import Footer from './components/Footer';
 import AllPosts from './components/AllPosts';
 import CreatePost from './components/CreatePost';
 import BackToTopBtn from './components/BackToTopBtn';
-import { NotificationProvider } from './context/NotificationContext';
+import ErrorBoundary from './components/ErrorBoundary';
+import ErrorFallback from './components/ErrorFallback';
 
 function AppContent() {
   const location = useLocation();
-  const hideLayout = location.pathname === '/login' || location.pathname === '/register';
+  const hideLayout = ['/login', '/register', '/forgot-password', '/reset-password'].includes(location.pathname);
 
   // Auth pages: full width, no container constraints
   if (hideLayout) {
     return (
-      <div className="min-h-screen bg-zinc-950">
+      <div className="min-h-screen dark:bg-zinc-950 bg-transparent">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
         </AnimatePresence>
       </div>
@@ -45,25 +60,34 @@ function AppContent() {
 
   // Main app: wrapped in container
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen dark:bg-zinc-950 bg-transparent flex flex-col">
       <Navbar />
       <main className="flex-grow">
         <div className="container mx-auto px-6 py-8">
-          <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
-              <Route path="/" element={<Home />} />
-              <Route path="/upload" element={<Upload />} />
-              <Route path="/explore" element={<Explore />} />
-              <Route path="/edit-video" element={<EditVideo />} />
-              <Route path="/friends" element={<Friends />} />
-              <Route path="/posts" element={<AllPosts />} />
-              <Route path="/create-post" element={<CreatePost />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/feedback" element={<Feedback />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AnimatePresence>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/upload" element={<Upload />} />
+            <Route path="/explore" element={<Explore />} />
+            <Route path="/edit-video" element={<EditVideo />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/sessions" element={<Sessions />} />
+            <Route path="/deleted-content" element={<DeletedContent />} />
+            <Route path="/saved" element={<Saved />} />
+            <Route path="/user/:userId" element={<PublicProfile />} />
+            <Route path="/posts" element={<AllPosts />} />
+            <Route path="/create-post" element={<CreatePost />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/contributors" element={<Contributor />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+            <Route path="/feedback" element={<Feedback />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/live-match" element={<LiveMatchRooms />} />
+            <Route path="/analytics" element={<Analytics />} />
+          </Routes>
         </div>
       </main>
       <Footer />
@@ -72,13 +96,21 @@ function AppContent() {
   );
 }
 
+import { NotificationProvider } from './context/NotificationContext';
+
 export default function App() {
   return (
     <Router>
-      <NotificationProvider>
-        <AppContent />
-      </NotificationProvider>
-      <Toaster richColors position="top-center" />
+      <ErrorBoundary
+        fallback={({ resetErrorBoundary }) => (
+          <ErrorFallback resetErrorBoundary={resetErrorBoundary} />
+        )}
+      >
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
+      </ErrorBoundary>
+      <Toaster richColors position="top-center" closeButton />
     </Router>
   );
 }

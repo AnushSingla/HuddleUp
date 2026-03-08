@@ -7,6 +7,7 @@ import { PenTool, Send } from 'lucide-react';
 import { API } from '@/api';
 import { getToken } from '@/utils/auth';
 import PageWrapper from '@/components/ui/PageWrapper';
+import PageMeta from '@/components/PageMeta';
 
 const CreatePost = () => {
   const location = useLocation();
@@ -72,6 +73,7 @@ const CreatePost = () => {
 
   return (
     <PageWrapper>
+      <PageMeta title={isEditMode ? 'Edit post' : 'Create post'} description={isEditMode ? 'Edit your post on HuddleUp.' : 'Create a new post and join the sports discussion on HuddleUp.'} />
     <div className="min-h-screen py-8" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-8">

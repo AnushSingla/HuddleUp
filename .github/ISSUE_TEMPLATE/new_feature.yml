@@ -1,0 +1,38 @@
+name: New Feature
+description: Propose a brand-new feature for the project.
+title: "[Feature]: "
+labels:
+  - feature
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Opportunity
+      description: What user problem should this feature solve?
+      placeholder: Explain the problem this feature addresses.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Feature
+      description: Describe your solution idea clearly.
+      placeholder: Describe the feature, behavior, and user flow.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternatives or other approaches?
+      placeholder: Mention other options you considered.
+    validations:
+      required: false
+  - type: textarea
+    id: impact
+    attributes:
+      label: Expected Impact
+      description: Who benefits and how?
+      placeholder: Explain expected outcome or value.
+    validations:
+      required: false
