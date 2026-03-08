@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Toaster } from "@/components/ui/sonner";
+import { disconnectSocket } from "@/utils/socket";
+import { isLoggedIn } from "@/utils/auth";
 
 // Pages
 import Register from './pages/Register';
@@ -41,6 +43,14 @@ import ErrorFallback from './components/ErrorFallback';
 function AppContent() {
   const location = useLocation();
   const hideLayout = ['/login', '/register', '/forgot-password', '/reset-password'].includes(location.pathname);
+
+  // Handle socket cleanup on route changes to auth pages
+  useEffect(() => {
+    if (hideLayout && !isLoggedIn()) {
+      // Disconnect socket when navigating to auth pages while not logged in
+      disconnectSocket();
+    }
+  }, [hideLayout]);
 
   // Auth pages: full width, no container constraints
   if (hideLayout) {
@@ -100,6 +110,13 @@ function AppContent() {
 import { NotificationProvider } from './context/NotificationContext';
 
 export default function App() {
+  // Global cleanup on app unmount
+  useEffect(() => {
+    return () => {
+      disconnectSocket();
+    };
+  }, []);
+
   return (
     <Router>
       <ErrorBoundary
