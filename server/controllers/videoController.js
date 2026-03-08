@@ -3,6 +3,7 @@ const { deleteCachePattern } = require("../utils/cache");
 const { invalidateQueryCache } = require("../utils/queryCache");
 const { addVideoToQueue } = require("../services/videoQueue");
 const { detectDuplicates, getDuplicateStats } = require("../services/duplicateDetectionService");
+const uploadLockService = require("../services/uploadLockService");
 const path = require("path");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
@@ -17,10 +18,12 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
     return ResponseHandler.unauthorized(res);
   }
 
+  const userId = req.user.id;
   const { title, description, category, ignoreDuplicates } = req.body;
+
   if (!req.file) {
     logger.warn('Video creation failed - no file uploaded', {
-      userId: req.user.id,
+      userId,
       title,
       category
     });
@@ -33,7 +36,7 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
   }
 
   logger.info('Video upload started', {
-    userId: req.user.id,
+    userId,
     title,
     category,
     filename: req.file.filename,
@@ -43,7 +46,14 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
   const videoUrl = `/uploads/${req.file.filename}`;
   const inputPath = path.join(__dirname, "..", "uploads", req.file.filename);
 
+  let lockAcquired = false;
+  let newVideo;
+
   try {
+    // Acquire per-user upload lock to prevent concurrent uploads
+    await uploadLockService.acquireUploadLock(userId);
+    lockAcquired = true;
+
     // Perform duplicate detection
     const duplicateResult = await detectDuplicates(
       inputPath,
@@ -51,14 +61,14 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
         size: req.file.size,
         originalname: req.file.originalname
       },
-      req.user.id,
+      userId,
       req.videoMetadata || {} // Use metadata from validation if available
     );
 
     // Handle exact duplicates
     if (duplicateResult.isDuplicate && duplicateResult.type === 'exact') {
       logger.warn('Exact duplicate detected, rejecting upload', {
-        userId: req.user.id,
+        userId,
         filename: req.file.filename,
         duplicateVideoId: duplicateResult.duplicate._id
       });
@@ -83,7 +93,7 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
     // Handle potential duplicates
     if (duplicateResult.type === 'potential' && !ignoreDuplicates) {
       logger.info('Potential duplicates detected, requesting user confirmation', {
-        userId: req.user.id,
+        userId,
         filename: req.file.filename,
         potentialCount: duplicateResult.potentialDuplicates.length
       });
@@ -121,24 +131,28 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
       }
     };
 
-    // Create video record with enhanced metadata
-    const newVideo = new Video({
-      title,
-      description,
-      category,
-      videoUrl,
-      postedBy: req.user.id,
-      processingStatus: "pending",
-      processingProgress: 0,
-      fileHash: duplicateResult.fileHash,
-      originalFileSize: req.file.size,
-      originalFileName: req.file.originalname,
-      metadata: enhancedMetadata
+    // Create video record with enhanced metadata in a transaction when supported
+    await TransactionHelper.withTransactionIfSupported(async (session) => {
+      const sessionOpt = session ? { session } : {};
+
+      newVideo = new Video({
+        title,
+        description,
+        category,
+        videoUrl,
+        postedBy: userId,
+        processingStatus: "pending",
+        processingProgress: 0,
+        fileHash: duplicateResult.fileHash,
+        originalFileSize: req.file.size,
+        originalFileName: req.file.originalname,
+        metadata: enhancedMetadata
+      });
+
+      await newVideo.save(sessionOpt);
     });
 
-    await newVideo.save();
-
-    const jobId = await addVideoToQueue(newVideo._id.toString(), inputPath, req.user.id);
+    const jobId = await addVideoToQueue(newVideo._id.toString(), inputPath, userId);
     
     await Video.findByIdAndUpdate(newVideo._id, {
       jobId,
@@ -152,7 +166,7 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
 
     logger.info('Video uploaded successfully with enhanced validation', {
       videoId: newVideo._id,
-      userId: req.user.id,
+      userId,
       title: newVideo.title,
       jobId,
       fileHash: duplicateResult.fileHash,
@@ -173,8 +187,20 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
     }, "Video uploaded and processing started", 201);
 
   } catch (error) {
+    if (error.code === "UPLOAD_IN_PROGRESS" || error.message === "UPLOAD_IN_PROGRESS") {
+      logger.warn('Concurrent video upload attempt blocked', {
+        userId,
+        filename: req.file?.filename
+      });
+
+      return ResponseHandler.conflict(
+        res,
+        "Another video upload is already in progress for this account. Please wait for it to finish before starting a new upload."
+      );
+    }
+
     logger.error('Error during video upload with duplicate detection', {
-      userId: req.user.id,
+      userId,
       filename: req.file.filename,
       error: error.message
     });
@@ -185,6 +211,10 @@ exports.createVideo = ResponseHandler.asyncHandler(async (req, res) => {
       'Error processing video upload',
       500
     );
+  } finally {
+    if (lockAcquired) {
+      await uploadLockService.releaseUploadLock(userId);
+    }
   }
 });
 
