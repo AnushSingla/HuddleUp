@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API } from '@/api';
 import { isLoggedIn, getUserId } from '@/utils/auth';
 import { toast } from 'sonner';
-import { connectSocket } from '@/utils/socket';
+import { connectSocket, disconnectSocket } from '@/utils/socket';
 
 const NotificationContext = createContext();
 
@@ -100,6 +100,7 @@ export const NotificationProvider = ({ children }) => {
     // Real-time interaction toasts: listen for comment/like events and show toast to the recipient
     useEffect(() => {
         if (!isLoggedIn()) return;
+        
         const socket = connectSocket();
         socket.emit("join_feed");
 
@@ -110,9 +111,21 @@ export const NotificationProvider = ({ children }) => {
         };
 
         socket.on("notification:toast", handleNotificationToast);
+        
         return () => {
             socket.off("notification:toast", handleNotificationToast);
             socket.emit("leave_feed");
+            // Don't disconnect here as other components might be using the socket
+        };
+    }, []);
+
+    // Cleanup socket connection when component unmounts or user logs out
+    useEffect(() => {
+        return () => {
+            // Only disconnect if user is not logged in (i.e., logged out)
+            if (!isLoggedIn()) {
+                disconnectSocket();
+            }
         };
     }, []);
 
