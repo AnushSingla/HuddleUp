@@ -1,4 +1,5 @@
 // utils/auth.js
+import { disconnectSocket } from './socket';
 
 export const getToken = () => {
   return localStorage.getItem("token");
@@ -9,6 +10,8 @@ export const isLoggedIn = () => {
 };
 
 export const logout = () => {
+  // Disconnect socket before clearing token
+  disconnectSocket();
   localStorage.removeItem("token");
 };
 
