@@ -13,7 +13,7 @@ const { verifyToken } = require("../middleware/auth");
 const { videoValidator } = require("../middleware/validation");
 const { upload, validateUploadedFile, cleanupOnError, getUploadLimits } = require("../middleware/multer");
 const { advancedFileSecurityValidator, logSecurityAnalysis } = require("../middleware/fileSecurityValidator");
-const { videoUploadLimiter } = require("../middleware/rateLimit");
+const { videoUploadLimiter, videoListingLimiter } = require("../middleware/rateLimit");
 const { uploadLimiter } = require("../middleware/rateLimiter");
 
 // Middleware to check if user is admin
@@ -61,7 +61,7 @@ router.post("/video/upload",
   createVideo
 );
 
-router.get("/videos", getAllVideos);
+router.get("/videos", videoListingLimiter, getAllVideos);
 router.get("/videos/:id/status", getProcessingStatus);
 router.put("/videos/:id", verifyToken, videoValidator, updateVideo);
 router.delete("/videos/:id", verifyToken, deleteVideo);
