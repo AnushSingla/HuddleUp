@@ -135,9 +135,34 @@ exports.getOverview = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Get all videos for this creator
-    const videos = await Video.find({ postedBy: userId }).select("_id title likes views createdAt").lean();
-    if (!videos.length) {
+    // Use aggregation pipeline to join videos with analytics in one query
+    const videosWithAnalytics = await Video.aggregate([
+      { $match: { postedBy: new mongoose.Types.ObjectId(userId) } },
+      {
+        $lookup: {
+          from: 'videoanalytics',
+          localField: '_id',
+          foreignField: 'video',
+          as: 'analytics'
+        }
+      },
+      { $unwind: { path: '$analytics', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          likes: 1,
+          views: 1,
+          createdAt: 1,
+          totalViews: { $ifNull: ['$analytics.totalViews', 0] },
+          totalLikes: { $ifNull: ['$analytics.totalLikes', 0] },
+          totalComments: { $ifNull: ['$analytics.totalComments', 0] },
+          totalShares: { $ifNull: ['$analytics.totalShares', 0] }
+        }
+      }
+    ]);
+
+    if (!videosWithAnalytics.length) {
       return res.json({
         totalViews: 0,
         totalLikes: 0,
@@ -151,13 +176,27 @@ exports.getOverview = async (req, res) => {
       });
     }
 
-    const videoIds = videos.map((v) => v._id);
+    const videoIds = videosWithAnalytics.map((v) => v._id);
 
-    // Aggregate analytics docs
-    const analyticsAgg = await VideoAnalytics.aggregate([
-      { $match: { video: { $in: videoIds } } },
-      {
-        $group: {
+    // Aggregate analytics from the joined data
+    const analyticsAgg = videosWithAnalytics.reduce((acc, video) => {
+      return {
+        totalViews: acc.totalViews + video.totalViews,
+        totalLikes: acc.totalLikes + video.totalLikes,
+        totalComments: acc.totalComments + video.totalComments,
+        totalShares: acc.totalShares + video.totalShares
+      };
+    }, { totalViews: 0, totalLikes: 0, totalComments: 0, totalShares: 0 });
+
+    const analyticsResult = [{
+      _id: null,
+      totalViews: analyticsAgg.totalViews,
+      totalLikes: analyticsAgg.totalLikes,
+      totalComments: analyticsAgg.totalComments,
+      totalShares: analyticsAgg.totalShares
+    }];
+
+    const analyticsAgg = analyticsResult;
           _id: null,
           totalViews: { $sum: "$totalViews" },
           totalLikes: { $sum: "$totalLikes" },
@@ -243,25 +282,42 @@ exports.getOverview = async (req, res) => {
 exports.getVideoList = async (req, res) => {
   try {
     const userId = req.user.id;
-    const videos = await Video.find({ postedBy: userId })
-      .select("_id title views likes createdAt category")
-      .lean();
+    
+    // Use aggregation to join videos with analytics in one query
+    const videosWithAnalytics = await Video.aggregate([
+      { $match: { postedBy: new mongoose.Types.ObjectId(userId) } },
+      {
+        $lookup: {
+          from: 'videoanalytics',
+          localField: '_id',
+          foreignField: 'video',
+          as: 'analytics'
+        }
+      },
+      { $unwind: { path: '$analytics', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          views: 1,
+          likes: { $size: { $ifNull: ['$likes', []] } },
+          createdAt: 1,
+          category: 1,
+          totalViews: { $ifNull: ['$analytics.totalViews', 0] },
+          totalLikes: { $ifNull: ['$analytics.totalLikes', 0] },
+          totalComments: { $ifNull: ['$analytics.totalComments', 0] }
+        }
+      },
+      { $sort: { createdAt: -1 } }
+    ]);
 
-    if (!videos.length) return res.json([]);
+    if (!videosWithAnalytics.length) return res.json([]);
 
-    const videoIds = videos.map((v) => v._id);
-    const analyticsDocs = await VideoAnalytics.find({ video: { $in: videoIds } }).lean();
-    const analyticsMap = {};
-    analyticsDocs.forEach((a) => {
-      analyticsMap[a.video.toString()] = a;
-    });
-
-    const result = videos.map((v) => {
-      const a = analyticsMap[v._id.toString()] || {};
-      const totalViews = a.totalViews || v.views || 0;
-      const totalLikes = a.totalLikes || v.likes?.length || 0;
-      const totalComments = a.totalComments || 0;
-      const totalShares = a.totalShares || 0;
+    const result = videosWithAnalytics.map((v) => {
+      const totalViews = v.totalViews || v.views || 0;
+      const totalLikes = v.totalLikes || v.likes || 0;
+      const totalComments = v.totalComments || 0;
+      const totalShares = 0; // Not in aggregation
       const engagementRate =
         totalViews > 0
           ? parseFloat(

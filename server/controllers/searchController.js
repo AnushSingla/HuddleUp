@@ -50,8 +50,8 @@ const search = async (req, res) => {
 
     return res.json(results);
   } catch (err) {
-    // Removed console.error - use logger instead
-    return res.status(500).json({ error: "Search failed" });
+    logger.error('Search operation failed', { error: err.message, query: req.query });
+    return ResponseHandler.error(res, ERROR_CODES.INTERNAL_ERROR, "Search failed", 500);
   }
 };
 
@@ -86,13 +86,13 @@ const history = async (req, res) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
+      return ResponseHandler.unauthorized(res, "Authentication required");
     }
     const results = await getSearchHistory(userId);
     return res.json(results);
   } catch (err) {
-    // Removed console.error - use logger instead
-    return res.status(500).json([]);
+    logger.error('Search history retrieval failed', { error: err.message, userId: req.user?.id });
+    return ResponseHandler.error(res, ERROR_CODES.INTERNAL_ERROR, "Failed to retrieve search history", 500);
   }
 };
 

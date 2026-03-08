@@ -1,10 +1,68 @@
 const User = require("../models/User");
+const mongoose = require("mongoose");
 const PaginationHelper = require("../utils/paginationHelper");
 const logger = require("../utils/logger");
 const { ResponseHandler, ERROR_CODES } = require("../utils/responseHandler");
 
 exports.getAllUsers = async (req, res) => {
   try {
+    const currentUserId = req.user.id;
+    const { page = 1, limit = 20 } = req.query;
+    const pageNum = parseInt(page);
+    const limitNum = Math.min(parseInt(limit), 100);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Use aggregation to get users with friend status in one query (N+1 optimization + pagination)
+    const pipeline = [
+      { $match: { _id: { $ne: new mongoose.Types.ObjectId(currentUserId) } } },
+      {
+        $lookup: {
+          from: 'users',
+          let: { userId: '$_id' },
+          pipeline: [
+            { $match: { _id: new mongoose.Types.ObjectId(currentUserId) } },
+            {
+              $project: {
+                isFriend: { $in: ['$$userId', '$friends'] },
+                hasRequestFrom: { $in: ['$$userId', '$friendRequests'] },
+                hasSentRequestTo: { $in: ['$$userId', '$sentRequests'] }
+              }
+            }
+          ],
+          as: 'friendStatus'
+        }
+      },
+      { $unwind: { path: '$friendStatus', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          username: 1,
+          isFriend: { $ifNull: ['$friendStatus.isFriend', false] },
+          hasRequestFrom: { $ifNull: ['$friendStatus.hasRequestFrom', false] },
+          hasSentRequestTo: { $ifNull: ['$friendStatus.hasSentRequestTo', false] }
+        }
+      },
+      { $sort: { username: 1 } },
+      { $skip: skip },
+      { $limit: limitNum }
+    ];
+
+    const [users, total] = await Promise.all([
+      User.aggregate(pipeline),
+      User.countDocuments({ _id: { $ne: currentUserId } })
+    ]);
+
+    res.json({
+      users,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+        hasNext: pageNum * limitNum < total,
+        hasPrev: pageNum > 1
+      }
+    });
     const paginationParams = PaginationHelper.getPaginationParams(req.query);
     
     const result = await PaginationHelper.executePaginatedQuery(
@@ -19,7 +77,6 @@ exports.getAllUsers = async (req, res) => {
     
     res.json(result);
   } catch (err) {
-    // Removed console.error - use logger instead
     return ResponseHandler.handleError(err, req, res, "Failed to fetch users");
   }
 };
