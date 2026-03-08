@@ -28,6 +28,7 @@ import CommunityGuidelines from './pages/CommunityGuidelines';
 import Analytics from './pages/Analytics';
 import Sessions from './pages/Sessions';
 import DeletedContent from './pages/DeletedContent';
+import NotFound from './pages/404';
 
 // Components
 import Navbar from './components/Navbar';
@@ -52,6 +53,7 @@ function AppContent() {
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </AnimatePresence>
       </div>
@@ -87,6 +89,7 @@ function AppContent() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/live-match" element={<LiveMatchRooms />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </main>
