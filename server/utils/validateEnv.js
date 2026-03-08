@@ -4,6 +4,7 @@
  */
 
 const crypto = require('crypto');
+const logger = require('./logger');
 
 /**
  * Required environment variables with their validation rules
@@ -80,7 +81,7 @@ function validateEnvironment() {
   const warnings = [];
   const suggestions = [];
 
-  console.log('🔍 Validating environment variables...\n');
+  logger.info('🔍 Validating environment variables...\n');
 
   // Validate required variables
   for (const [name, config] of Object.entries(REQUIRED_ENV_VARS)) {
@@ -89,9 +90,9 @@ function validateEnvironment() {
     
     if (varErrors.length > 0) {
       errors.push(...varErrors);
-      console.error(`❌ ${name}: ${varErrors.join(', ')}`);
-      console.error(`   Description: ${config.description}`);
-      console.error(`   Example: ${config.example}\n`);
+      logger.error(`❌ ${name}: ${varErrors.join(', ')}`);
+      logger.error(`   Description: ${config.description}`);
+      logger.error(`   Example: ${config.example}\n`);
       
       // Special handling for JWT_SECRET
       if (name === 'JWT_SECRET') {
@@ -99,7 +100,7 @@ function validateEnvironment() {
         suggestions.push(`Add this to your .env file:\nJWT_SECRET=${generatedSecret}`);
       }
     } else {
-      console.log(`✅ ${name}: Set and valid`);
+      logger.info(`✅ ${name}: Set and valid`);
     }
   }
 
@@ -110,9 +111,9 @@ function validateEnvironment() {
     if (!value && config.default) {
       process.env[name] = config.default;
       warnings.push(`${name} not set, using default: ${config.default}`);
-      console.log(`⚠️  ${name}: Using default value (${config.default})`);
+      logger.warn(`⚠️  ${name}: Using default value (${config.default})`);
     } else if (value) {
-      console.log(`✅ ${name}: ${value}`);
+      logger.info(`✅ ${name}: ${value}`);
     }
   }
 
@@ -126,27 +127,27 @@ function validateEnvironment() {
   }
 
   // Print results
-  console.log('\n📋 Environment Validation Summary:');
-  console.log(`✅ Valid: ${Object.keys(REQUIRED_ENV_VARS).length - errors.length}/${Object.keys(REQUIRED_ENV_VARS).length} required variables`);
+  logger.info('\n📋 Environment Validation Summary:');
+  logger.info(`✅ Valid: ${Object.keys(REQUIRED_ENV_VARS).length - errors.length}/${Object.keys(REQUIRED_ENV_VARS).length} required variables`);
   
   if (warnings.length > 0) {
-    console.log(`⚠️  Warnings: ${warnings.length}`);
-    warnings.forEach(warning => console.log(`   - ${warning}`));
+    logger.warn(`⚠️  Warnings: ${warnings.length}`);
+    warnings.forEach(warning => logger.warn(`   - ${warning}`));
   }
 
   if (errors.length > 0) {
-    console.log(`❌ Errors: ${errors.length}`);
-    console.log('\n🔧 Quick Fix:');
+    logger.error(`❌ Errors: ${errors.length}`);
+    logger.info('\n🔧 Quick Fix:');
     
     if (suggestions.length > 0) {
-      suggestions.forEach(suggestion => console.log(suggestion));
+      suggestions.forEach(suggestion => logger.info(suggestion));
     }
     
-    console.log('\n📖 For more help, see: HuddleUp/SETUP_GUIDE.md');
+    logger.info('\n📖 For more help, see: HuddleUp/SETUP_GUIDE.md');
     return false;
   }
 
-  console.log('✅ All environment variables are valid!\n');
+  logger.info('✅ All environment variables are valid!\n');
   return true;
 }
 
@@ -161,7 +162,7 @@ function getJWTSecret() {
   }
   
   if (secret.length < 32) {
-    console.warn('⚠️  WARNING: JWT_SECRET is shorter than recommended (32+ characters)');
+    logger.warn('⚠️  WARNING: JWT_SECRET is shorter than recommended (32+ characters)');
   }
   
   return secret;

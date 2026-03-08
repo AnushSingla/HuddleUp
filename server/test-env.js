@@ -5,61 +5,62 @@
  */
 
 const { validateEnvironment, getJWTSecret, generateJWTSecret } = require('./utils/validateEnv');
+const logger = require('./utils/logger');
 
-console.log('🧪 Testing Environment Variable Validation\n');
+logger.info('🧪 Testing Environment Variable Validation\n');
 
 // Test 1: Save current JWT_SECRET
 const originalJWTSecret = process.env.JWT_SECRET;
-console.log('1️⃣ Testing with missing JWT_SECRET...');
+logger.info('1️⃣ Testing with missing JWT_SECRET...');
 
 // Temporarily remove JWT_SECRET
 delete process.env.JWT_SECRET;
 
 try {
   const result = validateEnvironment();
-  console.log('Validation result:', result ? '✅ Passed' : '❌ Failed (expected)');
+  logger.info('Validation result:', result ? '✅ Passed' : '❌ Failed (expected)');
 } catch (error) {
-  console.log('❌ Validation threw error:', error.message);
+  logger.error('❌ Validation threw error:', { error: error.message });
 }
 
 // Test 2: Test getJWTSecret with missing secret
-console.log('\n2️⃣ Testing getJWTSecret with missing JWT_SECRET...');
+logger.info('\n2️⃣ Testing getJWTSecret with missing JWT_SECRET...');
 try {
   getJWTSecret();
-  console.log('❌ Should have thrown an error');
+  logger.error('❌ Should have thrown an error');
 } catch (error) {
-  console.log('✅ Correctly threw error:', error.message);
+  logger.info('✅ Correctly threw error:', error.message);
 }
 
 // Test 3: Test with short JWT_SECRET
-console.log('\n3️⃣ Testing with short JWT_SECRET...');
+logger.info('\n3️⃣ Testing with short JWT_SECRET...');
 process.env.JWT_SECRET = 'short';
 try {
   const result = validateEnvironment();
-  console.log('Validation result:', result ? '✅ Passed' : '❌ Failed (expected)');
+  logger.info('Validation result:', result ? '✅ Passed' : '❌ Failed (expected)');
 } catch (error) {
-  console.log('❌ Validation threw error:', error.message);
+  logger.error('❌ Validation threw error:', { error: error.message });
 }
 
 // Test 4: Test with valid JWT_SECRET
-console.log('\n4️⃣ Testing with valid JWT_SECRET...');
+logger.info('\n4️⃣ Testing with valid JWT_SECRET...');
 const generatedSecret = generateJWTSecret();
 process.env.JWT_SECRET = generatedSecret;
 try {
   const result = validateEnvironment();
-  console.log('Validation result:', result ? '✅ Passed (expected)' : '❌ Failed');
+  logger.info('Validation result:', result ? '✅ Passed (expected)' : '❌ Failed');
   
   const secret = getJWTSecret();
-  console.log('✅ getJWTSecret() returned valid secret (length:', secret.length, ')');
+  logger.info('✅ getJWTSecret() returned valid secret (length:', secret.length, ')');
 } catch (error) {
-  console.log('❌ Unexpected error:', error.message);
+  logger.error('❌ Unexpected error:', { error: error.message });
 }
 
 // Test 5: Generate new JWT secret
-console.log('\n5️⃣ Testing JWT secret generation...');
+logger.info('\n5️⃣ Testing JWT secret generation...');
 const newSecret = generateJWTSecret();
-console.log('✅ Generated JWT secret (length:', newSecret.length, ')');
-console.log('Sample:', newSecret.substring(0, 20) + '...');
+logger.info('✅ Generated JWT secret (length:', newSecret.length, ')');
+logger.info('Sample:', newSecret.substring(0, 20) + '...');
 
 // Restore original JWT_SECRET
 if (originalJWTSecret) {
@@ -68,6 +69,6 @@ if (originalJWTSecret) {
   delete process.env.JWT_SECRET;
 }
 
-console.log('\n🎉 Environment validation tests completed!');
-console.log('\n💡 To generate a secure JWT_SECRET for your .env file:');
-console.log(`JWT_SECRET=${generateJWTSecret()}`);
+logger.info('\n🎉 Environment validation tests completed!');
+logger.info('\n💡 To generate a secure JWT_SECRET for your .env file:');
+logger.info(`JWT_SECRET=${generateJWTSecret()}`);
