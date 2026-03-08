@@ -225,7 +225,8 @@ const gracefulShutdown = async (signal) => {
   console.log(`\n${signal} received. Starting graceful shutdown...`);
 
   try {
-    // Close Socket.IO first to disconnect all clients and release socket references
+    // CRITICAL: Close Socket.IO first to disconnect all clients and release socket references
+    // This prevents resource leaks and ensures clients receive proper disconnect events
     if (io) {
       console.log('Closing Socket.IO server...');
       await new Promise((resolve) => {
