@@ -1,5 +1,6 @@
 // utils/auth.js
-import { API } from './api';
+import { API } from '../api';
+import { disconnectSocket } from './socket';
 
 export const getToken = () => {
   return localStorage.getItem("token");
@@ -11,6 +12,8 @@ export const isLoggedIn = () => {
 
 export const logout = async () => {
   try {
+    // Disconnect socket before logout
+    disconnectSocket();
     // Call the secure logout endpoint
     await API.post('/auth/logout');
   } catch (error) {
@@ -25,6 +28,8 @@ export const logout = async () => {
 
 export const logoutAll = async () => {
   try {
+    // Disconnect socket before logout
+    disconnectSocket();
     // Call the logout all devices endpoint
     await API.post('/auth/logout-all');
   } catch (error) {

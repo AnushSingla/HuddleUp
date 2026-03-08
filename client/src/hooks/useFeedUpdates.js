@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { connectSocket } from "@/utils/socket";
+import { connectSocket, isSocketConnected } from "@/utils/socket";
 
 export default function useFeedUpdates() {
     const [newItemsCount, setNewItemsCount] = useState(0);
     const [latestEngagement, setLatestEngagement] = useState(null);
     const socketRef = useRef(null);
+    const cleanupRef = useRef(null);
 
     useEffect(() => {
         const socket = connectSocket();
@@ -23,10 +24,24 @@ export default function useFeedUpdates() {
         socket.on("feed:new_content", handleNewContent);
         socket.on("feed:engagement_update", handleEngagement);
 
+        // Store cleanup function
+        cleanupRef.current = () => {
+            if (socketRef.current && isSocketConnected()) {
+                socketRef.current.off("feed:new_content", handleNewContent);
+                socketRef.current.off("feed:engagement_update", handleEngagement);
+                socketRef.current.emit("leave_feed");
+            }
+        };
+
+        return cleanupRef.current;
+    }, []);
+
+    // Cleanup on unmount
+    useEffect(() => {
         return () => {
-            socket.off("feed:new_content", handleNewContent);
-            socket.off("feed:engagement_update", handleEngagement);
-            socket.emit("leave_feed");
+            if (cleanupRef.current) {
+                cleanupRef.current();
+            }
         };
     }, []);
 

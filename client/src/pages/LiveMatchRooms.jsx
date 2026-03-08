@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { socket } from "../lib/socket";
+import { connectSocket, disconnectSocket, isSocketConnected } from "@/utils/socket";
 import PageMeta from "@/components/PageMeta";
 import MentionText from "@/components/MentionText";
 
@@ -65,29 +65,37 @@ export default function LiveMatchRooms() {
 
   // Socket
   useEffect(() => {
-    socket.connect();
+    const socket = connectSocket();
     socket.emit("join_match", mockMatch.id);
 
-    socket.on("receive_message", (msg) => {
+    const handleReceiveMessage = (msg) => {
       setMessages((prev) => [...prev, { ...msg, time: new Date() }]);
-    });
+    };
 
-    socket.on("typing", () => {
+    const handleTyping = () => {
       setTyping(true);
       setTimeout(() => setTyping(false), 2000);
-    });
+    };
 
-    // Listen for match events
-    socket.on("match_event", (event) => {
+    const handleMatchEvent = (event) => {
       setMatchEvents((prev) => [{
         ...event,
         id: Date.now(),
         timestamp: new Date()
       }, ...prev]);
-    });
+    };
+
+    socket.on("receive_message", handleReceiveMessage);
+    socket.on("typing", handleTyping);
+    socket.on("match_event", handleMatchEvent);
 
     return () => {
-      socket.disconnect();
+      if (isSocketConnected()) {
+        socket.off("receive_message", handleReceiveMessage);
+        socket.off("typing", handleTyping);
+        socket.off("match_event", handleMatchEvent);
+        socket.emit("leave_match", mockMatch.id);
+      }
     };
   }, []);
 
@@ -99,7 +107,11 @@ export default function LiveMatchRooms() {
     if (!input.trim()) return;
     const msg = { matchId: mockMatch.id, user: "You", text: input };
     setMessages((prev) => [...prev, { ...msg, time: new Date() }]);
-    socket.emit("send_message", msg);
+    
+    const socket = connectSocket();
+    if (isSocketConnected()) {
+      socket.emit("send_message", msg);
+    }
     setInput("");
   };
 
@@ -334,7 +346,10 @@ export default function LiveMatchRooms() {
               value={input}
               onChange={(e) => {
                 setInput(e.target.value);
-                socket.emit("typing");
+                const socket = connectSocket();
+                if (isSocketConnected()) {
+                  socket.emit("typing");
+                }
               }}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               placeholder="Type your message..."
