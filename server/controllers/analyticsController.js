@@ -196,18 +196,7 @@ exports.getOverview = async (req, res) => {
       totalShares: analyticsAgg.totalShares
     }];
 
-    const analyticsAgg = analyticsResult;
-          _id: null,
-          totalViews: { $sum: "$totalViews" },
-          totalLikes: { $sum: "$totalLikes" },
-          totalComments: { $sum: "$totalComments" },
-          totalShares: { $sum: "$totalShares" },
-          totalWatchSecs: { $sum: "$watchTime.total" },
-        },
-      },
-    ]);
-
-    const agg = analyticsAgg[0] || {
+    const agg = analyticsResult[0] || {
       totalViews: 0,
       totalLikes: 0,
       totalComments: 0,
