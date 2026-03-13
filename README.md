@@ -5,7 +5,7 @@ It enables users to share videos, participate in discussions, follow creators, a
 
 ---
 
-## 🌐 Live Demo
+## 🌐 Live Demo here
 
 - HuddleUp: https://huddle-up-beta.vercel.app/
 
